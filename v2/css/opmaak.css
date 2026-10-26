@@ -1,7 +1,11 @@
 /* Labels en bordjes: huisstijl uit versie 25. Alle maten in mm, zwart op wit. */
-@font-face{font-family:"DSL Futura";font-weight:400;src:local("Futura Bk BT"),local("FuturaBT-Book"),local("Futura Book"),local("Futura-Book"),local("Futura PT Book"),local("FuturaPT-Book")}
-@font-face{font-family:"DSL Futura";font-weight:500 600;src:local("Futura Md BT"),local("FuturaBT-Medium"),local("Futura Medium"),local("Futura-Medium"),local("Futura PT Medium"),local("FuturaPT-Medium"),local("Futura Bk BT")}
-@font-face{font-family:"DSL Futura";font-weight:700 900;src:local("Futura Hv BT"),local("FuturaBT-Heavy"),local("Futura Bold"),local("Futura-Bold"),local("Futura PT Bold"),local("FuturaPT-Bold"),local("Futura Md BT"),local("Futura Bk BT")}
+/* Bordjes: Futura Bk BT als die op de pc staat, anders het meegeleverde Jost.
+   Labels: het meegeleverde Barlow Condensed. Zo werkt het op elke pc en offline. */
+@font-face{font-family:"DSL Futura";font-weight:400;font-display:block;src:local("Futura Bk BT"),local("FuturaBT-Book"),local("Futura Book"),local("Futura-Book"),url("../fonts/jost-400.woff") format("woff")}
+@font-face{font-family:"DSL Futura";font-weight:500 600;font-display:block;src:local("Futura Md BT"),local("FuturaBT-Medium"),local("Futura Medium"),local("Futura-Medium"),url("../fonts/jost-500.woff") format("woff")}
+@font-face{font-family:"DSL Futura";font-weight:700 900;font-display:block;src:local("Futura Hv BT"),local("FuturaBT-Heavy"),local("Futura Bold"),local("Futura-Bold"),url("../fonts/jost-700.woff") format("woff")}
+@font-face{font-family:"DSL Label";font-weight:400 600;font-display:block;src:url("../fonts/barlow-condensed-500.woff2") format("woff2")}
+@font-face{font-family:"DSL Label";font-weight:700 900;font-display:block;src:url("../fonts/barlow-condensed-700.woff2") format("woff2")}
 
 .signb,.lbl{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#000;background:#fff;box-sizing:border-box;overflow:hidden;position:relative;flex:0 0 auto}
 .signb *,.lbl *{box-sizing:border-box}
@@ -10,7 +14,7 @@
 .geen-qr{display:flex;align-items:center;justify-content:center;text-align:center;font:600 7pt/1.15 Arial,sans-serif;color:#b00;border:.3mm dashed #b00;padding:1mm}
 
 /* ---------- bordjes ---------- */
-.signb{border:.25mm solid #000;font-family:"DSL Futura","Futura Bk BT",Futura,"Century Gothic","Segoe UI",Arial,sans-serif;line-height:1.15}
+.signb{border:.25mm solid #000;font-family:"DSL Futura","Century Gothic",Arial,sans-serif;line-height:1.15}
 .signb .band{position:absolute;left:0;top:0;bottom:0}
 .signb .gat{position:absolute;display:block;overflow:visible}
 .signb .blg{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center}
@@ -44,7 +48,7 @@
 .signb .fsep{display:inline-block;width:.2mm;height:.85em;background:#9a9a9a;margin:0 .6em;vertical-align:-.08em}
 
 /* ---------- labels (Citizen) ---------- */
-.lbl{font-family:"Bahnschrift Condensed",Bahnschrift,"Arial Narrow","Roboto Condensed",Arial,sans-serif;font-stretch:condensed;display:flex}
+.lbl{font-family:"DSL Label","Arial Narrow",Arial,sans-serif;display:flex}
 .lbl .qr svg{display:block;width:100%;height:100%}
 .lbl .t1,.lbl .t2{display:flex;flex-direction:column;justify-content:center;overflow:hidden;min-height:0}
 .lbl .t1>span,.lbl .t2>span{display:block;width:100%;line-height:1.02;overflow-wrap:normal;word-break:normal}

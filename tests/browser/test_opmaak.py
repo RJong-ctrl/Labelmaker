@@ -68,6 +68,24 @@ class Opmaak(PaginaTest):
         self.assertEqual(r, [])
         self.assertEqual(self.fouten, [])
 
+    def test_lettertypes_meegeleverd(self):
+        r = self.pagina.evaluate("""() => {
+            const f = [...document.fonts].filter(x => x.family.replace(/"/g, '').startsWith('DSL'));
+            return {
+                geladen: f.filter(x => x.status === 'loaded').map(x => x.family.replace(/"/g, '') + ' ' + x.weight).sort(),
+                bordje: getComputedStyle(document.querySelector('#backdrop')).fontFamily,
+                label: getComputedStyle(document.querySelector('#qrlabel')).fontFamily,
+                futura: document.fonts.check('700 12pt "DSL Futura"'),
+                labelfont: document.fonts.check('700 12pt "DSL Label"'),
+            };
+        }""")
+        self.assertTrue(r['futura'])
+        self.assertTrue(r['labelfont'])
+        self.assertIn('DSL Futura 700 900', r['geladen'])
+        self.assertIn('DSL Label 700 900', r['geladen'])
+        self.assertTrue(r['bordje'].startswith('"DSL Futura"'))
+        self.assertTrue(r['label'].startswith('"DSL Label"'))
+
     def test_formaat_in_mm(self):
         maten = self.pagina.evaluate("""() => Object.fromEntries([...document.body.children].map(e => [e.id, [e.style.width, e.style.height]]))""")
         self.assertEqual(maten['strook'], ['180mm', '48mm'])

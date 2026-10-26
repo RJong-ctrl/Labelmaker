@@ -88,6 +88,7 @@ class Werkscherm(Hulp):
         self.kies('GE9402')
         p.locator('#actBordje').click()
         self.aanvullen('Doorsnede', '4 mm²')
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')  # pas dan is het printvel bewaard
         p.reload()
         p.wait_for_function("document.querySelector('#printA4').textContent.includes('Print 1')")
         expect(p.locator('#velLijst li')).to_have_count(1)
@@ -158,7 +159,7 @@ class Werkscherm(Hulp):
         p.locator('#actQr').click()
         p.locator('#printMeer').click()
         p.locator('#printMenu').get_by_role('button', name='Alleen eerste label (Citizen)').click()
-        self.assertIn('Citizen CL-E321', p.locator('#printbalk').inner_text())
+        expect(p.locator('#printbalk')).to_contain_text('Citizen CL-E321')
 
 
 class Herinlezen(Hulp):

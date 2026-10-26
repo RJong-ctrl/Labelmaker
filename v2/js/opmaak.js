@@ -12,6 +12,7 @@ export const HUISSTIJL_DSL = {
     'Tel. 0224-218130 | info@dslverhuur.nl | www.dslverhuur.nl',
   ],
   lettertype: 'DSL Futura',
+  labelLettertype: 'DSL Label',
 };
 
 const STREEP = 1;       // mm, volle kleur aan de binnenkant van het kleurvlak
@@ -212,9 +213,20 @@ function schrijflijn(span) {
   return y;
 }
 
+let lettertypes = null;
+/** Meegeleverde lettertypes laden vóór het meten (anders past de tekst niet). */
+function laadLettertypes() {
+  if (!lettertypes) {
+    const nodig = ['400', '500', '700'].map(w => `${w} 12pt "DSL Futura"`).concat(['500 12pt "DSL Label"', '700 12pt "DSL Label"']);
+    lettertypes = Promise.all(nodig.map(f => document.fonts?.load?.(f).catch(() => null)))
+      .then(() => document.fonts?.ready).catch(() => null);
+  }
+  return lettertypes;
+}
+
 /** Tekst passend maken; het element moet in de pagina staan. */
 export async function pasAan(el) {
-  if (document.fonts?.ready) { try { await document.fonts.ready; } catch { /* doorgaan */ } }
+  await laadLettertypes();
   await Promise.all([...el.querySelectorAll('img')].map(img => (img.decode ? img.decode().catch(() => {}) : null)));
   el.querySelectorAll('.fb').forEach(maakPassend);
   el.querySelectorAll('.hp').forEach(b => b.classList.add('fitted'));
