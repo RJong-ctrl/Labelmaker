@@ -11,13 +11,13 @@ Labels en bordjes maken voor het magazijn van DSL Geluids- & Lichtverhuur.
 Open de site in Chrome of Edge:
 **https://rjong-ctrl.github.io/Labelmaker/**
 
+**Nieuwe versie (test):** https://rjong-ctrl.github.io/Labelmaker/v2/ — Rentman-export inlezen, zoeken en scannen, bordjes, stroken en labels in de DSL-huisstijl. Lettertypes worden meegeleverd, dus het werkt op elke pc hetzelfde.
+
 Printen gaat via het printvenster van de browser. Voor de Citizen: papierformaat 76 × 56 mm, marges *Geen*, schaal *Standaard*, kop- en voetteksten uit. Bordjes print je op een gewone A4-printer.
 
 ## Gegevens
 
-Instellingen, sjablonen en opgeslagen labels/bordjes staan nu nog in de browser van elke pc. Met *Exporteren* en *Importeren* zet je ze over naar een andere pc. In de volgende versie komen ze in een gedeelde OneDrive-map, zodat iedereen dezelfde gegevens heeft.
-
-Er staan geen artikelgegevens of Rentman-exports in deze repository; die blijven op de eigen pc's.
+Alles staat in de browser van elke pc. Prijzen en interne opmerkingen uit de Rentman-export worden nooit bewaard of gepubliceerd, en er staan geen Rentman-exports in deze repository.
 
 ## Versies
 
