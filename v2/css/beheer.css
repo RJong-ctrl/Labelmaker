@@ -119,6 +119,16 @@
 .beheer .keuzes .vink input{accent-color:var(--accent)}
 .raster.kolommen{margin-top:12px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
 
+/* wijzigingen op deze pc */
+.wijzigingen{list-style:none;margin:8px 0 0;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+.wijziging{display:flex;align-items:center;gap:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.wijziging:last-child{border-bottom:0}
+.wijziging .soort{flex:0 0 92px;font-size:12px;font-weight:600;color:var(--muted)}
+.wijziging .wtekst{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.wijziging .nm{font-weight:600;overflow-wrap:anywhere}
+.wijziging .sub{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.beheer-form .leeg{margin-top:12px}
+
 /* ---------- voorbeeld ---------- */
 .beheer-voorbeeld{gap:8px}
 .beheer-voorbeeld>*{flex:0 0 auto}

@@ -449,6 +449,64 @@ class Editor(Hulp):
         self.assertEqual(uit[3], '{Connector} {Doorsnede}')
 
 
+class Wijzigingen(Hulp):
+    def test_wijzigingen_weggooien(self):
+        p = self.pagina
+        self.maak_model(artikelen=False)
+        p.evaluate("""async () => {
+            await model.laadBasis({ type: 'labelmaker-basis', versie: 1, profiel: 'dsl', datum: '2026-10-26T10:00:00.000Z',
+                artikelen: Object.values(T.A), losseItems: [], sjablonen: [], aanvullingen: { GE9402: { Doorsnede: '2,5 mm²' } } });
+            await model.zetAanvulling('GE9402', { Doorsnede: '4 mm²' });
+        }""")
+        self.start()
+        self.open('wijzigingen')
+        f = p.locator('#beheerForm')
+        expect(f).to_contain_text('Basis van 26 okt')
+        rijen = f.locator('li.wijziging')
+        expect(rijen).to_have_count(1)
+        expect(rijen.first).to_contain_text('Speakon 4p Verlengkabel 2,5m')
+        expect(rijen.first).to_contain_text('Doorsnede: 4 mm²')
+        rijen.first.get_by_role('button', name='Weggooien').click()
+        expect(rijen).to_have_count(0)
+        expect(f).to_contain_text('Geen wijzigingen')
+        expect(p.locator('#beheerMelding')).to_contain_text('Weggegooid')
+        self.assertEqual(self.model('e.aanvullingen.GE9402.Doorsnede'), '2,5 mm²')
+        self.assertEqual(self.model('m.wijzigingen().length'), 0)
+        self.assertEqual(self.fouten, [])
+
+    def test_wijzigingen_sjabloon_en_artikellijst(self):
+        p = self.pagina
+        self.maak_model()
+        p.evaluate("""async () => {
+            const e = model.effectief();
+            await model.zetSjabloon({ ...structuredClone(e.sjablonen.find(s => s.id === 'bordje-staand')), id: 'kist', naam: 'Kist' });
+            await model.zetSjabloon({ ...structuredClone(e.sjablonen.find(s => s.id === 'gitterbox')), naam: 'Strook anders' });
+            await model.zetPrintvel('a4', [{ sjabloon: 'kist', artikel: 'CO1120', qr: 'kenporto-00', aantal: 1 }]);
+        }""")
+        self.start()
+        self.open('wijzigingen')
+        f = p.locator('#beheerForm')
+        rijen = f.locator('li.wijziging')
+        expect(rijen).to_have_count(3)
+        vraag = p.locator('#beheerVraag')
+        rijen.filter(has_text='Artikellijst').get_by_role('button', name='Weggooien').click()
+        expect(vraag).to_contain_text('geen artikelen')
+        vraag.get_by_role('button', name='Annuleren').click()
+        expect(rijen).to_have_count(3)
+        rijen.filter(has_text='Kist').get_by_role('button', name='Weggooien').click()
+        expect(vraag).to_contain_text('alleen op deze pc')
+        vraag.get_by_role('button', name='Weggooien').click()
+        expect(rijen).to_have_count(2)
+        expect(p.locator('#beheerMelding')).to_contain_text('1 regel van het printvel')
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:kist"]')).to_have_count(0)
+        self.assertEqual(p.evaluate("async () => (await model.printvel('a4')).length"), 0)
+        rijen.filter(has_text='Strook anders').get_by_role('button', name='Weggooien').click()
+        vraag.get_by_role('button', name='Weggooien').click()
+        expect(rijen).to_have_count(1)
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:gitterbox"]')).to_contain_text('Gitterbox-strook')
+        self.assertEqual(self.fouten, [])
+
+
 def png(breedte=2, hoogte=2):
     """Klein, geldig PNG-bestand (rood)."""
     def blok(soort, data):

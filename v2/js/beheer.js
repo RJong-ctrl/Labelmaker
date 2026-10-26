@@ -257,6 +257,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     else if (id === 'huisstijl') await tekenHuisstijl();
     else if (id === 'printers') tekenPrinters();
     else if (id === 'kolommen') tekenKolommen();
+    else if (id === 'wijzigingen') tekenWijzigingen();
     else if (id.startsWith('extra:')) await tekenExtra(extra.find(o => o.id === id));
     else form.innerHTML = formKop(ONDERDELEN.find(o => o.id === id)?.titel || id) + '<p class="hint">Volgt.</p>';
     voorbeeldLater(0);
@@ -439,6 +440,67 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
       st.werkHuisstijl = { ...st.werkHuisstijl, lettertype: el.value };
       bewaarHuisstijl();
     }
+  }
+
+  // ---------- wijzigingen op deze pc ----------
+  const SOORT_NAAM = { sjabloon: 'Sjabloon', instelling: 'Instelling', aanvulling: 'Aanvulling', artikelen: 'Artikellijst', los: 'Los item' };
+
+  function tekenWijzigingen(focusIndex = null) {
+    const lijst = model.wijzigingen();
+    st.wijzigingen = lijst;
+    const e = model.effectief();
+    const namen = new Map([...e.artikelen, ...e.losseItems].map(a => [String(sleutelVan(a)), a.naam]));
+    const datum = e.basisDatum ? new Date(e.basisDatum) : null;
+    const basis = datum && !Number.isNaN(+datum)
+      ? `Basis van ${datum.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }).replace('.', '')} geladen.`
+      : 'Op deze pc is nog geen gepubliceerde basis geladen.';
+    form.innerHTML = formKop('Wijzigingen op deze pc')
+      + `<p class="hint">${esc(basis)} Wat hier staat wijkt op deze pc af van de basis. Publiceer het om het voor iedereen te bewaren, of gooi het weg om terug te gaan naar de basis.</p>`
+      + (lijst.length
+        ? '<ul class="wijzigingen">' + lijst.map((w, i) => {
+          const sub = w.soort === 'aanvulling' ? [namen.get(String(w.id)), w.id].filter(Boolean).join(' · ') : '';
+          return `<li class="wijziging"><span class="soort">${SOORT_NAAM[w.soort] || esc(w.soort)}</span>`
+            + `<span class="wtekst"><span class="nm">${esc(w.omschrijving)}</span>${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</span>`
+            + `<button type="button" data-beheer="weggooien" data-i="${i}" aria-label="Weggooien: ${esc(w.omschrijving)}${sub ? ` (${esc(sub)})` : ''}">Weggooien</button></li>`;
+        }).join('') + '</ul>'
+        : '<p class="leeg">Geen wijzigingen op deze pc.</p>');
+    if (focusIndex !== null) {
+      const knoppen = form.querySelectorAll('[data-beheer="weggooien"]');
+      (knoppen[Math.min(focusIndex, knoppen.length - 1)] || menu.querySelector('[aria-current="page"]'))?.focus();
+    }
+  }
+
+  async function gooiWeg(i) {
+    await bewaarNu();
+    const w = st.wijzigingen?.[i];
+    if (!w) return;
+    let g = null;
+    if (w.soort === 'sjabloon') {
+      const sj = sjabloonVan(w.id);
+      const onderlaag = STANDAARD_IDS.has(w.id) || (model.basis()?.sjablonen || []).some(s => s.id === w.id);
+      if (sj && !onderlaag) g = await gebruik(w.id);
+      const regels = g
+        ? [`Dit sjabloon staat alleen op deze pc en verdwijnt helemaal.`, ...(gevolgen(g).length ? [`Dit haalt ook weg: ${lijstTekst(gevolgen(g))}.`] : [])]
+        : [sj ? 'Je wijzigingen aan dit sjabloon op deze pc gaan verloren.' : 'Het sjabloon komt terug zoals in de basis.'];
+      if (!(await vraag(`${w.omschrijving}: weggooien?`, regels, 'Weggooien'))) return;
+    } else if (w.soort === 'artikelen') {
+      const regels = [model.basis()?.artikelen?.length
+        ? 'Deze pc gebruikt daarna weer de artikelen uit de basis.'
+        : 'Er is geen basis met artikelen: daarna staan er op deze pc geen artikelen meer, tot je opnieuw inleest.'];
+      if (!(await vraag('Artikellijst van deze pc weggooien?', regels, 'Weggooien'))) return;
+    }
+    const gelukt = await bewaar(async () => {
+      if (g) await ruimOp(w.id, g);
+      await model.gooiWeg(w);
+    });
+    if (!gelukt) return;
+    meld('weggegooid', w.id);
+    if (w.soort === 'artikelen' || w.soort === 'los') vulArtikelLijst();
+    tekenMenu();
+    tekenWijzigingen(i);
+    const extraTekst = g && gevolgen(g).length ? ` ${lijstTekst(gevolgen(g))} weggehaald.` : '';
+    melding(`Weggegooid: ${w.omschrijving}.${extraTekst}`);
+    voorbeeldLater(0);
   }
 
   // ---------- printers ----------
@@ -689,6 +751,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     if (actie === 'pin-wis') return wisPincode();
     if (actie.startsWith('regel-')) return regelKlik(actie, +knop.dataset.i);
     if (actie === 'kies' || actie === 'weg') return huisstijlKlik(knop);
+    if (actie === 'weggooien') return gooiWeg(+knop.dataset.i);
   }
 
   function formInvoer(ev) {
