@@ -43,4 +43,9 @@ export function kaal(naam) {
   return s.replace(/\s+/g, ' ').replace(/\s*[-|]\s*$/, '').trim();
 }
 
-export const PATRONEN = { lengte, maat, polen, kwaliteit, kaal };
+/** 'ja' als het een kabel is: een lengte in de naam, of 'kabel'/'snake' erin. */
+export function kabel(naam) {
+  return lengte(naam) || /kabel|snake/i.test(naam || '') ? 'ja' : '';
+}
+
+export const PATRONEN = { lengte, maat, polen, kwaliteit, kaal, kabel };

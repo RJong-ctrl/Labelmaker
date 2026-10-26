@@ -6,7 +6,7 @@ import { sleutel, ONBEKEND } from './kleuren.js';
 
 const kolom = (naam, k, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'kolom', kolom: k }, verplicht });
 const uitNaam = (naam, patroon, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'naam', patroon }, verplicht });
-const keuze = (naam, opties) => ({ naam, soort: 'keuze', opties, herkomst: { type: 'aanvulling' }, verplicht: true });
+const keuze = (naam, opties, alleenAls) => ({ naam, soort: 'keuze', opties, herkomst: { type: 'aanvulling' }, verplicht: true, ...(alleenAls ? { alleenAls } : {}) });
 const v = (veld) => ({ veld });
 
 const leeg = { titel: [], groot: [], label: [], eigenschappen: [], onder: [] };
@@ -46,7 +46,8 @@ export const DSL_SJABLONEN = [
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },
     logoBoven: true,
-    velden: [uitNaam('Omschrijving', 'kaal', true), uitNaam('Lengte', 'lengte'), uitNaam('Connector', 'polen'), keuze('Doorsnede', ['2,5 mm²', '4 mm²']), kolom('Artikelnummer', 'code', true)],
+    velden: [uitNaam('Omschrijving', 'kaal', true), uitNaam('Lengte', 'lengte'), uitNaam('Connector', 'polen'), uitNaam('Kabel', 'kabel'),
+      keuze('Doorsnede', ['2,5 mm²', '4 mm²'], 'Kabel'), kolom('Artikelnummer', 'code', true)],
     plekken: { ...leeg, titel: [v('Omschrijving')], groot: [v('Lengte'), ' m'], label: [v('Connector'), ' ', v('Doorsnede')], onder: ['Artikelnummer ', v('Artikelnummer')] },
     kleuren: {
       rand: { veld: 'Lengte', waarden: { '2,5': '#ffff00', '5': '#00b050', '7,5': '#0050ff', '10': '#ff0000', '15': '#7030a0', '20': '#ffffff', '25': '#ff8c00' } },
@@ -63,9 +64,12 @@ export function veldwaarde(veld, artikel, aanvullingen = {}) {
   return String(aanvullingen[veld.naam] ?? '').trim();
 }
 
+// Een veld met alleenAls telt alleen mee als dat andere veld een waarde heeft
+// (Doorsnede alleen bij kabels).
 function waarden(sjabloon, artikel, aanvullingen) {
   const w = {};
   for (const veld of sjabloon.velden) w[veld.naam] = veldwaarde(veld, artikel, aanvullingen);
+  for (const veld of sjabloon.velden) if (veld.alleenAls && !w[veld.alleenAls]) w[veld.naam] = '';
   return w;
 }
 
@@ -105,7 +109,9 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
 
 /** Verplichte aanvulvelden die nog geen waarde hebben. */
 export function ontbrekend(sjabloon, artikel, aanvullingen = {}) {
-  return sjabloon.velden.filter(v => v.herkomst.type === 'aanvulling' && v.verplicht && !veldwaarde(v, artikel, aanvullingen));
+  const w = waarden(sjabloon, artikel, {});
+  return sjabloon.velden.filter(v => v.herkomst.type === 'aanvulling' && v.verplicht
+    && !(v.alleenAls && !w[v.alleenAls]) && !veldwaarde(v, artikel, aanvullingen));
 }
 
 /** Welke QR-codes: per exemplaar bij serie-artikelen, anders de artikel-QR. */

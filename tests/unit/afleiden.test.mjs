@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lengte, maat, polen, kwaliteit, kaal, PATRONEN } from '../../v2/js/afleiden.js';
+import { lengte, maat, polen, kwaliteit, kaal, kabel, PATRONEN } from '../../v2/js/afleiden.js';
 
 const tabel = (fn, gevallen) => { for (const [in_, uit] of gevallen) assert.equal(fn(in_), uit, in_); };
 
@@ -63,7 +63,17 @@ test('kaal', () => tabel(kaal, [
   ['Pipe & drape staander 1,8-4,2m telescopisch', 'Pipe & drape staander telescopisch'],
 ]));
 
+test('kabel', () => tabel(kabel, [
+  ['Speakon 4p Verlengkabel 2,5m', 'ja'],
+  ['Speakon 4p 50m op haspel', 'ja'],
+  ['Speakon 4P ( Groen 4² ) bridgekabel tbv SXH218', 'ja'],
+  ['4 x Speakon 2p 10m snake grijs Verlengkabel', 'ja'],
+  ['Speakon 8p Koppelbus', ''],
+  ['Speakon 4p > Speakon 8p Verloop (sub)', ''],
+  ['2x NL2 > 4x NL2 split box', ''],
+]));
+
 test('patronen', () => {
-  assert.deepEqual(Object.keys(PATRONEN).sort(), ['kaal', 'kwaliteit', 'lengte', 'maat', 'polen']);
+  assert.deepEqual(Object.keys(PATRONEN).sort(), ['kaal', 'kabel', 'kwaliteit', 'lengte', 'maat', 'polen']);
   assert.equal(PATRONEN.lengte('Speakon 4p Verlengkabel 7,5m'), '7,5');
 });

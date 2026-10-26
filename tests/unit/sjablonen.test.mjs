@@ -47,6 +47,16 @@ test('koppelbus_zonder_lengte', () => {
   assert.equal(i.titel, 'Speakon 8p Koppelbus');
 });
 
+test('geen_doorsnede_als_het_geen_kabel_is', () => {
+  assert.deepEqual(ontbrekend(S.gitterbox, A.GE9391, {}), []);
+  const verloop = { ...A.GE9402, naam: 'Speakon 4p > Speakon 8p Verloop (sub)' };
+  assert.deepEqual(ontbrekend(S.gitterbox, verloop, {}), []);
+  // ook een eerder opgeslagen doorsnede komt er niet op
+  assert.deepEqual(vul(S.gitterbox, A.GE9391, { Doorsnede: '2,5 mm²' }, 'nl8-koppel').label, { tekst: 'NL8', kleur: '#7f7f7f' });
+  const haspel = { ...A.GE9402, naam: 'Speakon 4p 50m op haspel' };
+  assert.deepEqual(ontbrekend(S.gitterbox, haspel, {}).map(v => v.naam), ['Doorsnede']);
+});
+
 test('twaalf_vijf_onbekend', () => {
   assert.equal(vul(S.gitterbox, A.GE9412, { Doorsnede: '2,5 mm²' }, 'nl4-12.50m').rand, '#7f7f7f');
 });
