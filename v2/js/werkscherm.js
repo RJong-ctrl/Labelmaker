@@ -227,11 +227,16 @@ export async function start(root, opslag, { waarschuwing = '' } = {}) {
         st.aanvullingen[code] = { ...(st.aanvullingen[code] || {}), ...w };
         await opslag.schrijf('aanvullingen', code, st.aanvullingen[code]).catch(opslagFout);
       }
-      const qrs = soort === 'locatie' ? [''] : (exemplaren ? [...exemplaren] : qrsVoor(a));
+      // Aangevinkt = één met de artikel-QR; gescande exemplaren = die exemplaren; 'Per exemplaar' = allemaal.
+      const qrs = soort === 'locatie' ? ['']
+        : exemplaren ? [...exemplaren]
+        : $('perExemplaar').checked ? qrsVoor(a)
+        : [a.qr || a.exemplaren?.[0] || ''];
       for (const qr of qrs) { voegToe(sj.printer, { sjabloon: sid, artikel: code, qr, aantal: 1 }); toegevoegd++; }
       printer = sj.printer;
     }
     st.keuze.clear();
+    $('perExemplaar').checked = false;
     if (printer) st.tab = printer;
     await bewaarVel();
     bewaarInst();

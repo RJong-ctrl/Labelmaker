@@ -58,7 +58,7 @@ class PaginaTest(unittest.TestCase):
     def setUp(self):
         self.context = self.browser.new_context(viewport=self.viewport, device_scale_factor=self.apparaatschaal)
         self.pagina = self.context.new_page()
-        self.pagina.set_default_timeout(8000)
+        self.pagina.set_default_timeout(15000)  # ruim: tests draaien soms naast elkaar
         if not self.app_starten:
             self.context.route('**/v2/js/app.js', lambda r: r.fulfill(status=200, content_type='text/javascript', body=''))
         self.fouten = []

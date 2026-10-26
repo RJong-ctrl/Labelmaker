@@ -65,13 +65,23 @@ class Werkscherm(Hulp):
         p.wait_for_function("document.querySelector('#printA4').textContent.includes('Print 2')")
         self.assertTrue(p.locator('#aanvulling').is_hidden())
 
-    def test_qrlabel_per_exemplaar(self):
+    def test_artikel_aanvinken_geeft_er_een(self):
         p = self.pagina
         self.inlezen()
         self.kies('LI8163-B')
         p.locator('#actQr').click()
-        p.wait_for_function("document.querySelector('#printLabel').textContent.includes('Print 2')")
-        self.assertEqual(p.locator('#tabLabel').inner_text().strip(), 'Citizen (2)')
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        expect(p.locator('#velLijst')).to_contain_text('bd6x3B')
+
+    def test_qrlabel_per_exemplaar_als_gekozen(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('LI8163-B')
+        p.locator('#perExemplaar').check()
+        p.locator('#actQr').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 2 op Citizen')
+        expect(p.locator('#tabLabel')).to_have_text('Citizen (2)')
+        expect(p.locator('#perExemplaar')).not_to_be_checked()
 
     def test_locatielabel_zonder_locatie_overgeslagen(self):
         p = self.pagina
@@ -230,7 +240,7 @@ class Robuust(Hulp):
         p.locator('#zoek').fill('bd6x3b-01')
         p.locator('#zoek').press('Enter')
         p.locator('#actQr').click()
-        expect(p.locator('#printLabel')).to_have_text('Print 2 op Citizen')
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
 
     def test_qrlabel_zonder_qr_melding(self):
         p = self.pagina
