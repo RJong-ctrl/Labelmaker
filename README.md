@@ -1,24 +1,32 @@
 # DSL Labelmaker
 
-Labels en bordjes maken voor het magazijn van DSL Geluids- & Lichtverhuur.
+Labels en bordjes maken voor het magazijn van DSL Geluids- & Lichtverhuur, en voor eigen werk.
 
-- **QR-labels** voor de Citizen CL-E321 (76 × 56 mm), met QR-codes uit Rentman
-- **Locatielabels** voor stellingen en vakken
-- **A4-bordjes** in A7-formaat om te lamineren (Backdrop, Pipe & Drape) en **gitterbox-stroken**, gemaakt vanuit sjablonen met een vaste kleurcode
+**Openen:** https://rjong-ctrl.github.io/Labelmaker/ (Chrome of Edge). Werkt na het eerste bezoek ook zonder internet.
 
-## Openen
+- **QR-labels en locatielabels** voor de Citizen CL-E321 (76 × 56 mm, ook halve labels)
+- **Bordjes** in A7 om te lamineren (Backdrop, Pipe & Drape, algemene bordjes), 4 per A4 met snijtekens
+- **Gitterbox-stroken** (180 × 48 mm) met kleurcode per lengte en doorsnede
+- **Los item** voor alles wat niet in Rentman staat; **Aanpassen** om teksten op een bordje te wijzigen of weg te halen
 
-Open de site in Chrome of Edge:
-**https://rjong-ctrl.github.io/Labelmaker/**
+## Werken
 
-**Nieuwe versie (test):** https://rjong-ctrl.github.io/Labelmaker/v2/ — Rentman-export inlezen, zoeken en scannen, bordjes, stroken en labels in de DSL-huisstijl. Lettertypes worden meegeleverd, dus het werkt op elke pc hetzelfde.
+1. *Artikelen inlezen*: de materiaalexport uit Rentman (.xlsx of .csv). Of niets doen: de gedeelde DSL-basis wordt bij het openen geladen.
+2. Zoek of scan, vink aan, kies *Bordje of strook*, *QR-label*, *Locatielabel* of *Ander sjabloon…*.
+3. Rechtsboven: *Print n op Citizen* of *Print n op A4*. Citizen: papier 76 × 56 mm, marges *Geen*.
 
-Printen gaat via het printvenster van de browser. Voor de Citizen: papierformaat 76 × 56 mm, marges *Geen*, schaal *Standaard*, kop- en voetteksten uit. Bordjes print je op een gewone A4-printer.
+## Beheer
 
-## Gegevens
+Sjablonen, kleuren per maat of lengte, categorie → sjabloon, huisstijl, printers, kolommen, profielen, oude gegevens uit versie 25, pincode.
+**Publiceren** maakt `dsl.json`; zet dat in de map [`v2/data`](https://github.com/RJong-ctrl/Labelmaker/upload/main/v2/data) en elke pc laadt het bij het openen.
 
-Alles staat in de browser van elke pc. Prijzen en interne opmerkingen uit de Rentman-export worden nooit bewaard of gepubliceerd, en er staan geen Rentman-exports in deze repository.
+## Gegevens en privacy
+
+Alles staat in de browser van elke pc (per profiel). Prijzen en interne opmerkingen uit de Rentman-export worden nooit bewaard of gepubliceerd; de gepubliceerde basis bevat alleen namen, codes, QR-waarden, locaties en categorieën. Er staan geen Rentman-exports in deze repository.
 
 ## Versies
 
-Elke wijziging staat in de geschiedenis van deze repository. Het versienummer zie je rechtsboven in het programma.
+- Huidige versie: `v2/` (het hoofdadres stuurt daarheen door).
+- Vorige versie (25): https://rjong-ctrl.github.io/Labelmaker/v1/
+
+Lettertypes: Jost en Barlow Condensed (SIL Open Font License), zie `v2/fonts/`. QR-codes: QRCode for JavaScript (Kazuhiko Arase, MIT).

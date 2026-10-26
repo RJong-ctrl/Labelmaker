@@ -29,6 +29,7 @@ export async function laadModel(opslag, profielId, standaardSoort) {
   return {
     profielId,
     opslag,
+    standaard,
     effectief,
     basis: () => basis,
     wijzigingen: () => bepaalWijzigingen(basis, lokaal),

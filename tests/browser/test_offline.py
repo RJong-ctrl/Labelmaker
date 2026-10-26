@@ -72,6 +72,8 @@ def bestanden_uit_sw(tekst):
 class OfflineBasis(PaginaTest):
     """Per test een eigen server op een verse kopie van v2/ (zodat een test die kan aanpassen)."""
 
+    basis_blokkeren = False
+
     def setUp(self):
         self.map = tempfile.mkdtemp(prefix='labelmaker-offline-')
         shutil.copytree(V2, os.path.join(self.map, 'v2'))

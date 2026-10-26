@@ -38,6 +38,7 @@ class PaginaTest(unittest.TestCase):
     apparaatschaal = 1
     app_starten = True  # False: alleen de modules testen, zonder werkscherm
     init_script = None  # JavaScript dat vóór de pagina draait
+    basis_blokkeren = True  # v2/data/*.json niet laden (anders laadt elke test de echte basis)
 
     @classmethod
     def setUpClass(cls):
@@ -59,6 +60,8 @@ class PaginaTest(unittest.TestCase):
         self.context = self.browser.new_context(viewport=self.viewport, device_scale_factor=self.apparaatschaal)
         self.pagina = self.context.new_page()
         self.pagina.set_default_timeout(15000)  # ruim: tests draaien soms naast elkaar
+        if self.basis_blokkeren:
+            self.context.route('**/v2/data/**', lambda r: r.fulfill(status=404, body=''))
         if not self.app_starten:
             self.context.route('**/v2/js/app.js', lambda r: r.fulfill(status=200, content_type='text/javascript', body=''))
         self.fouten = []

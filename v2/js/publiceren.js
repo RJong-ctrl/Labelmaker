@@ -60,22 +60,32 @@ function schoneAanvullingen(aanvullingen) {
  * @param {string} profielId
  * @param {Date|string|number} [datum]
  */
-export function maakBasis(effectief, profielId, datum = new Date()) {
+/**
+ * standaard (optioneel) = de profielstandaard; sjablonen en instellingen die daaraan gelijk zijn
+ * gaan dan niet mee, zodat latere verbeteringen aan de standaard op alle pc's doorkomen.
+ */
+export function maakBasis(effectief, profielId, datum = new Date(), standaard = null) {
   const e = effectief || {};
-  return {
+  const gelijk = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const stdSj = new Map((standaard?.sjablonen || []).map(s => [s.id, s]));
+  const anders = (k, waarde) => (standaard && gelijk(waarde, standaard[k]) ? undefined : waarde);
+  const kolommen = Object.fromEntries(Object.entries(e.kolommen || {}).filter(([k]) => TOEGESTANE_VELDEN.includes(k)));
+  const basis = {
     type: TYPE,
     versie: VERSIE,
     profiel: profielId,
     datum: new Date(datum).toISOString(),
     artikelen: schoneLijst(e.artikelen),
     losseItems: schoneLijst(e.losseItems),
-    sjablonen: zonderGeheimen(kopie(e.sjablonen || [])),
-    regels: zonderGeheimen(kopie(e.regels || {})),
-    huisstijl: schoneHuisstijl(e.huisstijl),
-    printers: zonderGeheimen(kopie(e.printers || {})),
-    kolommen: Object.fromEntries(Object.entries(e.kolommen || {}).filter(([k]) => TOEGESTANE_VELDEN.includes(k))),
+    sjablonen: zonderGeheimen(kopie((e.sjablonen || []).filter(s => !gelijk(s, stdSj.get(s.id))))),
+    regels: anders('regels', zonderGeheimen(kopie(e.regels || {}))),
+    huisstijl: anders('huisstijl', schoneHuisstijl(e.huisstijl)),
+    printers: anders('printers', zonderGeheimen(kopie(e.printers || {}))),
+    kolommen: anders('kolommen', kolommen),
     aanvullingen: schoneAanvullingen(e.aanvullingen),
   };
+  for (const k of Object.keys(basis)) if (basis[k] === undefined) delete basis[k];
+  return basis;
 }
 
 /**

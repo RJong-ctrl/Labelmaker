@@ -183,3 +183,22 @@ test('alle_maanden', () => {
   const verwacht = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
   verwacht.forEach((m, i) => assert.equal(korteDatum(`2026-${String(i + 1).padStart(2, '0')}-15T12:00:00Z`), `15 ${m}`));
 });
+
+test('basis_zonder_ongewijzigde_standaard', () => {
+  const std = PROFIEL_STANDAARD.dsl;
+  const e = samen(std, null, { sjablonen: [], instellingen: {}, artikelen: [], losse: [], aanvullingen: {} });
+  const b = maakBasis(e, 'dsl', new Date('2026-10-26T12:00:00Z'), std);
+  assert.deepEqual(b.sjablonen, []);
+  assert.equal(b.regels, undefined);
+  assert.equal(b.huisstijl, undefined);
+  assert.equal(b.printers, undefined);
+  assert.equal(b.kolommen, undefined);
+  const gb = std.sjablonen.find(s => s.id === 'gitterbox');
+  const e2 = samen(std, null, { sjablonen: [{ ...gb, naam: 'Strook' }, { ...gb, id: 'eigen', naam: 'Eigen' }], instellingen: { printers: { label: { naam: 'X', b: 100, h: 50 }, a4: { naam: 'Y' } } }, artikelen: [], losse: [], aanvullingen: {} });
+  const b2 = maakBasis(e2, 'dsl', new Date('2026-10-26T12:00:00Z'), std);
+  assert.deepEqual(b2.sjablonen.map(s => s.id), ['gitterbox', 'eigen']);
+  assert.equal(b2.printers.label.b, 100);
+  assert.ok(!leesBasis(JSON.stringify(b2)).fout);
+  // zonder standaard: alles mee (oud gedrag)
+  assert.equal(maakBasis(e, 'dsl', new Date()).sjablonen.length, std.sjablonen.length);
+});

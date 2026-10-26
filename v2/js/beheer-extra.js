@@ -7,7 +7,7 @@ import { leesV25 } from './oud.js';
 import { profielen, maakProfiel, hernoemProfiel, verwijderProfiel, exporteerProfiel, importeerProfiel, kiesProfiel } from './profielen.js';
 import { openOpslag } from './opslag.js';
 
-const UPLOAD = 'https://github.com/RJong-ctrl/Labelmaker/upload/main/data';
+const UPLOAD = 'https://github.com/RJong-ctrl/Labelmaker/upload/main/v2/data';
 
 function download(naam, data) {
   const a = document.createElement('a');
@@ -37,12 +37,12 @@ function publiceren(doel, model, profielId) {
     + `<p class="hint">Laatste basis op deze pc: <b>${e.basisDatum ? esc(korteDatum(e.basisDatum)) : 'nog geen'}</b>. Wijzigingen op deze pc: <b>${w.length}</b> (gaan mee in de publicatie).</p>`
     + `<div class="acties"><button type="button" class="primary" data-k="maak">Publicatiebestand maken</button></div>`
     + `<ol class="stappen"><li>Klik op <b>Publicatiebestand maken</b>; je krijgt <code>${esc(bestandsnaam(profielId))}</code>.</li>`
-    + `<li>Open <a href="${UPLOAD}" target="_blank" rel="noopener">GitHub → map data → Upload files</a>, sleep het bestand erin en klik <b>Commit changes</b>. Of stuur het naar Claude.</li>`
+    + `<li>Open <a href="${UPLOAD}" target="_blank" rel="noopener">GitHub → map v2/data → Upload files</a>, sleep het bestand erin en klik <b>Commit changes</b>. Of stuur het naar Claude.</li>`
     + '<li>Binnen ongeveer een minuut laden alle pc\'s de nieuwe basis bij het opstarten.</li></ol>'
     + '<p class="hint">Nooit in het bestand: prijzen, interne opmerkingen, de pincode en een eigen lettertypebestand.</p>'
     + '<p class="melding-beheer" role="status"></p>';
   doel.querySelector('[data-k="maak"]').addEventListener('click', () => {
-    const basis = maakBasis(model.effectief(), profielId);
+    const basis = maakBasis(model.effectief(), profielId, new Date(), model.standaard);
     download(bestandsnaam(profielId), basis);
     doel.querySelector('.melding-beheer').textContent = `Bestand gemaakt: ${basis.artikelen.length} artikelen, ${basis.sjablonen.length} sjablonen.`;
   });
