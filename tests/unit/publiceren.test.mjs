@@ -202,3 +202,13 @@ test('basis_zonder_ongewijzigde_standaard', () => {
   // zonder standaard: alles mee (oud gedrag)
   assert.equal(maakBasis(e, 'dsl', new Date()).sjablonen.length, std.sjablonen.length);
 });
+
+test('tijdelijke_losse_items_niet_gepubliceerd', () => {
+  const std = PROFIEL_STANDAARD.dsl;
+  const los = (id, extra = {}) => ({ id, naam: id, code: '', qr: '', exemplaren: [], pad: '', map: 'Losse items', locatie: '', soort: 'bulk', type: 'Los item', combinatie: false, aantal: 0, sjabloon: 'leeg-staand', ...extra });
+  const e = samen(std, null, { sjablonen: [], instellingen: {}, artikelen: [], losse: [los('los-tijd', { tijdelijk: true }), los('los-vast')],
+    aanvullingen: { 'los-tijd': { Groot: 'x' }, 'los-vast': { Groot: 'y' }, 'los-weg': { Groot: 'z' } } });
+  const b = maakBasis(e, 'dsl', new Date('2026-10-26T12:00:00Z'), std);
+  assert.deepEqual(b.losseItems.map(x => x.id), ['los-vast']);
+  assert.deepEqual(Object.keys(b.aanvullingen), ['los-vast']);
+});

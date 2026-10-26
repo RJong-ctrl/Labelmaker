@@ -81,3 +81,10 @@ test('wijziging_artikellijst_nieuwer_dan_basis', () => {
   l.instellingen.artikelenDatum = '2026-10-20T10:00:00.000Z';
   assert.deepEqual(wijzigingen(basis(), l), []);
 });
+
+test('tijdelijke_items_geen_wijziging', () => {
+  const l = leeg();
+  l.losse = [{ ...art('los-t'), tijdelijk: true }];
+  l.aanvullingen = { 'los-t': { Groot: 'x' } };
+  assert.deepEqual(wijzigingen(null, l), []);
+});

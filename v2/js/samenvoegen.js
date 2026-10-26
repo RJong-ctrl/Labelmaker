@@ -49,7 +49,9 @@ export function wijzigingen(basis, lokaal) {
     const v = lokaal.instellingen[k];
     if (v !== undefined && !gelijk(v, basis?.[k])) uit.push({ soort: 'instelling', id: k, omschrijving: `${NAMEN[k]} gewijzigd` });
   }
+  const tijdelijk = new Set((lokaal.losse || []).filter(x => x.tijdelijk).map(x => x.id));
   for (const [id, velden] of Object.entries(lokaal.aanvullingen || {})) {
+    if (tijdelijk.has(id)) continue;
     for (const [veld, waarde] of Object.entries(velden || {})) {
       if (basis?.aanvullingen?.[id]?.[veld] === waarde) continue;
       uit.push({ soort: 'aanvulling', id, veld, omschrijving: `${veld}: ${waarde}` });
@@ -61,7 +63,7 @@ export function wijzigingen(basis, lokaal) {
   }
   const basisLos = new Map((basis?.losseItems || []).map(x => [x.id, x]));
   for (const x of lokaal.losse || []) {
-    if (gelijk(x, basisLos.get(x.id))) continue;
+    if (x.tijdelijk || gelijk(x, basisLos.get(x.id))) continue;
     uit.push({ soort: 'los', id: x.id, omschrijving: x.verwijderd ? `Los item verwijderd` : `Los item "${x.naam}"` });
   }
   return uit;

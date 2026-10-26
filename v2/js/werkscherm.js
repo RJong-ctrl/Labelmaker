@@ -56,7 +56,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
   indexeer();
 
   const opslagFout = (e) => melding('Opslaan mislukt: ' + (e?.message || e) + '. Wat je nu doet, is na herladen misschien weg.', true);
-  const bewaarInst = () => model.zetPcInstelling('werkscherm', { tab: st.tab, combinaties: st.combinaties, paneel: typeof paneel === 'undefined' ? 'maken' : paneel }).catch(opslagFout);
+  const bewaarInst = () => model.zetPcInstelling('werkscherm', { tab: st.tab, combinaties: st.combinaties, paneel }).catch(opslagFout);
   const bewaarVel = () => Promise.all([model.zetPrintvel('label', st.vel.label), model.zetPrintvel('a4', st.vel.a4)]).catch(opslagFout);
   const context = () => {
     const e = E();
@@ -440,11 +440,11 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     if (!li) return;
     if (e.target.closest('button.weg')) {
       st.vel[st.tab].splice(+li.dataset.i, 1);
-      bewaarVel();
+      bewaarVel().then(ruimTijdelijkOp);
       tekenVel();
     } else if (e.target.closest('button.aanpassen')) aanpassen(st.vel[st.tab][+li.dataset.i], +li.dataset.i);
   });
-  $('velLeeg').addEventListener('click', () => { st.vel[st.tab] = []; bewaarVel(); tekenVel(); melding('Printvel leeggemaakt.'); });
+  $('velLeeg').addEventListener('click', () => { st.vel[st.tab] = []; bewaarVel().then(ruimTijdelijkOp); tekenVel(); melding('Printvel leeggemaakt.'); });
   $('printLabel').addEventListener('click', () => printen('label'));
   $('printA4').addEventListener('click', () => printen('a4'));
   const menu = $('printMenu');
@@ -458,6 +458,14 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
   });
   root.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target)) zetMenu(false); });
   root.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) zetMenu(false); });
+
+  /** Tijdelijke losse items (aangepaste bordjes) die niet meer op het printvel staan: weg, met hun aanvullingen. */
+  async function ruimTijdelijkOp() {
+    const inGebruik = new Set([...st.vel.label, ...st.vel.a4].map(i => i.artikel));
+    let weg = 0;
+    for (const x of E().losseItems) if (x.tijdelijk && !inGebruik.has(x.id)) { await model.verwijderLosItem(x.id).catch(() => {}); weg++; }
+    if (weg) indexeer();
+  }
 
   // ---------- panelen: Maken (standaard) en Lijst ----------
   let paneel = inst.paneel === 'lijst' ? 'lijst' : 'maken';
@@ -475,8 +483,10 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     voegToe, indexeer,
     vervang: (printer, index, items) => {
       st.vel[printer].splice(index, 1);
-      for (const it of items) { const p = sjabloon(it.sjabloon)?.printer || printer; st.vel[p].splice(p === printer ? index : st.vel[p].length, 0, it); }
+      let k = 0;
+      for (const it of items) { const p = sjabloon(it.sjabloon)?.printer || printer; st.vel[p].splice(p === printer ? index + k++ : st.vel[p].length, 0, it); }
     },
+    ruimOp: () => ruimTijdelijkOp(),
     naarPrinter: (p) => { st.tab = p; bewaarInst(); },
     melding, bewaarVel,
     tekenAlles: () => { tekenChips(); tekenLijst(); tekenVel(); },
@@ -484,11 +494,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
   zetPaneel(paneel);
   $('maken').hidden = paneel !== 'maken'; $('lijstDeel').hidden = paneel !== 'lijst';
 
-  // Tijdelijke losse items die niet meer op het printvel staan, opruimen.
-  {
-    const inGebruik = new Set([...st.vel.label, ...st.vel.a4].map(i => i.artikel));
-    for (const x of E().losseItems) if (x.tijdelijk && !inGebruik.has(x.id)) await model.gooiWeg({ soort: 'los', id: x.id }).catch(() => {});
-  }
+  await ruimTijdelijkOp();
 
   /** Opnieuw tekenen na een wijziging elders (beheer, nieuwe basis); printvel opnieuw uit de opslag. */
   async function vernieuw(opnieuwLezen = true) {

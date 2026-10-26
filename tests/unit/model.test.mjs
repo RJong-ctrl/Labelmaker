@@ -68,3 +68,14 @@ test('ander_profiel_andere_standaard', async () => {
   const m = await laadModel(new GeheugenOpslag(), 'thuis', 'basis');
   assert.deepEqual(m.effectief().sjablonen.map(s => s.id), ['qrlabel', 'locatie', 'leeg-staand', 'leeg-liggend', 'bordje-staand', 'bordje-liggend', 'strook']);
 });
+
+test('los_item_weg_ook_aanvulling_weg', async () => {
+  const o = new GeheugenOpslag();
+  const m = await laadModel(o, 'dsl');
+  await m.zetLosItem({ ...art('los-1'), sjabloon: 'leeg-staand' });
+  await m.zetAanvulling('los-1', { Groot: 'x' });
+  await m.verwijderLosItem('los-1');
+  assert.equal(await o.lees('aanvullingen', 'los-1'), undefined);
+  assert.equal(await o.lees('losse', 'los-1'), undefined);
+  assert.deepEqual(m.wijzigingen(), []);
+});

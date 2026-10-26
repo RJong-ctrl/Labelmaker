@@ -79,6 +79,8 @@ class OfflineBasis(PaginaTest):
         self.map = tempfile.mkdtemp(prefix='labelmaker-offline-')
         shutil.copytree(V2, os.path.join(self.map, 'v2'))
         self.v2 = os.path.join(self.map, 'v2')
+        # Zoals op de site: naast v2/ staat de service worker van het hoofdadres.
+        shutil.copy(os.path.join(V2, '..', 'sw-hoofd.js'), self.map)
         self.zet_data({'nr': 1})
         handler = functools.partial(_Handler, directory=self.map)
         self.eigen_server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), handler)

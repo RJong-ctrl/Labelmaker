@@ -57,7 +57,13 @@ export async function laadModel(opslag, profielId, standaardSoort) {
       lokaal.artikelen = artikelen; lokaal.instellingen.artikelenDatum = datum; vernieuw();
     },
     async zetLosItem(item) { await opslag.schrijf('losse', item.id, item); vervang(lokaal.losse, item); vernieuw(); },
-    async verwijderLosItem(id) { const x = { id, verwijderd: true }; await opslag.schrijf('losse', id, x); vervang(lokaal.losse, x); vernieuw(); },
+    /** Los item weg, met zijn aanvullingen; alleen een 'verwijderd'-markering als de basis het item heeft. */
+    async verwijderLosItem(id) {
+      if ((basis?.losseItems || []).some(x => x.id === id)) { const x = { id, verwijderd: true }; await opslag.schrijf('losse', id, x); vervang(lokaal.losse, x); }
+      else { await opslag.wis('losse', id); lokaal.losse = lokaal.losse.filter(x => x.id !== id); }
+      await opslag.wis('aanvullingen', id); delete lokaal.aanvullingen[id];
+      vernieuw();
+    },
 
     /** Bewaart de basis als die nieuwer is dan wat deze pc heeft. */
     async laadBasis(json) {
@@ -77,7 +83,10 @@ export async function laadModel(opslag, profielId, standaardSoort) {
       } else if (w.soort === 'artikelen') {
         await opslag.wis('artikelen'); await opslag.wis('instellingen', 'artikelenDatum');
         lokaal.artikelen = []; delete lokaal.instellingen.artikelenDatum;
-      } else if (w.soort === 'los') { await opslag.wis('losse', w.id); lokaal.losse = lokaal.losse.filter(x => x.id !== w.id); }
+      } else if (w.soort === 'los') {
+        await opslag.wis('losse', w.id); lokaal.losse = lokaal.losse.filter(x => x.id !== w.id);
+        if (String(w.id).startsWith('los-')) { await opslag.wis('aanvullingen', w.id); delete lokaal.aanvullingen[w.id]; }
+      }
       vernieuw();
     },
 

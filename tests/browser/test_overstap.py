@@ -46,3 +46,33 @@ class Overstap(PaginaTest):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class HoofdadresOffline(PaginaTest):
+    service_workers = 'allow'
+
+    def test_hoofdadres_opent_offline(self):
+        p = self.pagina
+        p.evaluate("""async () => {
+            for (let i = 0; i < 100; i++) {
+                const r = await navigator.serviceWorker.getRegistration('/');
+                const v2 = await navigator.serviceWorker.getRegistration('/v2/');
+                if (r?.active && r.scope.endsWith('/') && !r.scope.endsWith('/v2/') && v2?.active) return;
+                await new Promise(z => setTimeout(z, 100));
+            }
+            throw new Error('service workers niet actief');
+        }""")
+        p.reload()
+        p.goto(self.basis + '/')
+        p.wait_for_url('**/v2/')
+        self.context.set_offline(True)
+        self.server.shutdown()
+        self.server.server_close()
+        p.goto(self.basis + '/')
+        p.wait_for_url('**/v2/')
+        expect(p.locator('#printLabel')).to_be_visible()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.browser.close()
+        cls.pw.stop()

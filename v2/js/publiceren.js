@@ -69,6 +69,9 @@ export function maakBasis(effectief, profielId, datum = new Date(), standaard = 
   const gelijk = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const stdSj = new Map((standaard?.sjablonen || []).map(s => [s.id, s]));
   const anders = (k, waarde) => (standaard && gelijk(waarde, standaard[k]) ? undefined : waarde);
+  // Tijdelijke losse items (een aangepast bordje op het printvel van één pc) gaan nooit mee.
+  const vasteLosse = (e.losseItems || []).filter(x => isObject(x) && !x.tijdelijk);
+  const geldig = new Set([...(e.artikelen || []), ...vasteLosse].filter(isObject).map(a => a.id || a.code));
   const kolommen = Object.fromEntries(Object.entries(e.kolommen || {}).filter(([k]) => TOEGESTANE_VELDEN.includes(k)));
   const basis = {
     type: TYPE,
@@ -76,13 +79,14 @@ export function maakBasis(effectief, profielId, datum = new Date(), standaard = 
     profiel: profielId,
     datum: new Date(datum).toISOString(),
     artikelen: schoneLijst(e.artikelen),
-    losseItems: schoneLijst(e.losseItems),
+    losseItems: schoneLijst(vasteLosse),
     sjablonen: zonderGeheimen(kopie((e.sjablonen || []).filter(s => !gelijk(s, stdSj.get(s.id))))),
     regels: anders('regels', zonderGeheimen(kopie(e.regels || {}))),
     huisstijl: anders('huisstijl', schoneHuisstijl(e.huisstijl)),
     printers: anders('printers', zonderGeheimen(kopie(e.printers || {}))),
     kolommen: anders('kolommen', kolommen),
-    aanvullingen: schoneAanvullingen(e.aanvullingen),
+    // Alleen aanvullingen van artikelen en bewaarde losse items (geen tijdelijke of verweesde).
+    aanvullingen: schoneAanvullingen(Object.fromEntries(Object.entries(e.aanvullingen || {}).filter(([id]) => geldig.has(id)))),
   };
   for (const k of Object.keys(basis)) if (basis[k] === undefined) delete basis[k];
   return basis;

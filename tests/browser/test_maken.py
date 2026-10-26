@@ -87,6 +87,55 @@ class Maken(PaginaTest):
         expect(p.locator('#makenSoort')).to_have_value('auto')
         expect(p.locator('#makenVoorbeeld .signb.staand')).to_have_count(1)
 
+    def losse(self):
+        return self.pagina.evaluate("async () => { const { openOpslag } = await import('./js/opslag.js'); return (await (await openOpslag('dsl')).alle('losse')).map(x => x.id); }")
+
+    def test_gescand_exemplaar_is_gewone_regel(self):
+        p = self.pagina
+        self.inlezen()
+        p.locator('#makenZoek').fill('bd6x3b-02')
+        p.locator('#makenZoek').press('Enter')
+        p.locator('#makenVelden select[name="Kleur"]').select_option('Zwart')
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        # Kleur ingevuld = eigen versie; zonder wijziging (kleur al bekend) wordt het een gewone regel
+        p.locator('#velLeeg').click()
+        expect(p.locator('#printA4')).to_have_text('Print 0 op A4')
+        self.assertEqual(self.losse(), [])
+        p.evaluate("async () => { const { openOpslag } = await import('./js/opslag.js'); await (await openOpslag('dsl')).schrijf('aanvullingen', 'LI8163-B', { Kleur: 'Zwart' }); }")
+        p.reload()
+        p.locator('#makenZoek').fill('bd6x3b-02')
+        p.locator('#makenZoek').press('Enter')
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        expect(p.locator('#velLijst li').first).to_contain_text('bd6x3b-02')
+        self.assertEqual(self.losse(), [])
+
+    def test_bijwerken_houdt_aantal(self):
+        p = self.pagina
+        p.locator('#makenVelden input[name="Naam"]').fill('Statafel')
+        p.locator('#makenOpVel').click()
+        rij = p.locator('#velLijst li').first
+        rij.locator('input.aantal').fill('5')
+        rij.locator('input.aantal').press('Tab')
+        expect(p.locator('#printA4')).to_have_text('Print 5 op A4')
+        p.locator('#velLijst li').first.get_by_role('button', name='Aanpassen').click()
+        expect(p.locator('#makenVelden input[name="__aantal"]')).to_have_value('5')
+        p.locator('#makenVelden input[name="Groot"]').fill('Ø 80')
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 5 op A4')
+
+    def test_tijdelijk_item_weg_met_regel(self):
+        p = self.pagina
+        p.locator('#makenVelden input[name="Naam"]').fill('Eenmalig')
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        self.assertEqual(len(self.losse()), 1)
+        p.locator('#velLijst li').first.get_by_role('button', name='Verwijderen').click()
+        expect(p.locator('#printA4')).to_have_text('Print 0 op A4')
+        p.wait_for_timeout(300)
+        self.assertEqual(self.losse(), [])
+
     def test_soort_kiezen(self):
         p = self.pagina
         self.inlezen()

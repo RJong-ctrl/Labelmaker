@@ -39,6 +39,8 @@ document.body.dataset.klaar = '1'; // werkscherm is opgestart (tests wachten hie
 (async () => {
   try {
     const { registreerOffline } = await import('./offline.js');
+    // Ook het hoofdadres (doorverwijzing naar v2/) offline beschikbaar maken.
+    if (location.protocol.startsWith('http')) navigator.serviceWorker?.register('../sw-hoofd.js', { scope: '../', updateViaCache: 'none' }).catch(() => {});
     const hadVersie = !!navigator.serviceWorker?.controller;
     const { nieuweVersie } = await registreerOffline();
     if (nieuweVersie) scherm.melding('Nieuwe versie geladen.');

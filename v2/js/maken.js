@@ -17,7 +17,7 @@ const norm = (s) => String(s ?? '').toLowerCase().replace(/×/g, 'x').replace(/,
  */
 export function startMaken(root, h) {
   const doel = root.getElementById('maken');
-  const m = { artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false };
+  const m = { artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 };
 
   const sjabloonId = () => (m.sjabloonId !== 'auto' ? m.sjabloonId
     : m.artikel ? standaardSjabloon(m.artikel, 'bordje', h.E().regels) : (h.sjabloon('leeg-staand') ? 'leeg-staand' : h.E().sjablonen[0]?.id));
@@ -30,6 +30,8 @@ export function startMaken(root, h) {
     return o;
   };
   const qrWaarde = () => (m.qrBewerkt ? m.qr : (m.artikel?.qr || m.artikel?.exemplaren?.[0] || ''));
+  // Een QR van het artikel zelf (artikel-QR of een van zijn exemplaren) is geen eigen wijziging.
+  const qrEigen = () => m.qrBewerkt && !(m.artikel && (m.qr === (m.artikel.qr || '') || (m.artikel.exemplaren || []).includes(m.qr)));
 
   function soortOpties() {
     const groep = (printer, titel) => {
@@ -70,7 +72,7 @@ export function startMaken(root, h) {
     const ex = m.artikel?.exemplaren?.length ? `<label class="vink breed"><input type="checkbox" id="makenPerEx"${m.perExemplaar ? ' checked' : ''}> Eén per exemplaar (${m.artikel.exemplaren.length})</label>` : '';
     root.getElementById('makenVelden').innerHTML = velden.join('')
       + `<label class="veld"><span>QR-code <small>(leeg = geen)</small></span><input type="text" name="__qr" value="${esc(qrWaarde())}" autocomplete="off"></label>`
-      + '<label class="veld"><span>Aantal</span><input type="number" name="__aantal" min="1" max="999" value="1"></label>' + ex;
+      + `<label class="veld"><span>Aantal</span><input type="number" name="__aantal" min="1" max="999" value="${m.aantal}"></label>` + ex;
     tekenVoorbeeld();
   }
 
@@ -129,7 +131,7 @@ export function startMaken(root, h) {
   }
 
   function reset() {
-    Object.assign(m, { artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false });
+    Object.assign(m, { artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 });
     tekenFormulier();
     root.getElementById('makenZoek')?.focus();
   }
@@ -145,9 +147,9 @@ export function startMaken(root, h) {
     if (!m.artikel && !inhoud.titel) { h.melding('Vul eerst een titel of naam in, of zoek een artikel op.', true); return; }
     const aantal = Math.max(1, Math.min(999, parseInt(root.querySelector('#makenVelden [name="__aantal"]')?.value, 10) || 1));
     const bewaar = root.getElementById('makenBewaar').checked;
-    const ongewijzigd = m.artikel && !m.bewerkt.size && !m.qrBewerkt && !bewaar && !m.artikel.los;
+    const ongewijzigd = m.artikel && !m.bewerkt.size && !qrEigen() && !bewaar && !m.artikel.los;
     let items;
-    if (ongewijzigd || (m.artikel?.los && !m.bewerkt.size && !m.qrBewerkt)) {
+    if (ongewijzigd || (m.artikel?.los && !m.bewerkt.size && !qrEigen())) {
       const qrs = m.perExemplaar && m.artikel.exemplaren?.length ? m.artikel.exemplaren : [qrWaarde()];
       items = qrs.map(qr => ({ sjabloon: sj.id, artikel: m.artikel.id, qr, aantal }));
     } else {
@@ -169,6 +171,7 @@ export function startMaken(root, h) {
     if (m.vanRij) h.vervang(m.vanRij.printer, m.vanRij.index, items);
     else for (const it of items) h.voegToe(sj.printer, it);
     await h.bewaarVel();
+    await h.ruimOp();
     h.naarPrinter(sj.printer);
     h.tekenAlles();
     h.melding(m.vanRij ? 'Bijgewerkt op het printvel.' : `Op het printvel gezet${bewaar ? ' en bewaard onder Losse items' : ''}.`);
@@ -178,7 +181,7 @@ export function startMaken(root, h) {
   /** Een regel van het printvel openen om aan te passen. */
   function laad(item, printer, index) {
     const a = h.perId().get(item.artikel);
-    Object.assign(m, { artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, perExemplaar: false, vanRij: { printer, index } });
+    Object.assign(m, { artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, perExemplaar: false, vanRij: { printer, index }, aantal: item.aantal || 1 });
     if (a?.los) {
       // los item: bronartikel (als dat er nog is) met de opgeslagen wijzigingen
       const bron = a.bron ? h.perId().get(a.bron) : null;
@@ -200,7 +203,8 @@ export function startMaken(root, h) {
   doel.addEventListener('input', (e) => {
     const t = e.target;
     if (t.id === 'makenZoek') { tekenTreffers(); return; }
-    if (!t.name || t.name === '__aantal') return;
+    if (t.name === '__aantal') { m.aantal = Math.max(1, parseInt(t.value, 10) || 1); return; }
+    if (!t.name) return;
     if (t.name === '__qr') { m.qr = t.value.trim(); m.qrBewerkt = true; }
     else { m.waarden[t.name] = t.value; m.bewerkt.add(t.name); }
     clearTimeout(voorbeeldTimer);
