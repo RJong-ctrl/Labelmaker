@@ -9,6 +9,8 @@ TEKSTEN = ['nl4-2.50m', 'bd6x3b-01', '1004421', 'é – Wit']
 
 
 class QR(PaginaTest):
+    app_starten = False
+
     def test_qr_leesbaar(self):
         p = self.pagina
         p.evaluate("""async (teksten) => {

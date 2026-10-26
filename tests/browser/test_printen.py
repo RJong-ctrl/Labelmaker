@@ -26,6 +26,8 @@ def pdf_info(pad):
 
 
 class Printen(PaginaTest):
+    app_starten = False
+
     def setUp(self):
         super().setUp()
         self.laad_voorbeeld()

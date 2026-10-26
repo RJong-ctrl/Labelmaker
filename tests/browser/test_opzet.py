@@ -14,8 +14,10 @@ class Opzet(PaginaTest):
         self.assertEqual(knoppen.nth(1).inner_text().strip(), 'Print 0 op A4')
         self.assertTrue(knoppen.nth(0).is_disabled())
         self.assertTrue(knoppen.nth(1).is_disabled())
+        groep = p.locator('header .print').bounding_box()
+        self.assertLessEqual(self.viewport['width'] - (groep['x'] + groep['width']), 40)
         rechts = knoppen.nth(1).bounding_box()
-        self.assertLessEqual(self.viewport['width'] - (rechts['x'] + rechts['width']), 40)
+        self.assertGreater(rechts['x'], self.viewport['width'] * 0.7)
         self.assertLess(rechts['y'], 80, 'printknop hoort bovenin')
         self.assertEqual(self.fouten, [])
 

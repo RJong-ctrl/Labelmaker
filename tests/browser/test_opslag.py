@@ -5,6 +5,8 @@ from basis import PaginaTest
 
 
 class Opslag(PaginaTest):
+    app_starten = False
+
     def test_indexeddb_blijft_na_herladen(self):
         p = self.pagina
         t0 = time.time()

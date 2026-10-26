@@ -37,6 +37,8 @@ TEKEN = """async (gevallen) => {
 
 
 class Opmaak(PaginaTest):
+    app_starten = False
+
     apparaatschaal = 3
 
     def setUp(self):
