@@ -1,0 +1,360 @@
+"""Beheerscherm: pincode, sjablonen en editor, instellingen, wijzigingen op deze pc.
+Draait zonder werkscherm (app_starten = False) op een model met GeheugenOpslag."""
+import re
+import unittest
+
+from playwright.sync_api import expect
+
+from basis import PaginaTest
+
+MODEL = """async ({ artikelen }) => {
+    const { GeheugenOpslag } = await import('./js/opslag.js');
+    const { laadModel } = await import('./js/model.js');
+    window.model = await laadModel(new GeheugenOpslag(), 'dsl');
+    if (artikelen) await window.model.zetArtikelen(Object.values(window.T.A));
+}"""
+
+START = """async ({ extra }) => {
+    const { startBeheer } = await import('./js/beheer.js');
+    document.querySelector('header').hidden = true;
+    document.querySelector('main').hidden = true;
+    document.getElementById('beheerScherm').hidden = false;
+    window.terug = 0;
+    const extraOnderdelen = extra ? [{ id: 'publiceren', titel: 'Publiceren', teken: (doel) => { doel.innerHTML = '<p id="extraInhoud">Hallo</p>'; } }] : [];
+    window.beheer = await startBeheer(document, window.model, {
+        profielId: 'dsl',
+        terug: () => { window.terug++; window.naamBijTerug = window.model.effectief().sjablonen.find(s => s.id === 'gitterbox').naam; },
+        extraOnderdelen,
+    });
+}"""
+
+
+class Hulp(PaginaTest):
+    app_starten = False
+
+    def maak_model(self, artikelen=True):
+        self.laad_voorbeeld()
+        self.pagina.evaluate(MODEL, {'artikelen': artikelen})
+
+    def start(self, extra=False):
+        self.pagina.evaluate(START, {'extra': extra})
+
+    def open(self, onderdeel):
+        self.pagina.locator(f'#beheerMenu [data-onderdeel="{onderdeel}"]').click()
+        expect(self.pagina.locator('#beheerForm')).to_have_attribute('data-onderdeel', onderdeel)
+
+    def model(self, js):
+        return self.pagina.evaluate(f'async () => {{ const m = window.model; const e = m.effectief(); return {js}; }}')
+
+    def wacht_model(self, js):
+        self.pagina.wait_for_function(f'() => {{ const m = window.model; const e = m.effectief(); return {js}; }}')
+
+
+class Toegang(Hulp):
+    def test_pincode_drempel(self):
+        p = self.pagina
+        self.maak_model()
+        p.evaluate("() => model.zetPcInstelling('pincode', '1234')")
+        self.start()
+        expect(p.locator('#pincode')).to_be_visible()
+        expect(p.locator('#beheerMenu')).to_have_count(0)
+        p.locator('#pincode').fill('9999')
+        p.locator('#pincode').press('Enter')
+        expect(p.locator('#beheerScherm')).to_contain_text('Onjuiste pincode')
+        expect(p.locator('#beheerMenu')).to_have_count(0)
+        expect(p.locator('#pincode')).to_be_focused()
+        p.locator('#pincode').fill('1234')
+        p.locator('#pincode').press('Enter')
+        expect(p.locator('#beheerMenu')).to_be_visible()
+        expect(p.locator('#pincode')).to_have_count(0)
+        self.assertEqual(self.fouten, [])
+
+    def test_zonder_pincode_meteen_beheer(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        expect(p.locator('#beheerMenu')).to_be_visible()
+        expect(p.locator('#pincode')).to_have_count(0)
+        expect(p.locator('#beheerForm')).to_be_visible()
+        expect(p.locator('#beheerVoorbeeld')).to_be_visible()
+        self.assertEqual(self.fouten, [])
+
+    def test_terug_vanaf_pincode(self):
+        p = self.pagina
+        self.maak_model()
+        p.evaluate("() => model.zetPcInstelling('pincode', '1234')")
+        self.start()
+        p.get_by_role('button', name='Terug naar werkscherm').click()
+        p.wait_for_function('window.terug === 1')
+
+    def test_pincode_instellen_en_wissen(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('pincode')
+        f = p.locator('#beheerForm')
+        expect(f).to_contain_text('geen pincode')
+        f.locator('#nieuwePincode').fill('12')
+        f.get_by_role('button', name='Pincode instellen').click()
+        expect(f).to_contain_text('4 tot 8 cijfers')
+        self.assertIsNone(p.evaluate("() => model.pcInstelling('pincode')"))
+        f.locator('#nieuwePincode').fill('4321')
+        f.get_by_role('button', name='Pincode instellen').click()
+        p.wait_for_function("async () => (await model.pcInstelling('pincode')) === '4321'")
+        expect(f).to_contain_text('pincode ingesteld')
+        self.start()
+        expect(p.locator('#pincode')).to_be_visible()
+        p.locator('#pincode').fill('4321')
+        p.locator('#pincode').press('Enter')
+        self.open('pincode')
+        p.locator('#beheerForm').get_by_role('button', name='Pincode wissen').click()
+        p.wait_for_function("async () => (await model.pcInstelling('pincode')) === undefined")
+        self.assertNotIn('pincode', str(self.model('e')))
+        self.assertEqual(self.fouten, [])
+
+
+class Indeling(Hulp):
+    def test_menu_met_sjablonen_en_onderdelen(self):
+        p = self.pagina
+        self.maak_model()
+        self.start(extra=True)
+        menu = p.locator('#beheerMenu')
+        for naam in ('Gitterbox-strook', 'Backdrop', 'QR-label', 'Nieuw sjabloon', 'Categorie → sjabloon', 'Huisstijl',
+                     'Printers', 'Artikelen inlezen', 'Wijzigingen op deze pc', 'Pincode', 'Publiceren'):
+            expect(menu.get_by_role('button', name=naam, exact=True)).to_have_count(1)
+        menu.get_by_role('button', name='Publiceren').click()
+        expect(p.locator('#extraInhoud')).to_have_text('Hallo')
+        expect(menu.get_by_role('button', name='Publiceren')).to_have_attribute('aria-current', 'page')
+        self.assertEqual(p.locator('#beheerScherm').get_by_role('button', name=re.compile(r'^Print(\s|$)|printen', re.I)).count(), 0,
+                         'geen printknoppen in beheer')
+        self.assertEqual(self.fouten, [])
+
+    def test_drie_kolommen_op_1100(self):
+        p = self.pagina
+        p.set_viewport_size({'width': 1100, 'height': 760})
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:gitterbox')
+        m, f, v = (p.locator(s).bounding_box() for s in ('#beheerMenu', '#beheerForm', '#beheerVoorbeeld'))
+        self.assertLess(m['x'] + m['width'], f['x'])
+        self.assertLess(f['x'] + f['width'], v['x'])
+        self.assertGreaterEqual(f['width'], 400)
+        self.assertLessEqual(p.evaluate('document.documentElement.scrollWidth'), 1100)
+        self.assertEqual(self.fouten, [])
+
+    def test_toetsenbord_en_focus(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        p.keyboard.press('Tab')
+        expect(p.locator('#beheerTerug')).to_be_focused()
+        stijl = p.evaluate('() => { const s = getComputedStyle(document.activeElement); return [s.outlineStyle, parseFloat(s.outlineWidth)]; }')
+        self.assertNotEqual(stijl[0], 'none')
+        self.assertGreaterEqual(stijl[1], 2)
+        p.keyboard.press('Tab')
+        eerste = p.locator('#beheerMenu [data-onderdeel]').first
+        expect(eerste).to_be_focused()
+        p.keyboard.press('ArrowDown')
+        expect(p.locator('#beheerMenu [data-onderdeel]').nth(1)).to_be_focused()
+        p.keyboard.press('End')
+        expect(p.locator('#beheerMenu [data-onderdeel="pincode"]')).to_be_focused()
+        p.keyboard.press('Enter')
+        expect(p.locator('#beheerForm')).to_have_attribute('data-onderdeel', 'pincode')
+        p.keyboard.press('Home')
+        expect(eerste).to_be_focused()
+        # Alles wat je kunt aanklikken is een echte knop of invoer (bereikbaar met Tab).
+        nep = p.evaluate("""() => [...document.querySelectorAll('#beheerScherm [data-actie], #beheerScherm [data-beheer], #beheerScherm [data-onderdeel]')]
+            .filter(el => !['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) && el.id !== 'beheerForm').length""")
+        self.assertEqual(nep, 0)
+        p.locator('#beheerTerug').focus()
+        p.keyboard.press('Enter')
+        p.wait_for_function('window.terug === 1')
+        self.assertEqual(self.fouten, [])
+
+    def test_terug_bewaart_eerst(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:gitterbox')
+        p.locator('#beheerForm [data-pad="naam"]').fill('Strook X')
+        p.locator('#beheerTerug').click()
+        p.wait_for_function('window.terug === 1')
+        self.assertEqual(p.evaluate('window.naamBijTerug'), 'Strook X')
+
+
+GITTERBOX = "e.sjablonen.find(s => s.id === 'gitterbox')"
+
+
+class Editor(Hulp):
+    def kleurrand(self):
+        return self.pagina.locator('#beheerForm .kleurregel[data-regel="rand"]')
+
+    def test_sjabloon_bewerken_live(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:gitterbox')
+        p.locator('#voorbeeldArtikel').fill('GE9412')
+        p.locator('#voorbeeldArtikel').press('Enter')
+        streep = p.locator('#voorbeeldDoel .band.streep')
+        expect(streep).to_have_css('background-color', 'rgb(127, 127, 127)')
+        rand = self.kleurrand()
+        expect(rand.locator('[data-zonder]')).to_contain_text('12,5')
+        rand.get_by_role('button', name='Waarde toevoegen').click()
+        rij = rand.locator('tr.kleurrij').last
+        expect(rij.locator('[data-pad$=".waarde"]')).to_be_focused()
+        rij.locator('[data-pad$=".waarde"]').fill('12,5')
+        rij.locator('select[data-pad$=".naam"]').select_option('oranje')
+        expect(streep).to_have_css('background-color', 'rgb(255, 140, 0)')
+        expect(p.locator('#beheerStatus')).to_have_text('Opgeslagen')
+        self.wacht_model(GITTERBOX + ".kleuren.rand.waarden['12,5'] === '#ff8c00'")
+        self.assertEqual(self.model(GITTERBOX + ".kleuren.rand.waarden['2,5']"), '#ffff00')
+        expect(rand.locator('[data-zonder]')).not_to_contain_text('12,5')
+        # Het werkscherm leest hetzelfde model: daar krijgt GE9412 nu ook oranje.
+        rand_ws = p.evaluate("""async () => {
+            const { vul } = await import('./js/sjablonen.js');
+            const e = model.effectief();
+            return vul(e.sjablonen.find(s => s.id === 'gitterbox'), T.A['GE9412'], {}, '').rand;
+        }""")
+        self.assertEqual(rand_ws, '#ff8c00')
+        self.assertIn('gitterbox', self.model("m.wijzigingen().map(w => w.id)"))
+        self.assertEqual(self.fouten, [])
+
+    def test_nieuw_sjabloon_en_veld(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        p.locator('#beheerMenu [data-onderdeel="nieuw"]').click()
+        f = p.locator('#beheerForm')
+        naam = f.locator('[data-pad="naam"]')
+        expect(naam).to_be_focused()
+        naam.fill('Kist')
+        f.locator('[data-pad="opmaak"]').select_option('staand')
+        f.get_by_role('button', name='Veld toevoegen').click()
+        rij = f.locator('li.veldrij').last
+        expect(rij.locator('[data-pad$=".naam"]')).to_be_focused()
+        rij.locator('[data-pad$=".naam"]').fill('Inhoud')
+        rij.locator('[data-pad$=".naam"]').press('Tab')
+        rij.locator('[data-pad$=".herkomst"]').select_option('aanvulling')
+        rij.locator('[data-pad$=".verplicht"]').check()
+        titel = f.locator('[data-pad="plek.titel"]')
+        titel.fill('')
+        f.locator('[data-blok="plekken"] .veldchip', has_text='{Naam}').click()
+        expect(titel).to_have_value('{Naam}')
+        groot = f.locator('[data-pad="plek.groot"]')
+        groot.click()
+        f.locator('[data-blok="plekken"] .veldchip', has_text='{Inhoud}').click()
+        expect(groot).to_have_value('{Inhoud}')
+        expect(groot).to_be_focused()
+        expect(p.locator('#beheerMenu')).to_contain_text('Kist')
+        expect(p.locator('#beheerTitel')).to_have_text('Kist')
+        self.wacht_model("(() => { const s = e.sjablonen.find(s => s.naam === 'Kist'); return !!s && s.plekken.groot.length === 1; })()")
+        uit = p.evaluate("""async () => {
+            const { ontbrekend, vul } = await import('./js/sjablonen.js');
+            const s = model.effectief().sjablonen.find(s => s.naam === 'Kist');
+            const a = T.A['CO1120'];
+            return { opmaak: s.opmaak, printer: s.printer, veld: s.velden.find(v => v.naam === 'Inhoud'), titel: s.plekken.titel,
+                     mist: ontbrekend(s, a, {}).map(v => v.naam), groot: vul(s, a, { Inhoud: '12 kabels' }).groot,
+                     dsl: s.id === 'gitterbox' || s.id === 'backdrop' };
+        }""")
+        self.assertEqual(uit['opmaak'], 'staand')
+        self.assertEqual(uit['printer'], 'a4')
+        self.assertEqual(uit['veld'], {'naam': 'Inhoud', 'soort': 'tekst', 'herkomst': {'type': 'aanvulling'}, 'verplicht': True})
+        self.assertEqual(uit['titel'], [{'veld': 'Naam'}])
+        self.assertEqual(uit['mist'], ['Inhoud'])
+        self.assertEqual(uit['groot'], '12 kabels')
+        self.assertFalse(uit['dsl'])
+        self.assertEqual(self.fouten, [])
+
+    def test_veld_hernoemen_werkt_door(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:gitterbox')
+        f = p.locator('#beheerForm')
+        lengte = f.locator('li.veldrij').nth(1).locator('[data-pad$=".naam"]')
+        expect(lengte).to_have_value('Lengte')
+        lengte.fill('Len')
+        lengte.press('Tab')
+        expect(f.locator('[data-pad="plek.groot"]')).to_have_value('{Len} m')
+        expect(f.locator('[data-pad="kleur.rand.sleutel"]')).to_have_value('{Len}')
+        kabel = f.locator('li.veldrij').nth(3).locator('[data-pad$=".naam"]')
+        kabel.fill('IsKabel')
+        kabel.press('Tab')
+        self.wacht_model(GITTERBOX + ".velden.find(v => v.naam === 'Doorsnede').alleenAls === 'IsKabel'")
+        self.assertEqual(self.model(GITTERBOX + ".plekken.groot"), [{'veld': 'Len'}, ' m'])
+        self.assertEqual(self.model(GITTERBOX + ".kleuren.rand.sleutel"), [{'veld': 'Len'}])
+        dubbel = f.locator('li.veldrij').nth(4).locator('[data-pad$=".naam"]')
+        dubbel.fill('Len')
+        dubbel.press('Tab')
+        expect(f.locator('[data-melding="velden"]')).to_contain_text('al een veld')
+        expect(dubbel).to_have_value('Doorsnede')
+        self.assertEqual(self.fouten, [])
+
+    def test_kleur_alleen_hex(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:gitterbox')
+        rand = self.kleurrand()
+        rij = rand.locator('tr.kleurrij').first
+        expect(rij.locator('[data-pad$=".waarde"]')).to_have_value('2,5')
+        rij.locator('select[data-pad$=".naam"]').select_option('eigen')
+        hex_ = rij.locator('[data-pad$=".hex"]')
+        expect(hex_).to_be_focused()
+        melding = rand.locator('[data-melding="kleur.rand"]')
+        for fout in ('red', '"><b id="vet">x</b>', '#12345'):
+            hex_.fill(fout)
+            hex_.press('Tab')
+            expect(melding).to_contain_text('geen kleurcode')
+        expect(p.locator('#vet')).to_have_count(0)
+        p.wait_for_timeout(500)
+        self.assertEqual(self.model("m.wijzigingen().filter(w => w.soort === 'sjabloon').length"), 0)
+        hex_.fill('#00AA11')
+        hex_.press('Tab')
+        expect(melding).to_have_text('')
+        self.wacht_model(GITTERBOX + ".kleuren.rand.waarden['2,5'] === '#00aa11'")
+        expect(rij.locator('input[type=color]')).to_have_value('#00aa11')
+        expect(rij.locator('select[data-pad$=".naam"]')).to_have_value('eigen')
+        waarden = self.model("Object.values(" + GITTERBOX + ".kleuren.rand.waarden)")
+        self.assertTrue(all(len(w) == 7 and w.startswith('#') for w in waarden), waarden)
+        self.assertEqual(self.fouten, [])
+
+    def test_editor_html_blijft_tekst(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        p.locator('#beheerMenu [data-onderdeel="nieuw"]').click()
+        f = p.locator('#beheerForm')
+        f.locator('[data-pad="naam"]').fill('<b id="vet">Vet</b>')
+        boos = '"><img src=x onerror="window.__xss=1">'
+        f.locator('[data-pad="plek.titel"]').fill(boos)
+        expect(p.locator('#voorbeeldDoel .titel')).to_contain_text('<img src=x')
+        expect(p.locator('#beheerMenu')).to_contain_text('<b id="vet">Vet</b>')
+        expect(p.locator('#beheerTitel')).to_have_text('<b id="vet">Vet</b>')
+        self.wacht_model("e.sjablonen.some(s => s.naam === '<b id=\"vet\">Vet</b>')")
+        sid = self.model("e.sjablonen.find(s => s.naam === '<b id=\"vet\">Vet</b>').id")
+        self.open('sjabloon:qrlabel')
+        self.open('sjabloon:' + sid)
+        expect(f.locator('[data-pad="naam"]')).to_have_value('<b id="vet">Vet</b>')
+        expect(f.locator('[data-pad="plek.titel"]')).to_have_value(boos)
+        expect(p.locator('#voorbeeldDoel .titel')).to_contain_text('<img src=x')
+        expect(p.locator('#vet')).to_have_count(0)
+        expect(p.locator('img[src="x"]')).to_have_count(0)
+        self.assertIsNone(p.evaluate('window.__xss'))
+        self.assertEqual(self.fouten, [])
+
+    def test_tokens_heen_en_terug(self):
+        uit = self.pagina.evaluate("""async () => {
+            const { naarTokens, naarTekst } = await import('./js/editor.js');
+            return [naarTokens('Artikelnummer {Artikelnummer}'), naarTokens('{Lengte} m'), naarTokens('{} en {Kleur'),
+                    naarTekst([{ veld: 'Connector' }, ' ', { veld: 'Doorsnede' }])];
+        }""")
+        self.assertEqual(uit[0], ['Artikelnummer ', {'veld': 'Artikelnummer'}])
+        self.assertEqual(uit[1], [{'veld': 'Lengte'}, ' m'])
+        self.assertEqual(uit[2], ['{} en {Kleur'])
+        self.assertEqual(uit[3], '{Connector} {Doorsnede}')
+
+
+if __name__ == '__main__':
+    unittest.main()

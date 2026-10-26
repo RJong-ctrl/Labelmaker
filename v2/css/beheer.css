@@ -1,1 +1,117 @@
-/* Beheerscherm — wordt gevuld in fase 2, Task 8. */
+/* Beheer: links het menu, midden het formulier, rechts het voorbeeld.
+   Kleuren komen uit app.css (licht en donker). Geen printknoppen. */
+.beheer{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.beheer :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.beheer .bh-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.beheer h2,.beheer h3,.beheer h4{font-family:Bahnschrift,"Arial Narrow",Arial,sans-serif}
+
+.beheer-kop{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.beheer-kop h1{margin:0;font:700 26px/1 Bahnschrift,"Arial Narrow",Arial,sans-serif}
+.beheer-profiel{color:var(--muted);font-weight:600}
+.beheer-status{margin-left:auto;color:var(--muted);font-size:13px;min-width:9em;text-align:right}
+.beheer-status.fout{color:var(--err);font-weight:600}
+
+.beheer-romp{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(180px,220px) minmax(0,1fr) clamp(280px,28vw,470px);gap:14px;padding:14px 20px}
+.beheer-romp>.kolom{min-height:0}
+
+/* ---------- menu ---------- */
+.beheer-menu{overflow:auto;padding:8px}
+.beheer-menu .menukop{margin:10px 10px 4px;font:700 12px/1.2 "Segoe UI",system-ui,sans-serif;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.beheer-menu .menukop:first-child{margin-top:4px}
+.beheer-menu ul{list-style:none;margin:0 0 6px;padding:0;display:flex;flex-direction:column;gap:1px}
+.beheer-menu button{width:100%;display:flex;align-items:center;gap:8px;text-align:left;border:0;border-radius:6px;background:transparent;font-weight:500;padding:7px 10px;line-height:1.25}
+.beheer-menu button:hover{background:var(--field)}
+.beheer-menu button[aria-current="page"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.beheer-menu .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.beheer-menu .gewijzigd{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.55}
+.beheer-menu .nieuw{color:var(--muted)}
+.beheer-menu .nieuw[aria-current="page"]{color:var(--accent-ink)}
+
+/* ---------- formulier ---------- */
+.beheer-form{overflow:auto;display:block;container-type:inline-size}
+.formkop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.formkop h2{margin:0;flex:1 1 auto;min-width:0;overflow-wrap:anywhere;font-size:21px;line-height:1.15}
+.formkop .knoppen{display:flex;gap:8px;flex-wrap:wrap}
+.beheer button.gevaar{color:var(--err)}
+.beheer .hint{margin:4px 0 8px}
+.beheer .fout{color:var(--err);font-size:13px;font-weight:600;margin:6px 0 0}
+.beheer .fout:empty{display:none}
+.beheer .hint:empty{display:none}
+.beheer .acties{margin-top:8px}
+.beheer .acties.links{justify-content:flex-start}
+.beheer .veld{display:grid;gap:4px;align-content:start;min-width:0;font-weight:600;font-size:13px}
+.beheer .veld>span{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.beheer .veld small{font-weight:400;color:var(--muted);font-size:12px}
+.beheer .veld input:not([type=checkbox]):not([type=radio]):not([type=color]),.beheer .veld select,.beheer .veld textarea{width:100%;min-width:0}
+.beheer input[type=password],.beheer input:not([type]),.beheer textarea{background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 9px;font:inherit;font-size:14px}
+.beheer textarea{resize:vertical;line-height:1.4}
+.beheer input:disabled,.beheer select:disabled{opacity:.55}
+.beheer .vink{display:flex;align-items:center;gap:7px;font-size:14px;cursor:pointer}
+.beheer .vink input{width:16px;height:16px;margin:0;accent-color:var(--accent)}
+.raster{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 12px;align-items:end}
+.raster.smal{max-width:320px;grid-template-columns:1fr}
+.raster .breed{grid-column:1/-1}
+
+/* editor */
+.editor .blok{padding:14px 0 16px;border-top:1px solid var(--line)}
+.editor .blok:first-child{border-top:0;padding-top:6px}
+.editor h3{margin:0 0 8px;font-size:18px;line-height:1.1}
+.editor h4{margin:14px 0 6px;font-size:15px;line-height:1.1}
+.editor .maat{display:flex;align-items:center;gap:6px}
+.editor .maat input{width:0;flex:1 1 0}
+.editor .vinken{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 18px}
+
+.velden{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.veldrij{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr) minmax(0,1fr) auto;grid-template-areas:"naam soort extra weg" "herkomst bron alleen verplicht";gap:8px 10px;align-items:end;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.veldrij>:nth-child(1){grid-area:naam}
+.veldrij>:nth-child(2){grid-area:soort}
+.veldrij>:nth-child(3){grid-area:extra}
+.veldrij>:nth-child(4){grid-area:herkomst}
+.veldrij>:nth-child(5){grid-area:bron}
+.veldrij>:nth-child(6){grid-area:alleen}
+.veldrij>:nth-child(7){grid-area:verplicht;padding-bottom:8px}
+.veldrij>:nth-child(8){grid-area:weg;justify-self:end;align-self:start}
+.leeg-veld{min-height:1px}
+@container (max-width:640px){
+  .veldrij{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto;grid-template-areas:"naam naam soort weg" "herkomst herkomst bron bron" "extra alleen verplicht verplicht"}
+}
+
+.veldchips{margin:0 0 4px}
+.veldchip{font:600 12px/1.2 ui-monospace,Consolas,"Cascadia Mono",monospace;padding:4px 9px}
+.plekken{display:grid;gap:10px}
+.eigenschappen{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.eigrij{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr) auto;gap:8px;align-items:center}
+.veld.smal{max-width:320px;margin-top:12px}
+
+.kleurregel{margin-top:12px;padding:10px 12px 12px;border:1px solid var(--line);border-radius:8px}
+.kleurregel h4{margin-top:0}
+.kleurtabel{border-collapse:collapse;width:100%;margin-top:8px}
+.kleurtabel th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:2px 4px}
+.kleurtabel td{padding:3px 4px;vertical-align:middle}
+.kleurtabel td:first-child{width:34%}
+.kleurtabel td:last-child{width:1%}
+.kleurtabel input[type=text]{width:100%;min-width:0}
+.kleurcel{display:flex;align-items:center;gap:6px}
+.kleurcel select{flex:1 1 auto;min-width:84px}
+.kleurcel .hex{flex:0 0 92px;width:92px;font-family:ui-monospace,Consolas,monospace}
+.beheer input[type=color]{flex:0 0 auto;width:40px;height:35px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--field);cursor:pointer}
+
+/* ---------- voorbeeld ---------- */
+.beheer-voorbeeld{gap:8px}
+.beheer-voorbeeld>*{flex:0 0 auto}
+.beheer-voorbeeld .hint{margin:0}
+.voorbeeld-doel{flex:1 1 auto;min-height:0;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:6px 2px}
+
+/* ---------- pincode ---------- */
+.beheer-poort{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:center;padding:60px 20px}
+.beheer-poort form{width:min(360px,100%);padding:22px;overflow:visible}
+.beheer-poort .acties{justify-content:flex-end}
+
+.beheer-vraag p{margin:8px 0 0}
+
+@media (max-width:1000px){
+  .beheer-romp{grid-template-columns:1fr;overflow:auto}
+  .beheer-romp>.kolom{min-height:auto}
+  .voorbeeld-doel{min-height:320px}
+}
+@media print{.beheer{display:none!important}}
