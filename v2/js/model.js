@@ -43,6 +43,12 @@ export async function laadModel(opslag, profielId, standaardSoort) {
       const nieuw = { ...(lokaal.aanvullingen[id] || {}), ...waarden };
       await opslag.schrijf('aanvullingen', id, nieuw); lokaal.aanvullingen[id] = nieuw; vernieuw();
     },
+    /** Aanvullingen van één artikel in zijn geheel vervangen (velden weglaten = terug naar export/naam). */
+    async vervangAanvulling(id, waarden) {
+      if (Object.keys(waarden).length) { await opslag.schrijf('aanvullingen', id, waarden); lokaal.aanvullingen[id] = { ...waarden }; }
+      else { await opslag.wis('aanvullingen', id); delete lokaal.aanvullingen[id]; }
+      vernieuw();
+    },
     async zetArtikelen(artikelen) {
       const datum = new Date().toISOString();
       await opslag.vervangAlle('artikelen', artikelen.map(a => ({ id: a.code, waarde: a })));

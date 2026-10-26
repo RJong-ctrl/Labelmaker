@@ -3,7 +3,7 @@
 
 import { leesBestand } from './bestanden.js';
 import { importeer } from './import.js';
-import { vul, ontbrekend, qrsVoor, standaardSjabloon } from './sjablonen.js';
+import { vul, ontbrekend, qrsVoor, standaardSjabloon, veldwaarde, natuurlijkeWaarde } from './sjablonen.js';
 import { tekenVellen, pasVellenAan, print } from './printen.js';
 import { A4 } from './indeling.js';
 import { esc } from './html.js';
@@ -263,17 +263,27 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     const a = st.perId.get(item.artikel), sj = sjabloon(item.sjabloon);
     if (!a || !sj) return;
     if (a.los) return losItem(a);
-    const velden = sj.velden.filter(v => v.herkomst.type === 'aanvulling');
-    if (!velden.length) {
-      melding(`"${sj.naam}" heeft geen tekstvelden om aan te passen. Kies bij Ander sjabloon bijvoorbeeld Bordje staand, of maak een los item.`);
-      return;
-    }
+    // Alle velden van het sjabloon, ook die uit de export of uit de naam; leeg = niet op het bordje.
+    const aanv = E().aanvullingen[item.artikel] || {};
+    const BRON = { kolom: 'uit de export', naam: 'uit de naam' };
+    const velden = sj.velden.map(v => ({
+      ...v, verplicht: false, bron: BRON[v.herkomst.type] || '',
+      ...(v.herkomst.patroon === 'kabel' ? { keuzes: [{ waarde: 'ja', tekst: 'Ja' }, { waarde: '', tekst: 'Nee' }] } : {}),
+    }));
+    const huidig = Object.fromEntries(sj.velden.map(v => [v.naam, veldwaarde(v, a, aanv)]));
     const w = await vraagVelden($('aanvulling'), {
-      titel: 'Aanpassen', onder: `${a.naam} · ${sj.naam}`, velden: velden.map(v => ({ ...v, verplicht: v.verplicht && !(v.alleenAls) })),
-      waarden: E().aanvullingen[item.artikel] || {}, hint: 'Wordt onthouden voor dit artikel, ook bij een volgende keer.',
+      titel: 'Aanpassen', onder: `${a.naam} · ${sj.naam}`, velden, waarden: huidig,
+      hint: 'Leeg laten = niet op het bordje. Wordt onthouden voor dit artikel, ook bij een volgende keer.',
     });
     if (!w) return;
-    await model.zetAanvulling(item.artikel, w).catch(opslagFout);
+    const nieuw = { ...aanv };
+    for (const v of sj.velden) {
+      const waarde = String(w[v.naam] ?? '').trim();
+      if (v.herkomst.type === 'aanvulling') { if (waarde) nieuw[v.naam] = waarde; else delete nieuw[v.naam]; }
+      else if (waarde === natuurlijkeWaarde(v, a)) delete nieuw[v.naam];
+      else nieuw[v.naam] = waarde;
+    }
+    await model.vervangAanvulling(item.artikel, nieuw).catch(opslagFout);
     tekenVel();
   }
 

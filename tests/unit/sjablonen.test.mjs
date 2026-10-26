@@ -199,8 +199,14 @@ test('los_item_eigen_sjabloon', () => {
   assert.equal(standaardSjabloon(los, 'locatie'), 'locatie');
 });
 
-test('kolomveld_aangevuld_als_leeg', () => {
-  // Locatie uit de export wint; ontbreekt die, dan telt een aanvulling 'Locatie'.
+test('aanvulling_overschrijft_kolom_en_naam', () => {
+  // Een aanvulling met de naam van een veld gaat voor (ook leeg = weg van het bordje).
   assert.equal(vul(S.locatie, A.GE9412, { Locatie: 'B-3' }, '').titel, 'B-3');
-  assert.equal(vul(S.locatie, A.GE9402, { Locatie: 'B-3' }, '').titel, 'V-1-2');
+  assert.equal(vul(S.locatie, A.GE9402, {}, '').titel, 'V-1-2');
+  assert.equal(vul(S.locatie, A.GE9402, { Locatie: 'B-3' }, '').titel, 'B-3');
+  const zonderLengte = vul(S.gitterbox, A.GE9402, { Doorsnede: '2,5 mm²', Lengte: '' }, 'x');
+  assert.equal(zonderLengte.groot, '');
+  assert.equal(zonderLengte.rand, '#7f7f7f');
+  assert.deepEqual(ontbrekend(S.gitterbox, A.GE9402, { Kabel: '' }), []);
+  assert.equal(vul(S.gitterbox, A.GE9402, { Omschrijving: 'Verlengkabel NL4' }, 'x').titel, 'Verlengkabel NL4');
 });

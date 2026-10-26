@@ -38,8 +38,11 @@ const scherm = await start(document, model, { waarschuwing, profielId });
 (async () => {
   try {
     const { registreerOffline } = await import('./offline.js');
+    const hadVersie = !!navigator.serviceWorker?.controller;
     const { nieuweVersie } = await registreerOffline();
     if (nieuweVersie) scherm.melding('Nieuwe versie geladen.');
+    // Komt er tijdens het werken een nieuwe versie binnen: even herladen, anders lopen oud en nieuw door elkaar.
+    if (hadVersie) navigator.serviceWorker?.addEventListener('controllerchange', () => scherm.melding('Er is een nieuwe versie van de Labelmaker. Druk op F5 om hem te gebruiken.'));
   } catch { /* geen offline-ondersteuning */ }
 })();
 

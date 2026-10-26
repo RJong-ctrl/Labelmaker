@@ -25,7 +25,9 @@ const knoppen = (opslaan, extra = '') =>
 export function veldInvoer(v, waarde = '', { verplicht = v.verplicht } = {}) {
   const naam = esc(v.naam), w = esc(waarde), req = verplicht ? ' required' : '';
   let invoer;
-  if (v.opties?.length) {
+  if (v.keuzes?.length) {
+    invoer = `<select name="${naam}"${req}>` + v.keuzes.map(k => `<option value="${esc(k.waarde)}"${k.waarde === waarde ? ' selected' : ''}>${esc(k.tekst)}</option>`).join('') + '</select>';
+  } else if (v.opties?.length) {
     invoer = `<select name="${naam}"${req}><option value="">${verplicht ? 'Kies…' : '—'}</option>`
       + v.opties.map(o => `<option${o === waarde ? ' selected' : ''}>${esc(o)}</option>`).join('') + '</select>';
   } else if (v.meerregelig) {
@@ -33,7 +35,8 @@ export function veldInvoer(v, waarde = '', { verplicht = v.verplicht } = {}) {
   } else {
     invoer = `<input type="text" name="${naam}" value="${w}"${req}>`;
   }
-  return `<label class="veld"><span>${naam}${v.eenheid ? ` (${esc(v.eenheid)})` : ''}</span>${invoer}</label>`;
+  const bron = v.bron ? ` <small class="hint">${esc(v.bron)}</small>` : '';
+  return `<label class="veld"><span>${naam}${v.eenheid ? ` (${esc(v.eenheid)})` : ''}${bron}</span>${invoer}</label>`;
 }
 
 const formWaarden = (form) => Object.fromEntries([...new FormData(form)].map(([k, v]) => [k, String(v).trim()]));

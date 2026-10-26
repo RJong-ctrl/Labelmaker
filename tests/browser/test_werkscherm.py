@@ -14,7 +14,7 @@ class Hulp(PaginaTest):
     def inlezen(self):
         p = self.pagina
         p.locator('#bestand').set_input_files(VOORBEELD)
-        p.wait_for_function("document.querySelector('#melding').textContent.includes('ingelezen')")
+        p.wait_for_function("document.querySelector('#melding').textContent.includes('ingelezen')", timeout=30000)
 
     def rij(self, code):
         return self.pagina.locator(f'#lijst li[data-code="{code}"]')
@@ -285,6 +285,25 @@ class Vrijheid(Hulp):
         d.locator('input[name="Groot"]').fill('12 st.')
         d.get_by_role('button', name='Opslaan').click()
         expect(p.locator('#voorbeeld .signb .groot')).to_have_text('12 st.')
+
+    def test_aanpassen_alle_velden(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('GE9402')
+        p.locator('#actBordje').click()
+        self.aanvullen('Doorsnede', '2,5 mm²')
+        expect(p.locator('#voorbeeld .signb .groot')).to_have_text('2,5 m')
+        p.locator('#velLijst li').first.get_by_role('button', name='Aanpassen').click()
+        d = p.locator('#aanvulling')
+        expect(d.locator('input[name="Lengte"]')).to_have_value('2,5')
+        expect(d.locator('input[name="Omschrijving"]')).to_have_value('Speakon 4p Verlengkabel')
+        d.locator('input[name="Lengte"]').fill('')
+        d.get_by_role('button', name='Opslaan').click()
+        expect(p.locator('#voorbeeld .signb .groot')).to_have_count(0)
+        p.reload()
+        p.locator('#tabA4').click()
+        p.locator('#velLijst li').first.get_by_role('button', name='Aanpassen').click()
+        expect(d.locator('input[name="Lengte"]')).to_have_value('')
 
     def test_kolommen_koppelen(self):
         p = self.pagina

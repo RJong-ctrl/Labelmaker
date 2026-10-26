@@ -3,7 +3,7 @@
 // BELANGRIJK: verander VERSIE bij elke wijziging in een bestand van de app, anders blijven
 // bezoekers de oude bestanden uit hun cache houden. De lijst BESTANDEN moet alle bestanden
 // van de app bevatten (tests/unit/sw_bestanden.test.mjs controleert dat); data/ hoort er niet in.
-const VERSIE = '2026-10-26-1';
+const VERSIE = '20261026-2211';
 const CACHE = `labelmaker-${VERSIE}`;
 
 // Paden relatief aan deze sw.js (dus aan de map van de app).
@@ -14,17 +14,19 @@ const BESTANDEN = [
   'css/app.css',
   'css/beheer.css',
   'css/opmaak.css',
-  'fonts/LEESMIJ.txt',
-  'fonts/OFL-Barlow.txt',
-  'fonts/OFL-Jost.txt',
   'fonts/barlow-condensed-500.woff2',
   'fonts/barlow-condensed-700.woff2',
   'fonts/jost-400.woff',
   'fonts/jost-500.woff',
   'fonts/jost-700.woff',
+  'fonts/LEESMIJ.txt',
+  'fonts/OFL-Barlow.txt',
+  'fonts/OFL-Jost.txt',
   'js/afleiden.js',
   'js/app.js',
+  'js/beheer-extra.js',
   'js/bestanden.js',
+  'js/dialogen.js',
   'js/html.js',
   'js/import.js',
   'js/indeling.js',
@@ -33,8 +35,10 @@ const BESTANDEN = [
   'js/offline.js',
   'js/opmaak.js',
   'js/opslag.js',
+  'js/oud.js',
   'js/printen.js',
   'js/profielen.js',
+  'js/publiceren.js',
   'js/qr.js',
   'js/samenvoegen.js',
   'js/sjablonen.js',

@@ -74,11 +74,17 @@ export const DSL_SJABLONEN = [
 
 /** Waarde van één veld voor dit artikel. */
 export function veldwaarde(veld, artikel, aanvullingen = {}) {
+  // Een aanvulling met de naam van het veld gaat altijd voor, ook leeg (= niet op het bordje).
+  if (aanvullingen && Object.hasOwn(aanvullingen, veld.naam)) return String(aanvullingen[veld.naam] ?? '').trim();
+  return natuurlijkeWaarde(veld, artikel);
+}
+
+/** Waarde zonder aanvulling: uit de export of uit de naam. */
+export function natuurlijkeWaarde(veld, artikel) {
   const h = veld.herkomst;
-  // Kolom uit de export; is die leeg, dan telt een aanvulling met dezelfde naam (bijv. Locatie).
-  if (h.type === 'kolom') return String(artikel[h.kolom] ?? '').trim() || String(aanvullingen[veld.naam] ?? '').trim();
+  if (h.type === 'kolom') return String(artikel[h.kolom] ?? '').trim();
   if (h.type === 'naam') return (PATRONEN[h.patroon] || (() => ''))(artikel.naam || '');
-  return String(aanvullingen[veld.naam] ?? '').trim();
+  return '';
 }
 
 // Een veld met alleenAls telt alleen mee als dat andere veld een waarde heeft
@@ -141,7 +147,7 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
 
 /** Verplichte aanvulvelden die nog geen waarde hebben. */
 export function ontbrekend(sjabloon, artikel, aanvullingen = {}) {
-  const w = waarden(sjabloon, artikel, {});
+  const w = waarden(sjabloon, artikel, aanvullingen);
   return sjabloon.velden.filter(v => v.herkomst.type === 'aanvulling' && v.verplicht
     && !(v.alleenAls && !w[v.alleenAls]) && !veldwaarde(v, artikel, aanvullingen));
 }
