@@ -1,7 +1,7 @@
 # Labelmaker v2 — ontwerp
 
 Datum: 26 oktober 2026
-Status: ter goedkeuring
+Status: ter goedkeuring (bijgewerkt na Rentman-export van 26 okt)
 
 ## Doel
 
@@ -42,7 +42,7 @@ Vervalt: drie tabbladen, tekstvak met puntkomma's, twee aparte bibliotheken.
 ```
 DSL Labelmaker/
 ├─ instellingen.json            sjablonen, kleurcodes, categorie → sjabloon, huisstijl, Rentman-kolommen, pincode (gehasht)
-├─ rentman/<export>.xlsx|csv    laatste Rentman-export
+├─ rentman/artikelen.json       ingelezen Rentman-export, alleen de kolommen die nodig zijn
 ├─ artikelen/<code>.json        aanvullingen per artikel (lengte, connector, doorsnede, kleur …)
 ├─ losse-items/<id>.json        items buiten Rentman
 └─ geprint/<datum>-<pc>.json    printlog per pc per dag
@@ -52,7 +52,30 @@ DSL Labelmaker/
 - **Per pc (browser):** het printvel van dat moment, een kopie van de gedeelde gegevens voor als de map even niet bereikbaar is, en de koppeling met de map.
 - **Zonder map-verbinding:** werken met de laatste kopie; printen kan, beheer en aanvullingen opslaan niet (duidelijke melding).
 - **Back-up:** versiegeschiedenis van OneDrive.
-- **Niet in GitHub:** artikelgegevens, Rentman-exports of andere bedrijfsgegevens. De repository is openbaar.
+- **Niet in GitHub:** artikelgegevens, Rentman-exports of andere bedrijfsgegevens. De repository is openbaar; `.gitignore` weert xlsx/csv/json-gegevens.
+- **Geen prijzen bewaren:** de Rentman-export bevat ook prijzen, boekwaarde en inkoop. Bij inlezen bewaart het programma alleen naam, code, QR-codes, exemplaar-QR's, pad, map, locatie, voorraadmethode en aantal. De rest wordt niet opgeslagen, ook niet in OneDrive.
+
+## 2b. Rentman-export (Export_Materiaal, 26 okt: 4.160 regels, 75 kolommen)
+
+Vaste koppeling, aan te passen onder *Rentman-kolommen*:
+
+| Programma | Rentman-kolom | Opmerking |
+|---|---|---|
+| Naam | `Naam (in database)` | |
+| Artikelnummer | `Code` | bijv. GE9402 |
+| QR-code artikel | `QR-codes / RFID` | bijv. `nl4-2.50m`; bij meerdere waarden de eerste |
+| QR-codes exemplaren | `QR-codes / RFID exemplaren` | kommalijst, bijv. `bd6x3b-01,bd6x3b-02` |
+| Categorie | `Pad` (en `Map (Map)`) | bijv. `Materialen / Geluid / Bekabeling / Speakon / Speakon 4 polig` |
+| Locatie | `Locatie in magazijn per voorraadlocatie [Standaard voorraadlocatie]` | bijv. `V-1-2`, `A1`; bij ca. 450 artikelen ingevuld |
+| Soort | `Methode voorraadberekening`, `Type materiaal` | Bulk / Geserialiseerd; combinaties standaard verborgen |
+| Aantal | `Huidig aantal` | |
+
+Wat de export ons leert:
+- **De QR-code is níet het artikelnummer.** Rentman scant de waarde uit `QR-codes / RFID` (bijv. `nl4-2.50m`) of een exemplaar-QR. De labels gebruiken die waarde; het artikelnummer staat er alleen als tekst op.
+- **Geserialiseerde artikelen** (1.367, samen 8.240 exemplaar-QR's) krijgen per exemplaar een eigen label of bordje met de eigen QR-code. Bulkartikelen krijgen de artikel-QR.
+- **Lengte en maat staan in de naam**, niet in de kolom `Lengte` (die is 0 bij kabels). Het programma haalt ze uit de naam: "Verlengkabel 12,5m" → 12,5; "Backdrop 6 x 3m" → 6 × 3; "Speakon 4p" → NL4.
+- **Mappen met Z98/Z99 zijn gewoon in gebruik** (bijv. de Pipe & Drape-doeken) en worden niet weggefilterd.
+- **Doorsnede (2,5 / 4 mm²) en materiaalkleur** staan niet in Rentman en worden aanvullingen.
 
 ## 3. Sjablonen en beheer
 
@@ -60,7 +83,10 @@ Beheer is een eigen pagina met links een lijst (sjablonen en instellingen), midd
 
 Een sjabloon bestaat uit:
 1. **Basis** — printer (Citizen/A4), opmaak (*Bordje staand*, *Bordje liggend*, *Strook*, *QR-label*, *Locatielabel*), formaat in mm, gatmarkering aan/uit, voettekst aan/uit.
-2. **Velden** — tabel: naam, soort (tekst / getal + eenheid / keuzelijst), herkomst (*Rentman-kolom* of *Aanvulling*), verplicht ja/nee.
+2. **Velden** — tabel: naam, soort (tekst / getal + eenheid / keuzelijst), herkomst, verplicht ja/nee. Herkomst is een van:
+   - *Rentman-kolom* (naam, code, QR, locatie …);
+   - *Uit de naam*: vaste patronen om uit te kiezen (lengte in m, maat b × h, aantal polen 2p/4p/8p → NL2/NL4/NL8, kwaliteit A/B);
+   - *Aanvulling*: één keer per artikel invullen, opgeslagen in de OneDrive-map.
 3. **Wat waar komt** — per plek van de opmaak (titel, groot, label, eigenschappen, onderregel) velden als blokjes plus vaste tekst. Plekken met alleen lege optionele velden verdwijnen.
 4. **Kleuren** — kleurrand volgt veld X met per waarde een kleur; label volgt veld Y met per waarde een kleur. Kleuren kiezen uit vaste namen (geel, groen, blauw, rood, paars, wit, oranje, magenta, lichtblauw, grijs) of een eigen kleur.
 
@@ -71,9 +97,9 @@ Vast in de huisstijl en niet meer instelbaar: lettertype, sterkte en breedte van
 **Standaardsjablonen (meegenomen uit versie 25):**
 - *QR-label* 76 × 56 en *QR-label half* 76 × 28 (Citizen);
 - *Locatielabel* 76 × 56 en half (Citizen);
-- *Backdrop* A7 staand: breedte, hoogte, kleur (zwart/wit/rood), kwaliteit B1 + certificaatregel; rand volgt formaat;
+- *Backdrop* A7 staand: maat en kwaliteit A/B (uit de naam), kleur zwart/wit/rood (aanvulling), certificaatregel; één bordje per exemplaar met eigen QR; rand volgt maat;
 - *Pipe & Drape* A7 liggend: breedte, hoogte;
-- *Gitterbox-strook* 180 × 48: omschrijving, lengte (optioneel), connector, doorsnede; rand volgt lengte (2,5 geel, 5 groen, 7,5 blauw, 10 rood, 15 paars, 20 wit, 25 oranje; 12,5 nog te bepalen); label volgt doorsnede (2,5 mm² rood, 4 mm² groen).
+- *Gitterbox-strook* 180 × 48: omschrijving (Rentman), lengte en connector (uit de naam), doorsnede (aanvulling); rand volgt lengte (2,5 geel, 5 groen, 7,5 blauw, 10 rood, 15 paars, 20 wit, 25 oranje; 12,5 nog te bepalen); label volgt doorsnede (2,5 mm² rood, 4 mm² groen).
 
 ## 4. Printen
 
@@ -90,12 +116,12 @@ Vast in de huisstijl en niet meer instelbaar: lettertype, sterkte en breedte van
 - Eenmalige import van de huidige gegevens: in versie 25 *Exporteren*, in v2 *Oude gegevens importeren* (sjablonen, kleurcodes, opgeslagen bordjes).
 
 **Nodig van Robin vóór het bouwen**
-- Een echte Rentman-export (mag ingekort) om de kolommen goed te zetten.
+- ~~Een echte Rentman-export~~ ontvangen 26 okt.
 - Twee pc's met de gedeelde OneDrive-map voor de map-test.
 
 **Testen**
 - *Eerst:* kleine testpagina die op twee pc's controleert of lezen, schrijven, synchroniseren en conflictkopieën in de OneDrive-map werken. Valt die test tegen, dan is het alternatief een kleine intranetpagina; dat wordt dan eerst opnieuw besproken.
-- *Automatisch* bij elke wijziging: elk sjabloon renderen met voorbeeldartikelen; alle QR-codes uitlezen; printuitvoer controleren (papierformaat, aantal per vel, niets afgekapt); gegevenslaag testen met een nagebootste map, inclusief conflictkopieën en offline.
+- *Automatisch* bij elke wijziging: elk sjabloon renderen met voorbeeldartikelen (nagemaakte testgegevens in de vorm van de echte export, zonder prijzen); alle QR-codes uitlezen; printuitvoer controleren (papierformaat, aantal per vel, niets afgekapt); gegevenslaag testen met een nagebootste map, inclusief conflictkopieën en offline.
 - *Handmatig door Robin:* testprint Citizen en A4, scan met de Rentman-app, één collega die zonder uitleg een reeks stroken maakt.
 
 ## Opbouw van de code

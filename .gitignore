@@ -1,0 +1,6 @@
+# Nooit bedrijfsgegevens in deze openbare repository
+*.xlsx
+*.xls
+*.csv
+/data/
+artikelen.json
