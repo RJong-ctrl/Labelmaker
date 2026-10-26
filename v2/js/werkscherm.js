@@ -475,14 +475,15 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
   root.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target)) zetMenu(false); });
   root.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) zetMenu(false); });
 
-  /** Opnieuw tekenen na een wijziging elders (beheer, nieuwe basis). */
-  function vernieuw() {
+  /** Opnieuw tekenen na een wijziging elders (beheer, nieuwe basis); printvel opnieuw uit de opslag. */
+  async function vernieuw(opnieuwLezen = true) {
+    if (opnieuwLezen) { st.vel.label = await model.printvel('label'); st.vel.a4 = await model.printvel('a4'); }
     indexeer();
     for (const p of ['label', 'a4']) st.vel[p] = st.vel[p].filter(i => sjabloon(i.sjabloon));
     tekenProfielen(); tekenSjabloonKeuze(); tekenChips(); tekenLijst(); tekenVel();
   }
 
-  vernieuw();
+  await vernieuw(false);
   if (waarschuwing) melding(waarschuwing, true);
   $('zoek').focus();
   return { vernieuw, melding };

@@ -127,7 +127,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
       + `<input type="number" data-pad="formaat.b" min="${MIN_MM}" max="${MAX_MM}" step="any" value="${esc(s.formaat.b)}" aria-label="Breedte in mm">`
       + `<span aria-hidden="true">×</span><input type="number" data-pad="formaat.h" min="${MIN_MM}" max="${MAX_MM}" step="any" value="${esc(s.formaat.h)}" aria-label="Hoogte in mm"></span></div>`
       + (bordje
-        ? `<div class="vinken">${vink('gat', 'Gatmarkering')}${vink('voet', 'Voettekst')}${vink('logoBoven', 'Logo boven')}</div>`
+        ? `<div class="vinken">${vink('gat', 'Gatmarkering')}${vink('voet', 'Voettekst')}</div>`
           + `<label class="veld breed"><span>Certificaatregel</span><input type="text" data-pad="cert" value="${esc(s.cert || '')}" placeholder="leeg = geen" autocomplete="off"></label>`
         : '')
       + `</div><p class="fout" data-melding="basis" role="alert"></p>`;

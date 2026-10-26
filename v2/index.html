@@ -36,13 +36,17 @@
     <label class="vink"><input type="checkbox" id="combinaties"> Combinaties tonen</label>
     <ul id="lijst" class="lijst"></ul>
     <p id="lijstmelding" class="hint" hidden></p>
-    <div class="acties">
-      <span id="gekozen" class="hint">Niets gekozen</span>
-      <label class="vink" title="Voor artikelen met exemplaren: één per exemplaar met de eigen QR-code"><input type="checkbox" id="perExemplaar"> Per exemplaar</label>
-      <button type="button" id="actBordje" disabled>Bordje of strook</button>
-      <button type="button" id="actQr" disabled>QR-label</button>
-      <button type="button" id="actLoc" disabled>Locatielabel</button>
-      <select id="sjabloonKeuze" aria-label="Ander sjabloon" disabled><option value="">Ander sjabloon…</option></select>
+    <div class="acties acties-artikel">
+      <div class="regel">
+        <span id="gekozen" class="hint">Niets gekozen</span>
+        <label class="vink" title="Voor artikelen met exemplaren: één per exemplaar met de eigen QR-code"><input type="checkbox" id="perExemplaar"> Per exemplaar</label>
+      </div>
+      <div class="knoppen">
+        <button type="button" id="actBordje" disabled>Bordje of strook</button>
+        <button type="button" id="actQr" disabled>QR-label</button>
+        <button type="button" id="actLoc" disabled>Locatielabel</button>
+        <select id="sjabloonKeuze" aria-label="Ander sjabloon" disabled><option value="">Ander sjabloon…</option></select>
+      </div>
     </div>
   </section>
   <section id="printvel" class="kolom" aria-labelledby="kopPrintvel">

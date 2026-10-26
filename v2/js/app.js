@@ -50,22 +50,36 @@ const scherm = await start(document, model, { waarschuwing, profielId });
 let beheer = null;
 async function toonScherm() {
   const inBeheer = location.hash === '#beheer';
-  document.getElementById('werkscherm').hidden = inBeheer;
+  for (const el of [document.querySelector('header'), document.getElementById('werkscherm'), document.getElementById('melding')]) {
+    if (inBeheer) { el.dataset.verborgen = el.hidden ? '1' : ''; el.hidden = true; } else if (el.dataset.verborgen !== undefined) { el.hidden = el.dataset.verborgen === '1'; delete el.dataset.verborgen; }
+  }
   document.getElementById('beheerScherm').hidden = !inBeheer;
   document.body.classList.toggle('in-beheer', inBeheer);
-  if (!inBeheer) { if (beheer) scherm.vernieuw(); return; }
+  if (!inBeheer) {
+    if (beheer) { await beheer.stop?.(); beheer = null; await scherm.vernieuw(); }
+    return;
+  }
   try {
     const { startBeheer } = await import('./beheer.js');
-    const { beheerOnderdelen } = await import('./beheer-extra.js').catch(() => ({ beheerOnderdelen: () => [] }));
+    const { beheerOnderdelen } = await import('./beheer-extra.js');
     beheer = await startBeheer(document, model, {
       profielId,
       terug: () => { location.hash = ''; },
       extraOnderdelen: beheerOnderdelen(document, model, { profielId }),
     });
-  } catch {
-    document.getElementById('beheerScherm').innerHTML = '<div class="kolom"><p class="leeg">Beheer komt er binnenkort aan. <a href="#">Terug naar het werkscherm</a></p></div>';
+  } catch (e) {
+    document.getElementById('beheerScherm').innerHTML = `<div class="kolom"><p class="leeg">Beheer kon niet worden geopend. <a href="#">Terug naar het werkscherm</a></p></div>`;
+    console.warn(e);
   }
 }
-document.getElementById('beheer').addEventListener('click', () => { location.hash = location.hash === '#beheer' ? '' : '#beheer'; });
+document.getElementById('beheer').addEventListener('click', () => { location.hash = '#beheer'; });
 window.addEventListener('hashchange', toonScherm);
 if (location.hash === '#beheer') toonScherm();
+
+// Eigen lettertype van deze pc (uit beheer) ook in het werkscherm.
+(async () => {
+  try {
+    const lt = await model.pcInstelling('eigenLettertype');
+    if (lt) (await import('./beheer.js')).registreerEigenLettertype(lt);
+  } catch { /* geen eigen lettertype */ }
+})();
