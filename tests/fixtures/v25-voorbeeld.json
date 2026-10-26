@@ -1,0 +1,150 @@
+{
+ "lm-tpls": [
+  {
+   "id": "t-backdrop",
+   "naam": "Backdrop",
+   "fmt": "P",
+   "fields": "b | Breedte | getal | m\nh | Hoogte | getal | m\nkleur | Kleur | keuze | Zwart, Wit, Rood",
+   "hero": "{b} × {h} m",
+   "regels": "Breedte: {b} m, knooplinten\nHoogte: {h} m\nKleur: {kleur}",
+   "xl": "Kwaliteit",
+   "xt": "B1 brandvertragend",
+   "cert": "Gecertificeerd volgens DIN 4102 B1",
+   "ckey": "{b} × {h}",
+   "colors": {
+    "6×3,5": "#b000b0"
+   }
+  },
+  {
+   "id": "t-gbkabel",
+   "naam": "Gitterbox kabel",
+   "titel": "{naam}",
+   "fmt": "L",
+   "w": 180,
+   "h": 48,
+   "nofoot": true,
+   "nohole": true,
+   "logotop": true,
+   "fields": "art | Artikelnummer | tekst\nnaam | Omschrijving | tekst\nl | Lengte | getal | m | optioneel\ncon | Connector | keuze | NL4; NL8; NL2\nmm | Doorsnede | keuze | 2,5 mm²; 4 mm²",
+   "hero": "{l} m",
+   "regels": "Artikelnummer: {art}",
+   "xl": "",
+   "xt": "",
+   "cert": "",
+   "ckey": "{l}",
+   "colors": {
+    "5": "#00b050",
+    "10": "#ff0000",
+    "15": "#7030a0",
+    "20": "#ffffff",
+    "25": "#ff8c00",
+    "2,5": "#ffff00",
+    "7,5": "#0050ff"
+   },
+   "badge": "{con}  {mm}",
+   "bkey": "{mm}",
+   "bcolors": {
+    "2,5mm²": "#c00000",
+    "4mm²": "#00a050"
+   }
+  },
+  {
+   "id": "t-pd",
+   "naam": "Pipe & Drape",
+   "fmt": "L",
+   "fields": "b | Breedte | getal | m\nh | Hoogte | getal | m",
+   "hero": "{b} × {h} m",
+   "regels": "Maat: {b} m breed, {h} m hoog",
+   "xl": "Inhoud",
+   "xt": "1× zwart satijn, geplooid",
+   "cert": "",
+   "ckey": "{b} × {h}",
+   "colors": {
+    "3×3": "#ffff00"
+   }
+  },
+  {
+   "id": "t1k9x3ab",
+   "naam": "Kabelhaspel",
+   "titel": "",
+   "fmt": "P",
+   "fields": "l | Lengte | getal | m\ntype | Type | keuze | Schuko; CEE 16A; CEE 32A\nopm | Opmerking | tekst | optioneel",
+   "hero": "{l} m",
+   "regels": "Lengte: {l} m\nType: {type}\nOpmerking: {opm}",
+   "xl": "Inhoud",
+   "xt": "Haspel met {l} m kabel",
+   "cert": "",
+   "ckey": "{l}",
+   "w": "",
+   "h": "",
+   "badge": "{type}",
+   "bkey": "{type}",
+   "colors": {
+    "25": "#ff8c00",
+    "50": "#7030a0"
+   },
+   "bcolors": {
+    "cee16a": "#00a050",
+    "schuko": "#7f7f7f"
+   },
+   "nofoot": false,
+   "nohole": false,
+   "logotop": false
+  }
+ ],
+ "lm-signs": [
+  {
+   "id": "sm2f7q1z",
+   "fmt": "P",
+   "titel": "Kabelhaspel",
+   "hero": "50 m",
+   "kleur": "#7030a0",
+   "regels": "Lengte: 50 m\nType: CEE 16A",
+   "extraLabel": "Inhoud",
+   "extraText": "Haspel met 50 m kabel",
+   "qr": "hsp-50-01",
+   "cert": "",
+   "_w": 0,
+   "_h": 0,
+   "_nofoot": false,
+   "_nohole": false,
+   "_logotop": false,
+   "_badge": "CEE 16A",
+   "_bcol": "#00a050",
+   "tpl": "t1k9x3ab",
+   "vals": {
+    "l": "50",
+    "type": "CEE 16A",
+    "opm": ""
+   },
+   "used": 1793000000000
+  },
+  {
+   "id": "sm2f9k4c",
+   "fmt": "L",
+   "titel": "Kabelgoot",
+   "hero": "3 m",
+   "kleur": "#00B050",
+   "regels": "Breedte: 20 cm\nKleur: Grijs",
+   "extraLabel": "Omschrijving",
+   "extraText": "Per stuk verpakt",
+   "qr": "DSLB0615-01\nDSLB0615-02",
+   "cert": "",
+   "used": 1793100000000
+  }
+ ],
+ "lm-lib": [
+  {
+   "qr": "nl4-2.50m",
+   "t1": "Speakon 4p Verlengkabel 2,5m",
+   "t2": "V-1-2"
+  },
+  {
+   "qr": "kenporto-00",
+   "t1": "Kenwood TK-3201 Portofoon",
+   "t2": "A1"
+  }
+ ],
+ "lm-loc": "V-1-2\tSpeakon 4p Verlengkabel\t2\nA1;Portofoons;1",
+ "lm-certicon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+}
