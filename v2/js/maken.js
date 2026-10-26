@@ -1,7 +1,7 @@
 // Maken: een leeg formulier om een bordje, strook of label te maken. Een artikel
 // opzoeken (of scannen) vult de velden in; alles blijft aanpasbaar.
 
-import { vul, ontbrekend, standaardSjabloon, veldwaarde } from './sjablonen.js';
+import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { veldInvoer } from './dialogen.js';
 import { esc } from './html.js';
@@ -44,15 +44,15 @@ export function startMaken(root, h) {
 
   function tekenFormulier() {
     const a = m.artikel;
-    doel.innerHTML = `<label class="veld"><span>Soort</span><select id="makenSoort">${soortOpties()}</select></label>`
+    doel.innerHTML = '<div class="rij2">'
       + '<div class="zoeken"><label class="veld"><span>Artikel opzoeken <small>(optioneel)</small></span>'
       + '<input type="search" id="makenZoek" placeholder="Naam, code of QR — of scan" autocomplete="off"></label>'
       + '<ul id="makenTreffers" class="treffers" role="listbox" aria-label="Gevonden artikelen"></ul></div>'
+      + `<label class="veld"><span>Soort</span><select id="makenSoort">${soortOpties()}</select></label></div>`
       + (a ? `<div id="makenArtikel" class="gekoppeld"><b>${esc(a.naam)}</b><span class="hint">${esc(a.code || '')}</span><button type="button" class="klein" id="makenLos" aria-label="Artikel loskoppelen">×</button></div>` : '<div id="makenArtikel" hidden></div>')
       + '<div id="makenVelden" class="velden"></div>'
       + '<div class="knoppenrij"><label class="vink"><input type="checkbox" id="makenBewaar"> Bewaren onder Losse items</label>'
-      + `<button type="button" id="makenLeeg">Leegmaken</button><button type="button" id="makenOpVel" class="primary">${m.vanRij ? 'Bijwerken' : 'Op printvel'}</button></div>`
-      + '<div id="makenVoorbeeld" class="voorbeeld-klein" aria-label="Voorbeeld"></div>';
+      + `<button type="button" id="makenLeeg">Leegmaken</button><button type="button" id="makenOpVel" class="primary">${m.vanRij ? 'Bijwerken' : 'Op printvel'}</button></div>`;
     tekenVelden();
   }
 
@@ -69,6 +69,11 @@ export function startMaken(root, h) {
       return v.meerregelig ? html.replace('class="veld"', 'class="veld breed"') : html;
     });
     void o;
+    // Randkleur zelf kiezen kan op elk A4-bordje en elke strook (leeg = wat het sjabloon zegt).
+    if (sj?.printer === 'a4' && !sj.velden.some(v => v.naam === 'Randkleur')) {
+      const w = m.bewerkt.has('Randkleur') ? (m.waarden.Randkleur ?? '') : (artikelAanv().Randkleur || '');
+      velden.push(veldInvoer({ naam: 'Randkleur', keuzes: [{ waarde: '', tekst: 'Automatisch' }, ...RANDKLEUREN.map(k => ({ waarde: k, tekst: k }))] }, w, { verplicht: false }));
+    }
     const ex = m.artikel?.exemplaren?.length ? `<label class="vink breed"><input type="checkbox" id="makenPerEx"${m.perExemplaar ? ' checked' : ''}> Eén per exemplaar (${m.artikel.exemplaren.length})</label>` : '';
     root.getElementById('makenVelden').innerHTML = velden.join('')
       + `<label class="veld"><span>QR-code <small>(leeg = geen)</small></span><input type="text" name="__qr" value="${esc(qrWaarde())}" autocomplete="off"></label>`
@@ -84,8 +89,11 @@ export function startMaken(root, h) {
     if (!sj || !vak) return;
     const inhoud = vul(sj, basisArtikel(), overrides(), qrWaarde());
     const el = teken(inhoud, h.E().huisstijl);
+    // Het voorbeeld staat bovenin de kolom Voorbeeld en neemt hooguit de halve kolomhoogte.
+    const kolom = root.getElementById('voorbeeld');
     const breedte = Math.max(160, vak.clientWidth - 24);
-    const s = Math.min(1.3, breedte / (inhoud.formaat.b * PX), 280 / (inhoud.formaat.h * PX));
+    const hoogte = Math.max(160, (kolom?.clientHeight || 600) * 0.5 - 40);
+    const s = Math.min(1.3, breedte / (inhoud.formaat.b * PX), hoogte / (inhoud.formaat.h * PX));
     const d = document.createElement('div');
     d.className = 'vb';
     d.style.width = (inhoud.formaat.b * PX * s).toFixed(1) + 'px';

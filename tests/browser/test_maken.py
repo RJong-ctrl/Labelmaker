@@ -38,7 +38,7 @@ class Maken(PaginaTest):
         expect(p.locator('#makenVoorbeeld .signb .titel')).to_have_text('Nooduitgang')
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
-        expect(p.locator('#voorbeeld .signb .streep')).to_have_css('background-color', 'rgb(0, 176, 80)')
+        expect(p.locator('#vellen .signb .streep')).to_have_css('background-color', 'rgb(0, 176, 80)')
         expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('')
 
     def test_artikel_opzoeken_vult_in_en_aanpassen(self):
@@ -54,7 +54,7 @@ class Maken(PaginaTest):
         expect(p.locator('#makenVoorbeeld .signb .groot')).to_have_count(0)
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
-        expect(p.locator('#voorbeeld .signb .groot')).to_have_count(0)
+        expect(p.locator('#vellen .signb .groot')).to_have_count(0)
         # het artikel zelf is niet veranderd
         self.opzoeken('GE9402')
         expect(p.locator('#makenVelden input[name="Lengte"]')).to_have_value('2,5')
@@ -165,7 +165,7 @@ class Maken(PaginaTest):
         expect(p.locator('#makenOpVel')).to_have_text('Bijwerken')
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
-        expect(p.locator('#voorbeeld .signb .groot')).to_have_text('Ø 80 cm')
+        expect(p.locator('#vellen .signb .groot')).to_have_text('Ø 80 cm')
 
     def test_qr_leesbaar_in_voorbeeld_maken(self):
         p = self.pagina
@@ -173,6 +173,44 @@ class Maken(PaginaTest):
         p.locator('#makenVelden input[name="__qr"]').fill('kist-1')
         b = p.locator('#makenVoorbeeld .signb')
         expect(b.locator('.qc')).to_have_text('kist-1')
+
+
+    def test_randkleur_kiezen_bij_artikel(self):
+        p = self.pagina
+        self.inlezen()
+        self.opzoeken('GE9402')
+        # gitterbox kleurt zelf op lengte; ook hier kun je de kleur kiezen
+        p.locator('#makenVelden select[name="Doorsnede"]').select_option('2,5 mm²')
+        p.locator('#makenVelden select[name="Randkleur"]').select_option('Groen')
+        expect(p.locator('#makenVoorbeeld .signb .streep')).to_have_css('background-color', 'rgb(0, 176, 80)')
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#vellen .signb .streep')).to_have_css('background-color', 'rgb(0, 176, 80)')
+        self.assertEqual(self.fouten, [])
+
+    def test_geen_randkleur_bij_qr_label(self):
+        p = self.pagina
+        p.locator('#makenSoort').select_option('qrlabel')
+        expect(p.locator('#makenVelden select[name="Randkleur"]')).to_have_count(0)
+
+
+class MakenPast(PaginaTest):
+    """Laptop met 125% schaal (1536×740 zichtbaar): het formulier past zonder scrollen."""
+    viewport = {'width': 1536, 'height': 740}
+
+    def test_formulier_past_zonder_scrollen(self):
+        p = self.pagina
+        maat = p.evaluate("""() => { const m = document.getElementById('maken'); return [m.scrollHeight, m.clientHeight]; }""")
+        self.assertLessEqual(maat[0], maat[1] + 1, 'Maken-formulier moet scrollen: %r' % maat)
+        expect(p.locator('#makenOpVel')).to_be_in_viewport()
+
+    def test_voorbeeld_staat_in_voorbeeldkolom(self):
+        p = self.pagina
+        expect(p.locator('#voorbeeld #makenVoorbeeld .signb')).to_have_count(1)
+        p.locator('#tabLijst').click()
+        expect(p.locator('#makenVoorbeeld')).to_be_hidden()
+        p.locator('#tabMaken').click()
+        expect(p.locator('#makenVoorbeeld')).to_be_visible()
+        self.assertEqual(self.fouten, [])
 
 
 if __name__ == '__main__':

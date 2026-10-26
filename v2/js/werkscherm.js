@@ -474,6 +474,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     paneel = p;
     $('maken').hidden = p !== 'maken';
     $('lijstDeel').hidden = p !== 'lijst';
+    $('makenVak').hidden = p !== 'maken';
     $('tabMaken').setAttribute('aria-selected', p === 'maken');
     $('tabLijst').setAttribute('aria-selected', p === 'lijst');
   }

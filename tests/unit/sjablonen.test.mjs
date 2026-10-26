@@ -226,3 +226,13 @@ test('leeg_bordje', () => {
     assert.deepEqual(ontbrekend(sj, los, {}), []);
   }
 });
+
+test('randkleur_zelf_kiezen_op_elk_bordje', () => {
+  // Gitterbox kleurt op lengte (10 m = rood); een gekozen Randkleur gaat voor.
+  assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: 'Groen' }, 'x').rand, '#00b050');
+  assert.equal(vul(S['bordje-staand'], A.GE9402, { Randkleur: 'lichtblauw' }, 'x').rand, '#00b0f0');
+  // Leeg of 'Automatisch' = wat het sjabloon zegt; 'Geen' = grijs; onzin = sjabloon.
+  assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: '' }, 'x').rand, vul(S.gitterbox, A.GE9402, {}, 'x').rand);
+  assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: 'Geen' }, 'x').rand, '#7f7f7f');
+  assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: 'red;x' }, 'x').rand, vul(S.gitterbox, A.GE9402, {}, 'x').rand);
+});

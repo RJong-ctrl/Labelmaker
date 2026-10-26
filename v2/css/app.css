@@ -105,15 +105,16 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 .lijst .bewerk{flex:0 0 auto}
 
 /* ---------- maken ---------- */
-.maken{overflow:auto;gap:10px;padding-right:2px}
+.maken{overflow:auto;gap:8px;padding-right:2px}
 .maken>*{flex-shrink:0}
 .maken .rij2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.maken label.veld{display:grid;gap:4px;font-weight:600;font-size:13px}
+.maken label.veld{display:grid;gap:3px;font-weight:600;font-size:13px;min-width:0}
+.maken input[type=text],.maken input[type=search],.maken input[type=number],.maken select{padding-top:6px;padding-bottom:6px}
 .maken label.veld small{font-weight:400;color:var(--muted)}
 .maken input[type=text],.maken input[type=search],.maken input[type=number],.maken select,.maken textarea{width:100%}
-.maken textarea{background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 9px;font:inherit;font-size:14px;resize:vertical}
+.maken textarea{height:5.2em;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 9px;font:inherit;font-size:14px;resize:vertical}
 .maken .zoeken{position:relative}
-.maken .treffers{list-style:none;margin:4px 0 0;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--field);max-height:240px;overflow:auto}
+.maken .treffers{position:absolute;z-index:5;left:0;top:100%;width:calc(200% + 10px);box-shadow:0 8px 24px rgba(0,0,0,.35);list-style:none;margin:4px 0 0;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--field);max-height:240px;overflow:auto}
 .maken .treffers:empty{display:none}
 .maken .treffers li{padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--line)}
 .maken .treffers li:last-child{border-bottom:0}
@@ -121,9 +122,13 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 .maken .treffers .sub{color:var(--muted);font-size:12px;display:block}
 .maken .gekoppeld{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--sel);font-size:13px}
 .maken .gekoppeld b{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.maken .velden{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.maken .velden{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
 .maken .velden .breed{grid-column:1/-1}
-.maken .voorbeeld-klein{display:flex;justify-content:center;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:120px;overflow:hidden}
-.maken .voorbeeld-klein .vb{box-shadow:0 1px 0 var(--line),0 6px 18px rgba(0,0,0,.14)}
+/* voorbeeld van wat je nu maakt: bovenin de kolom Voorbeeld */
+.maken-vak{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.maken-vak[hidden]{display:none!important}
+.maken-vak h3{margin:0;font-size:13px;font-weight:600;color:var(--muted)}
+.voorbeeld-maken{display:flex;justify-content:center;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:120px;overflow:hidden}
+.maken-vak .op-vel{margin-top:6px}
 .maken .knoppenrij{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .maken .knoppenrij .vink{margin:0 auto 0 0}

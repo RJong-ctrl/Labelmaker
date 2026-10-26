@@ -50,7 +50,7 @@ class Integratie(PaginaTest):
         }""")
         p.reload()
         p.locator('#tabA4').click()
-        expect(p.locator('#voorbeeld .signb .streep')).to_have_css('background-color', 'rgb(255, 140, 0)')
+        expect(p.locator('#vellen .signb .streep')).to_have_css('background-color', 'rgb(255, 140, 0)')
 
 
 if __name__ == '__main__':

@@ -246,7 +246,7 @@ class Vrijheid(Hulp):
         self.kies('CO1120')
         p.locator('#sjabloonKeuze').select_option('bordje-liggend')
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
-        expect(p.locator('#voorbeeld .signb.liggend')).to_have_count(1)
+        expect(p.locator('#vellen .signb.liggend')).to_have_count(1)
 
     def test_kolommen_koppelen(self):
         p = self.pagina
@@ -398,7 +398,7 @@ class Scannen(Hulp):
         self.aanvullen('Kleur', 'Zwart')
         expect(p.locator('#tabA4')).to_have_text('A4 (1)')
         self.assertIn('bd6x3b-02', p.locator('#velLijst').inner_text())
-        bordje = p.locator('#voorbeeld .signb')
+        bordje = p.locator('#vellen .signb')
         bordje.wait_for()
         img = cv2.imdecode(np.frombuffer(bordje.screenshot(), np.uint8), cv2.IMREAD_GRAYSCALE)
         img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_NEAREST)

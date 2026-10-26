@@ -2,7 +2,7 @@
 // vul() maakt van sjabloon + artikel + aanvullingen een Inhoud die opmaak.js tekent.
 
 import { PATRONEN } from './afleiden.js';
-import { sleutel, ONBEKEND } from './kleuren.js';
+import { sleutel, ONBEKEND, KLEURNAMEN } from './kleuren.js';
 
 const kolom = (naam, k, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'kolom', kolom: k }, verplicht });
 const uitNaam = (naam, patroon, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'naam', patroon }, verplicht });
@@ -38,7 +38,7 @@ export const vrijBordje = (id, naam, opmaak, b, h, extra = {}) => ({
 });
 
 /** Leeg bordje: alles zelf invullen (titel, groot, vrije regels, onderregel, randkleur, QR). */
-const RANDKLEUREN = ['Geen', 'Geel', 'Groen', 'Blauw', 'Lichtblauw', 'Rood', 'Paars', 'Oranje', 'Magenta', 'Wit'];
+export const RANDKLEUREN = ['Geen', 'Geel', 'Groen', 'Blauw', 'Lichtblauw', 'Rood', 'Paars', 'Oranje', 'Magenta', 'Wit'];
 export const leegBordje = (id, naam, opmaak, b, h) => ({
   ...basis, id, naam, printer: 'a4', opmaak, formaat: { b, h }, gat: true, voet: true,
   velden: [kolom('Naam', 'naam', true),
@@ -141,6 +141,14 @@ function regelsUit(tekst) {
   });
 }
 
+/** Zelf gekozen randkleur (aanvulling 'Randkleur'): gaat voor op elk bordje. Leeg = wat het sjabloon zegt. */
+function eigenRand(aanvullingen) {
+  const k = String(aanvullingen?.Randkleur ?? '').trim();
+  if (!k) return null;
+  if (sleutel(k) === 'geen') return ONBEKEND;
+  return KLEURNAMEN[sleutel(k)] || geldigeKleur(k);
+}
+
 export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
   const w = waarden(sjabloon, artikel, aanvullingen);
   const p = sjabloon.plekken;
@@ -155,7 +163,7 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     eigenschappen: [...(p.eigenschappen || []).map(e => [e.kop, plek(e.waarde, w)]), ...(sjabloon.regelsVeld ? regelsUit(w[sjabloon.regelsVeld]) : [])].filter(e => e[1]),
     onder: plek(p.onder, w),
     qr: p.qr ? plek(p.qr, w) : String(qr || ''),
-    rand: kleur(sjabloon.kleuren.rand, w),
+    rand: eigenRand(aanvullingen) || kleur(sjabloon.kleuren.rand, w),
     cert: sjabloon.cert || '',
     gat: !!sjabloon.gat,
     voet: !!sjabloon.voet,
