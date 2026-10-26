@@ -17,6 +17,9 @@ GEVALLEN = [
     ('algemeen', 'bordje-staand', 'CO1120', {'Groot': '12 st.'}, 'kenporto-00', None),
     ('algemeenL', 'bordje-liggend', 'GE9509', {}, '1001540', None),
     ('algemeenS', 'bordje-staand', 'GE9509', {}, '1001540', None),
+    ('langS', 'bordje-staand', 'GE9402', {}, 'x1', '1 x mini jack stereo > 2 x Jack mono Verloop 1,5m'),
+    ('kortS', 'bordje-staand', 'GE9402', {}, 'x2', 'Shuko 230V 10m Verlengkabel'),
+    ('langL', 'bordje-liggend', 'GE9402', {}, 'x3', '1 x mini jack stereo > 2 x Jack mono Verloop 1,5m'),
     ('qrlabel', 'qrlabel', 'GE9402', {}, 'nl4-2.50m', None),
     ('lang', 'qrlabel', 'GE9509', {}, '1001540', None),
     ('qrhalf', 'qrlabel-half', 'CO1120', {}, 'kenporto-00', None),
@@ -94,6 +97,18 @@ class Opmaak(PaginaTest):
         pt = self.pagina.evaluate("""() => Object.fromEntries(['algemeenL', 'algemeenS'].map(id => [id, parseFloat(document.querySelector('#' + id + ' .titel>span').style.fontSize)]))""")
         self.assertGreaterEqual(pt['algemeenL'], 18)
         self.assertGreaterEqual(pt['algemeenS'], 16)
+
+    def test_lange_naam_blijft_groot(self):
+        r = self.pagina.evaluate("""() => Object.fromEntries(['langS', 'kortS', 'langL'].map(id => {
+            const el = document.getElementById(id), t = el.querySelector('.titel>span');
+            const onder = el.querySelector('.onderregel');
+            return [id, { pt: parseFloat(t.style.fontSize), deel: t.getBoundingClientRect().height / el.getBoundingClientRect().height, onder: onder ? onder.textContent : null }];
+        }))""")
+        self.assertGreaterEqual(r['langS']['pt'], 20, r)
+        self.assertGreaterEqual(r['langS']['deel'], 0.3, r)
+        self.assertGreaterEqual(r['kortS']['pt'], 22, r)  # 'Verlengkabel' is het langste woord
+        self.assertGreaterEqual(r['langL']['pt'], 18, r)
+        self.assertEqual(r['langS']['onder'], 'Artikelnummer GE9402')
 
     def test_formaat_in_mm(self):
         maten = self.pagina.evaluate("""() => Object.fromEntries([...document.body.children].map(e => [e.id, [e.style.width, e.style.height]]))""")

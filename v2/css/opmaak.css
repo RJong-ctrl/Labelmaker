@@ -22,6 +22,7 @@
 .signb .bm{position:absolute;display:flex;flex-direction:column}
 .signb .t>span,.signb .h>span{white-space:nowrap;font-weight:700;line-height:1}
 .signb .h>span{letter-spacing:-.01em}
+.signb .t.wrap{justify-content:flex-start}
 .signb .t.wrap>span{white-space:normal;line-height:1.05;overflow-wrap:normal}
 .signb .tb{flex:1 1 auto;justify-content:flex-start}
 .signb .tg{display:grid;grid-template-columns:auto 1fr;column-gap:.9em;align-items:baseline;row-gap:.32em}
@@ -29,6 +30,8 @@
 .signb .tk{font-size:.76em;color:#555;white-space:nowrap}
 .signb .tv{font-weight:600}
 .signb .bot{display:flex;align-items:flex-end;justify-content:space-between;gap:2mm;flex:0 0 auto}
+.signb .botlinks{display:flex;flex-direction:column;gap:.8mm;min-width:0}
+.signb .onderregel{font-weight:600;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .signb .cert{display:flex;align-items:center;gap:1.2mm;min-width:0;color:#333;line-height:1.25}
 .signb .cert img{flex:0 0 auto;object-fit:contain}
 .signb .qbox{flex:0 0 auto;display:flex;flex-direction:column;align-items:center}

@@ -32,7 +32,7 @@ export const vrijBordje = (id, naam, opmaak, b, h, extra = {}) => ({
     { naam: 'Omschrijving', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
     { naam: 'Regels', soort: 'tekst', meerregelig: true, herkomst: { type: 'aanvulling' }, verplicht: false }],
   regelsVeld: 'Regels',
-  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], eigenschappen: [{ kop: 'Omschrijving', waarde: [v('Omschrijving')] }], onder: [v('Code')] },
+  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], eigenschappen: [{ kop: 'Omschrijving', waarde: [v('Omschrijving')] }], onder: ['Artikelnummer ', v('Code')] },
   kleuren: { rand: { sleutel: [v('Groot')], waarden: {} } },
   ...extra,
 });

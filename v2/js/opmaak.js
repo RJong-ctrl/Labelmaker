@@ -63,7 +63,8 @@ function bordje(i, hs) {
   const gap = staand ? 4 * f : 3.5 * f, pad = staand ? 4 * f : 3 * f;
   const titel = esc(i.titel), groot = esc(i.groot);
   const rijen = i.eigenschappen.map(([k, v]) => [k, v]);
-  if (!strook && i.onder) rijen.push(['', i.onder]);
+  // Onderregel (bijv. 'Artikelnummer GE9402') klein linksonder, zoals op de strook.
+  const onder = !strook && i.onder ? `<div class="onderregel" style="font-size:${(6 * (staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48))).toFixed(1)}pt">${esc(i.onder)}</div>` : '';
   const tabel = rijen.length
     ? '<div class="tg">' + rijen.map((r, n) => (n ? '<div class="sep"></div>' : '') + `<div class="tk">${esc(r[0])}</div><div class="tv">${esc(r[1])}</div>`).join('') + '</div>'
     : '';
@@ -82,14 +83,15 @@ function bordje(i, hs) {
   if (staand) {
     const bd = 13 * f;
     const badge = i.label ? `<div class="badge" style="width:${mm(bd)};height:${mm(bd)};background:${esc(kleurLabel)};color:${inkt(kleurLabel)};font-size:${(bd * PT * 0.22).toFixed(1)}pt">${esc(i.label.tekst)}</div>` : '';
-    // Zonder 'groot' is de naam de hoofdzaak: groter en over meer regels.
-    const tH = H * (groot ? 0.085 : 0.26), hH = H * 0.125;
+    // Zonder 'groot' is de naam de hoofdzaak: die krijgt alle vrije ruimte, over meerdere regels.
+    const tH = H * 0.085, hH = H * 0.125;
+    const links = (cert || onder) ? `<div class="botlinks">${cert}${onder}</div>` : '<span></span>';
     main = (groot ? vak('t titel', tH * PT * 0.95, titel, `height:${mm(tH)};flex:0 0 auto`)
-      : vak('t titel wrap', H * 0.1 * PT, titel, `height:${mm(tH)};flex:0 0 auto`, 3, 3))
+      : vak('t titel wrap', H * 0.11 * PT, titel, `flex:1 1 ${mm(H * 0.2)};min-height:${mm(H * 0.2)}`, 6))
       + (groot ? vak('h groot', hH * PT * 0.95, groot, `height:${mm(hH)};flex:0 0 auto`) : '')
       + `<div style="height:${mm(3 * f)};flex:0 0 auto"></div>`
-      + vak('tb', 10 * f, tabel)
-      + `<div class="bot" style="margin-top:${mm(2 * f)}">${cert || '<span></span>'}<div style="display:flex;align-items:flex-end;gap:${mm(2.5 * f)}">${badge}${qrBlok(17 * f)}</div></div>`
+      + vak('tb', 10 * f, tabel, groot ? '' : 'flex:0 0 auto')
+      + `<div class="bot" style="margin-top:${mm(2 * f)}">${links}<div style="display:flex;align-items:flex-end;gap:${mm(2.5 * f)}">${badge}${qrBlok(17 * f)}</div></div>`
       + voet;
   } else if (strook) {
     const avH = H - 2 * pad, codeH = Math.max(3.2, 4 * f), qs = Math.max(8, avH - codeH - 0.5);
@@ -105,13 +107,15 @@ function bordje(i, hs) {
   } else {
     const bd = Math.min(H * 0.3, 13 * f);
     const badge = i.label ? `<div class="badge" style="width:${mm(bd)};height:${mm(bd)};background:${esc(kleurLabel)};color:${inkt(kleurLabel)};font-size:${(bd * PT * 0.22).toFixed(1)}pt">${esc(i.label.tekst)}</div>` : '';
-    const hdH = H * (groot ? 0.2 : 0.3);
-    main = `<div style="display:flex;gap:${mm(3 * f)};height:${mm(hdH)};flex:0 0 auto">`
-      + (groot ? vak('t titel', hdH * PT * 0.85, titel, 'flex:1 1 0') : vak('t titel wrap', H * 0.16 * PT, titel, 'flex:1 1 0', 3, 2))
+    const hdH = H * 0.2;
+    const kop = groot ? `height:${mm(hdH)};flex:0 0 auto` : `flex:1 1 ${mm(H * 0.3)};min-height:${mm(H * 0.3)}`;
+    main = `<div style="display:flex;gap:${mm(3 * f)};${kop}">`
+      + (groot ? vak('t titel', hdH * PT * 0.85, titel, 'flex:1 1 0') : vak('t titel wrap', H * 0.16 * PT, titel, 'flex:1 1 0', 6, 4))
       + (groot ? vak('h groot', hdH * PT * 0.85, groot, 'flex:0 0 40%') : '') + '</div>'
       + `<div style="height:${mm(2 * f)};flex:0 0 auto"></div>`
-      + `<div style="flex:1 1 auto;min-height:0;display:flex;gap:${mm(2.5 * f)}">${vak('tb', 8.5 * f, tabel, 'flex:1 1 0')}<div style="display:flex;align-items:center;gap:${mm(3 * f)}">${badge}${qrBlok(Math.min(H * 0.34, 17 * f))}</div></div>`
-      + (cert ? `<div style="margin-top:${mm(1.2 * f)}">${cert}</div>` : '')
+      + `<div style="${groot ? 'flex:1 1 auto' : 'flex:0 0 auto'};min-height:0;display:flex;align-items:flex-end;gap:${mm(2.5 * f)}">`
+      + `<div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:space-between;align-self:stretch">${vak('tb', 8.5 * f, tabel, 'flex:1 1 auto')}${cert || onder ? `<div class="botlinks">${cert}${onder}</div>` : ''}</div>`
+      + `<div style="display:flex;align-items:center;gap:${mm(3 * f)}">${badge}${qrBlok(Math.min(H * 0.34, 17 * f))}</div></div>`
       + voet;
   }
 
