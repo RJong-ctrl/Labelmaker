@@ -61,8 +61,10 @@ function bordje(i, hs) {
   if (staand) {
     const bd = 13 * f;
     const badge = i.label ? `<div class="badge" style="width:${mm(bd)};height:${mm(bd)};background:${esc(kleurLabel)};color:${inkt(kleurLabel)};font-size:${(bd * PT * 0.22).toFixed(1)}pt">${esc(i.label.tekst)}</div>` : '';
-    const tH = H * (groot ? 0.085 : 0.12), hH = H * 0.125;
-    main = vak('t titel', tH * PT * 0.95, titel, `height:${mm(tH)};flex:0 0 auto`)
+    // Zonder 'groot' is de naam de hoofdzaak: groter en over meer regels.
+    const tH = H * (groot ? 0.085 : 0.26), hH = H * 0.125;
+    main = (groot ? vak('t titel', tH * PT * 0.95, titel, `height:${mm(tH)};flex:0 0 auto`)
+      : vak('t titel wrap', H * 0.1 * PT, titel, `height:${mm(tH)};flex:0 0 auto`, 3, 3))
       + (groot ? vak('h groot', hH * PT * 0.95, groot, `height:${mm(hH)};flex:0 0 auto`) : '')
       + `<div style="height:${mm(3 * f)};flex:0 0 auto"></div>`
       + vak('tb', 10 * f, tabel)
@@ -82,9 +84,9 @@ function bordje(i, hs) {
   } else {
     const bd = Math.min(H * 0.3, 13 * f);
     const badge = i.label ? `<div class="badge" style="width:${mm(bd)};height:${mm(bd)};background:${esc(kleurLabel)};color:${inkt(kleurLabel)};font-size:${(bd * PT * 0.22).toFixed(1)}pt">${esc(i.label.tekst)}</div>` : '';
-    const hdH = H * 0.2;
+    const hdH = H * (groot ? 0.2 : 0.3);
     main = `<div style="display:flex;gap:${mm(3 * f)};height:${mm(hdH)};flex:0 0 auto">`
-      + vak('t titel', hdH * PT * 0.85, titel, 'flex:1 1 0')
+      + (groot ? vak('t titel', hdH * PT * 0.85, titel, 'flex:1 1 0') : vak('t titel wrap', H * 0.16 * PT, titel, 'flex:1 1 0', 3, 2))
       + (groot ? vak('h groot', hdH * PT * 0.85, groot, 'flex:0 0 40%') : '') + '</div>'
       + `<div style="height:${mm(2 * f)};flex:0 0 auto"></div>`
       + `<div style="flex:1 1 auto;min-height:0;display:flex;gap:${mm(2.5 * f)}">${vak('tb', 8.5 * f, tabel, 'flex:1 1 0')}<div style="display:flex;align-items:center;gap:${mm(3 * f)}">${badge}${qrBlok(Math.min(H * 0.34, 17 * f))}</div></div>`

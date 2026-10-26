@@ -22,6 +22,7 @@
 .signb .bm{position:absolute;display:flex;flex-direction:column}
 .signb .t>span,.signb .h>span{white-space:nowrap;font-weight:700;line-height:1}
 .signb .h>span{letter-spacing:-.01em}
+.signb .t.wrap>span{white-space:normal;line-height:1.05;overflow-wrap:normal}
 .signb .tb{flex:1 1 auto;justify-content:flex-start}
 .signb .tg{display:grid;grid-template-columns:auto 1fr;column-gap:.9em;align-items:baseline;row-gap:.32em}
 .signb .tg .sep{grid-column:1/-1;height:.2mm;background:#c8c8c8;align-self:center}

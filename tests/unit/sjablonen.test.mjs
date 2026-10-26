@@ -11,7 +11,8 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'gitterbox', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half']);
+  assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
   assert.deepEqual(S['pipe-drape'].formaat, { b: 105, h: 74 });
@@ -95,6 +96,14 @@ test('pipe_drape', () => {
   assert.equal(i.opmaak, 'liggend');
 });
 
+test('algemeen_bordje', () => {
+  const i = vul(S['bordje-staand'], A.CO1120, {}, 'kenporto-00');
+  assert.equal(i.titel, 'Kenwood TK-3201 Portofoon');
+  assert.equal(i.qr, 'kenporto-00');
+  assert.equal(i.opmaak, 'staand');
+  assert.deepEqual(ontbrekend(S['bordje-staand'], A.CO1120, {}), []);
+});
+
 test('qrlabel_en_locatie', () => {
   const q = vul(S.qrlabel, A.GE9402, {}, 'nl4-2.50m');
   assert.equal(q.titel, 'Speakon 4p Verlengkabel 2,5m');
@@ -117,7 +126,7 @@ test('standaardsjabloon', () => {
   assert.equal(standaardSjabloon(A.GE9402, 'bordje'), 'gitterbox');
   assert.equal(standaardSjabloon(A['LI8163-B'], 'bordje'), 'backdrop');
   assert.equal(standaardSjabloon(A.PD5143, 'bordje'), 'pipe-drape');
-  assert.equal(standaardSjabloon(A.CO1120, 'bordje'), 'qrlabel');
+  assert.equal(standaardSjabloon(A.CO1120, 'bordje'), 'bordje-staand');
   assert.equal(standaardSjabloon(A.GE9402, 'qrlabel'), 'qrlabel');
   assert.equal(standaardSjabloon(A.GE9402, 'locatie'), 'locatie');
 });

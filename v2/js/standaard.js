@@ -1,22 +1,15 @@
 // Profielstandaarden: waar een profiel mee begint, vóór basis en lokale wijzigingen.
 // 'dsl' = DSL-sjablonen en -huisstijl met Rentman; 'basis' = neutraal profiel.
 
-import { DSL_SJABLONEN, DSL_REGELS } from './sjablonen.js';
+import { DSL_SJABLONEN, DSL_REGELS, vrijBordje } from './sjablonen.js';
 import { RENTMAN } from './import.js';
 
 const kolom = (naam, k, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'kolom', kolom: k }, verplicht });
-const vrij = (naam) => ({ naam, soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false });
 const v = (veld) => ({ veld });
 const leeg = { titel: [], groot: [], label: [], eigenschappen: [], onder: [] };
 const basis = { gat: false, voet: false, logoBoven: false, kleuren: {}, cert: '' };
 
-const bordje = (id, naam, opmaak, b, h, extra = {}) => ({
-  ...basis, id, naam, printer: 'a4', opmaak, formaat: { b, h }, gat: opmaak !== 'strook', voet: opmaak !== 'strook',
-  velden: [kolom('Naam', 'naam', true), kolom('Code', 'code'), vrij('Groot'), vrij('Omschrijving')],
-  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], eigenschappen: [{ kop: 'Omschrijving', waarde: [v('Omschrijving')] }], onder: [v('Code')] },
-  kleuren: { rand: { sleutel: [v('Groot')], waarden: {} } },
-  ...extra,
-});
+const bordje = vrijBordje;
 
 const BASIS_SJABLONEN = [
   {

@@ -23,6 +23,17 @@ const locatie = (id, naam, h) => ({
   plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Naam')], qr: [v('Locatie')] },
 });
 
+/** Algemeen bordje (staand, liggend) of strook: naam, optioneel 'groot' en omschrijving, code onderaan. */
+export const vrijBordje = (id, naam, opmaak, b, h, extra = {}) => ({
+  ...basis, id, naam, printer: 'a4', opmaak, formaat: { b, h }, gat: opmaak !== 'strook', voet: opmaak !== 'strook',
+  velden: [kolom('Naam', 'naam', true), kolom('Code', 'code'),
+    { naam: 'Groot', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
+    { naam: 'Omschrijving', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false }],
+  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], eigenschappen: [{ kop: 'Omschrijving', waarde: [v('Omschrijving')] }], onder: [v('Code')] },
+  kleuren: { rand: { sleutel: [v('Groot')], waarden: {} } },
+  ...extra,
+});
+
 export const DSL_SJABLONEN = [
   qrlabel('qrlabel', 'QR-label', 56),
   qrlabel('qrlabel-half', 'QR-label half', 28),
@@ -43,6 +54,8 @@ export const DSL_SJABLONEN = [
     plekken: { ...leeg, titel: ['Pipe & Drape'], groot: [v('Maat'), ' m'], eigenschappen: [{ kop: 'Inhoud', waarde: [v('Naam')] }] },
     kleuren: { rand: { veld: 'Maat', waarden: {} } },
   },
+  vrijBordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),
+  vrijBordje('bordje-liggend', 'Bordje liggend', 'liggend', 105, 74),
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },
     logoBoven: true,
@@ -142,7 +155,7 @@ export const DSL_REGELS = {
     { pad: '/ backdrop', sjabloon: 'backdrop' },
     { pad: 'pipe en drape', naam: 'doek', sjabloon: 'pipe-drape' },
   ],
-  standaard: { bordje: 'qrlabel', qrlabel: 'qrlabel', locatie: 'locatie' },
+  standaard: { bordje: 'bordje-staand', qrlabel: 'qrlabel', locatie: 'locatie' },
 };
 
 const bevat = (tekst, deel) => !deel || String(tekst || '').toLowerCase().includes(String(deel).toLowerCase());

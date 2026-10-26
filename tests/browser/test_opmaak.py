@@ -13,13 +13,16 @@ GEVALLEN = [
     ('wit', 'gitterbox', 'GE9402', {'Doorsnede': '2,5 mm²'}, 'nl4-20m', 'Speakon 4p Verlengkabel 20m'),
     ('backdrop', 'backdrop', 'LI8163-B', {'Kleur': 'Zwart'}, 'bd6x3b-01', None),
     ('pd', 'pipe-drape', 'PD5143', {}, '1004421', None),
+    ('algemeen', 'bordje-staand', 'CO1120', {'Groot': '12 st.'}, 'kenporto-00', None),
+    ('algemeenL', 'bordje-liggend', 'GE9509', {}, '1001540', None),
+    ('algemeenS', 'bordje-staand', 'GE9509', {}, '1001540', None),
     ('qrlabel', 'qrlabel', 'GE9402', {}, 'nl4-2.50m', None),
     ('lang', 'qrlabel', 'GE9509', {}, '1001540', None),
     ('qrhalf', 'qrlabel-half', 'CO1120', {}, 'kenporto-00', None),
     ('locatie', 'locatie', 'GE9402', {}, '', None),
     ('lochalf', 'locatie-half', 'CO1120', {}, '', None),
 ]
-QR_VERWACHT = {'strook': 'nl4-2.50m', 'koppelbus': 'nl8-koppel', 'backdrop': 'bd6x3b-01', 'pd': '1004421',
+QR_VERWACHT = {'algemeen': 'kenporto-00', 'algemeenL': '1001540', 'algemeenS': '1001540', 'strook': 'nl4-2.50m', 'koppelbus': 'nl8-koppel', 'backdrop': 'bd6x3b-01', 'pd': '1004421',
                'qrlabel': 'nl4-2.50m', 'lang': '1001540', 'qrhalf': 'kenporto-00', 'locatie': 'V-1-2', 'lochalf': 'A1'}
 
 TEKEN = """async (gevallen) => {
@@ -85,6 +88,11 @@ class Opmaak(PaginaTest):
         self.assertIn('DSL Label 700 900', r['geladen'])
         self.assertTrue(r['bordje'].startswith('"DSL Futura"'))
         self.assertTrue(r['label'].startswith('"DSL Label"'))
+
+    def test_naam_groot_op_algemeen_bordje(self):
+        pt = self.pagina.evaluate("""() => Object.fromEntries(['algemeenL', 'algemeenS'].map(id => [id, parseFloat(document.querySelector('#' + id + ' .titel>span').style.fontSize)]))""")
+        self.assertGreaterEqual(pt['algemeenL'], 18)
+        self.assertGreaterEqual(pt['algemeenS'], 16)
 
     def test_formaat_in_mm(self):
         maten = self.pagina.evaluate("""() => Object.fromEntries([...document.body.children].map(e => [e.id, [e.style.width, e.style.height]]))""")

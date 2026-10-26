@@ -7,7 +7,7 @@ const artikel = { id: 'X1', naam: 'Testkist 2,5m', code: 'X1', qr: 'q1', exempla
 
 test('standaard_profielen', () => {
   const { dsl, basis } = PROFIEL_STANDAARD;
-  assert.equal(dsl.sjablonen.length, 7);
+  assert.equal(dsl.sjablonen.length, 9);
   assert.deepEqual(basis.sjablonen.map(s => s.id), ['qrlabel', 'locatie', 'bordje-staand', 'bordje-liggend', 'strook']);
   for (const p of [dsl, basis]) {
     for (const s of p.sjablonen) {
