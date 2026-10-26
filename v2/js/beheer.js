@@ -110,6 +110,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
   const meld = (soort, id) => scherm.dispatchEvent(new CustomEvent('beheer-wijziging', { bubbles: true, detail: { soort, id } }));
 
   function bewaarLater(sleutel, taak, ms = WACHT) {
+    if (gestopt) return;
     clearTimeout(wacht.get(sleutel)?.timer);
     wacht.set(sleutel, { taak, timer: setTimeout(() => voerUit(sleutel), ms) });
     status('Opslaan…');
@@ -598,6 +599,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
         voorbeeldLater();
       },
       waardenVoor,
+      signal,
     });
   }
 
@@ -854,6 +856,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
 
   let voorbeeldTimer, voorbeeldBeurt = 0;
   function voorbeeldLater(ms = WACHT) {
+    if (gestopt) return;
     clearTimeout(voorbeeldTimer);
     voorbeeldTimer = setTimeout(tekenVoorbeeld, ms);
   }

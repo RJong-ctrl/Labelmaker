@@ -187,6 +187,48 @@ class Indeling(Hulp):
         p.wait_for_function('window.terug === 1')
         self.assertEqual(p.evaluate('window.naamBijTerug'), 'Strook X')
 
+    def test_stop_bewaart_en_event(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        p.evaluate("""() => { window.events = [];
+            document.addEventListener('beheer-wijziging', (e) => window.events.push(e.detail)); }""")
+        self.open('sjabloon:gitterbox')
+        p.locator('#beheerForm [data-pad="naam"]').fill('Strook Y')
+        p.evaluate('() => window.beheer.stop()')
+        self.assertEqual(self.model(GITTERBOX + '.naam'), 'Strook Y')
+        self.assertEqual(p.evaluate('window.events'), [{'soort': 'sjabloon', 'id': 'gitterbox'}])
+        # Na stop reageert beheer nergens meer op.
+        p.locator('#beheerForm [data-pad="naam"]').fill('Strook Z')
+        p.wait_for_timeout(500)
+        self.assertEqual(self.model(GITTERBOX + '.naam'), 'Strook Y')
+        self.assertEqual(self.fouten, [])
+
+    def test_opmaak_wisselen(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        p.locator('#beheerMenu [data-onderdeel="nieuw"]').click()
+        f = p.locator('#beheerForm')
+        f.locator('[data-pad="opmaak"]').select_option('qrlabel')
+        expect(f.locator('[data-pad="printer"]')).to_have_value('label')
+        expect(f.locator('[data-pad="formaat.b"]')).to_have_value('76')
+        expect(f.locator('[data-pad="formaat.h"]')).to_have_value('56')
+        expect(f.locator('[data-pad="plek.groot"]')).to_have_count(0)
+        expect(f.locator('[data-blok="kleuren"]')).to_contain_text('geen kleuren')
+        expect(p.locator('#beheerVoorbeeldDoel .lbl')).to_have_count(1)
+        f.locator('[data-pad="opmaak"]').focus()
+        f.locator('[data-pad="opmaak"]').select_option('liggend')
+        expect(f.locator('[data-pad="printer"]')).to_have_value('a4')
+        expect(f.locator('[data-pad="formaat.b"]')).to_have_value('105')
+        expect(f.locator('[data-pad="opmaak"]')).to_be_focused()
+        f.locator('[data-pad="formaat.h"]').fill('5')
+        f.locator('[data-pad="formaat.h"]').press('Tab')
+        expect(f.locator('[data-melding="basis"]')).to_contain_text('tussen 10 en 297')
+        self.wacht_model("e.sjablonen.some(s => s.opmaak === 'liggend' && s.formaat.b === 105 && s.formaat.h === 74 && s.id.startsWith('sjabloon'))")
+        expect(p.locator('#beheerVoorbeeldDoel .signb.liggend')).to_have_count(1)
+        self.assertEqual(self.fouten, [])
+
 
 GITTERBOX = "e.sjablonen.find(s => s.id === 'gitterbox')"
 

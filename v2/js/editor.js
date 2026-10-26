@@ -75,9 +75,10 @@ let teller = 0;
  * Tekent de editor in doel. opties:
  *  - opWijziging(sjabloon): na elke geldige wijziging (volledig sjabloon, kopie)
  *  - waardenVoor(tokens, sjabloon) -> string[]: waarden die bij de artikelen voorkomen (kleurtabel)
+ *  - signal: AbortSignal; daarna reageert de editor nergens meer op
  * Geeft { sjabloon() } terug: de huidige stand.
  */
-export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoor = null } = {}) {
+export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoor = null, signal } = {}) {
   const s = normaliseer(sjabloon);
   const uid = ++teller;
   const rijen = {};
@@ -106,7 +107,8 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     if (!uit.regelsVeld) delete uit.regelsVeld;
     return uit;
   }
-  const wijzig = () => opWijziging(bouw());
+  const wijzig = () => { if (!signal?.aborted) opWijziging(bouw()); };
+  const luister = (type, fn) => wortel.addEventListener(type, fn, { signal });
 
   const $ = (sel) => wortel.querySelector(sel);
   const pad = (p) => wortel.querySelector(`[data-pad="${CSS.escape(p)}"]`);
@@ -327,7 +329,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     }
   }
 
-  wortel.addEventListener('input', (ev) => {
+  luister('input', (ev) => {
     const el = ev.target, p = el.dataset.pad;
     if (!p || el.tagName === 'SELECT' || el.type === 'checkbox') return;
     const d = p.split('.');
@@ -353,7 +355,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     } else if (d[0] === 'kleur') kleurInvoer(d[1], +d[2], d[3], el, false);
   });
 
-  wortel.addEventListener('change', (ev) => {
+  luister('change', (ev) => {
     const el = ev.target, p = el.dataset.pad;
     if (!p) return;
     const d = p.split('.');
@@ -402,12 +404,12 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     }
   }
 
-  wortel.addEventListener('focusin', (ev) => {
+  luister('focusin', (ev) => {
     const el = ev.target;
     if (el.classList?.contains('tokens')) laatstePad[el.closest('[data-blok]').dataset.blok] = el.dataset.pad;
   });
 
-  wortel.addEventListener('click', (ev) => {
+  luister('click', (ev) => {
     const knop = ev.target.closest('button[data-actie]');
     if (!knop || !wortel.contains(knop)) return;
     const a = knop.dataset.actie, i = +knop.dataset.i, k = knop.dataset.regel;
