@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -209,4 +209,20 @@ test('aanvulling_overschrijft_kolom_en_naam', () => {
   assert.equal(zonderLengte.rand, '#7f7f7f');
   assert.deepEqual(ontbrekend(S.gitterbox, A.GE9402, { Kabel: '' }), []);
   assert.equal(vul(S.gitterbox, A.GE9402, { Omschrijving: 'Verlengkabel NL4' }, 'x').titel, 'Verlengkabel NL4');
+});
+
+test('leeg_bordje', () => {
+  for (const id of ['leeg-staand', 'leeg-liggend']) {
+    const sj = DSL_SJABLONEN.find(s => s.id === id);
+    assert.ok(sj, id);
+    assert.ok(sj.velden.every(v => v.herkomst.type === 'aanvulling' || v.naam === 'Naam'));
+    const los = { id: 'los-1', naam: 'Nooduitgang', code: '', qr: '', exemplaren: [], pad: '', map: 'Losse items', locatie: '', soort: 'bulk', type: 'Los item', combinatie: false, aantal: 0, sjabloon: id };
+    const i = vul(sj, los, { Groot: '6 × 3 m', Regels: 'Kleur: Zwart', Onderregel: 'Alleen voor intern gebruik', Randkleur: 'Rood' }, '');
+    assert.equal(i.titel, 'Nooduitgang');
+    assert.equal(i.groot, '6 × 3 m');
+    assert.equal(i.rand, '#ff0000');
+    assert.deepEqual(i.eigenschappen, [['Kleur', 'Zwart']]);
+    assert.equal(i.onder, 'Alleen voor intern gebruik');
+    assert.deepEqual(ontbrekend(sj, los, {}), []);
+  }
 });

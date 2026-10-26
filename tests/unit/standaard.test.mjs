@@ -7,8 +7,8 @@ const artikel = { id: 'X1', naam: 'Testkist 2,5m', code: 'X1', qr: 'q1', exempla
 
 test('standaard_profielen', () => {
   const { dsl, basis } = PROFIEL_STANDAARD;
-  assert.equal(dsl.sjablonen.length, 9);
-  assert.deepEqual(basis.sjablonen.map(s => s.id), ['qrlabel', 'locatie', 'bordje-staand', 'bordje-liggend', 'strook']);
+  assert.equal(dsl.sjablonen.length, 11);
+  assert.deepEqual(basis.sjablonen.map(s => s.id), ['qrlabel', 'locatie', 'leeg-staand', 'leeg-liggend', 'bordje-staand', 'bordje-liggend', 'strook']);
   for (const p of [dsl, basis]) {
     for (const s of p.sjablonen) {
       const i = vul(s, artikel, {}, 'q1');
@@ -22,6 +22,6 @@ test('standaard_profielen', () => {
   assert.equal(basis.huisstijl.logo, null);
   assert.deepEqual(basis.huisstijl.voet, []);
   assert.equal(dsl.huisstijl.voet.length, 2);
-  assert.equal(vul(basis.sjablonen[2], artikel, { Groot: '20 m' }, 'q1').titel, 'Testkist 2,5m');
-  assert.deepEqual(ontbrekend(basis.sjablonen[2], artikel, {}), []);
+  assert.equal(vul(basis.sjablonen[4], artikel, { Groot: '20 m' }, 'q1').titel, 'Testkist 2,5m');
+  assert.deepEqual(ontbrekend(basis.sjablonen[4], artikel, {}), []);
 });

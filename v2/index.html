@@ -16,6 +16,7 @@
   <input type="search" id="zoek" placeholder="Zoek of scan: naam, code, QR, locatie" autocomplete="off" aria-label="Zoek of scan">
   <button type="button" id="inlezen">Artikelen inlezen</button>
   <input type="file" id="bestand" accept=".xlsx,.csv" hidden>
+  <button type="button" id="losItem" class="nieuw">+ Nieuw</button>
   <button type="button" id="beheer">Beheer</button>
   <div class="print">
     <button type="button" id="printLabel" class="primary" disabled>Print 0 op Citizen</button>
@@ -29,8 +30,14 @@
 </header>
 <p id="melding" class="melding" role="status" hidden></p>
 <main id="werkscherm">
-  <section id="artikelen" class="kolom" aria-labelledby="kopArtikelen">
-    <div class="kop"><h2 id="kopArtikelen">Artikelen</h2><span id="aantalArtikelen" class="hint"></span><button type="button" id="losItem" class="klein">+ Los item</button></div>
+  <section id="artikelen" class="kolom" aria-label="Maken en artikelen">
+    <div class="tabs" role="tablist">
+      <button type="button" id="tabMaken" role="tab" aria-selected="true" aria-controls="maken">Maken</button>
+      <button type="button" id="tabLijst" role="tab" aria-selected="false" aria-controls="lijstDeel">Lijst</button>
+    </div>
+    <div id="maken" class="maken" role="tabpanel" aria-label="Maken"></div>
+    <div id="lijstDeel" class="lijstdeel" role="tabpanel" aria-labelledby="kopArtikelen" hidden>
+    <div class="kop"><h2 id="kopArtikelen">Artikelen</h2><span id="aantalArtikelen" class="hint"></span></div>
     <div id="leegArtikelen" class="leeg">Nog geen artikelen. Klik op <b>Artikelen inlezen</b> en kies de materiaalexport uit Rentman (.xlsx of .csv).</div>
     <div id="chips" class="chips" role="group" aria-label="Categorie"></div>
     <label class="vink"><input type="checkbox" id="combinaties"> Combinaties tonen</label>
@@ -48,6 +55,7 @@
         <select id="sjabloonKeuze" aria-label="Ander sjabloon" disabled><option value="">Ander sjabloon…</option></select>
       </div>
     </div>
+    </div>
   </section>
   <section id="printvel" class="kolom" aria-labelledby="kopPrintvel">
     <div class="kop"><h2 id="kopPrintvel">Printvel</h2></div>
@@ -56,7 +64,7 @@
       <button type="button" id="tabA4" role="tab" aria-selected="false">A4 (0)</button>
     </div>
     <ul id="velLijst" class="lijst vel"></ul>
-    <div id="leegVel" class="leeg">Kies artikelen en klik op <b>Bordje of strook</b>, <b>QR-label</b> of <b>Locatielabel</b>.</div>
+    <div id="leegVel" class="leeg">Maak links een bordje of label en klik op <b>Op printvel</b>, of kies onder <b>Lijst</b> meerdere artikelen tegelijk.</div>
     <div class="acties"><button type="button" id="velLeeg">Printvel leegmaken</button></div>
   </section>
   <section id="voorbeeld" class="kolom" aria-labelledby="kopVoorbeeld">

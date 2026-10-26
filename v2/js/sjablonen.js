@@ -37,6 +37,22 @@ export const vrijBordje = (id, naam, opmaak, b, h, extra = {}) => ({
   ...extra,
 });
 
+/** Leeg bordje: alles zelf invullen (titel, groot, vrije regels, onderregel, randkleur, QR). */
+const RANDKLEUREN = ['Geen', 'Geel', 'Groen', 'Blauw', 'Lichtblauw', 'Rood', 'Paars', 'Oranje', 'Magenta', 'Wit'];
+export const leegBordje = (id, naam, opmaak, b, h) => ({
+  ...basis, id, naam, printer: 'a4', opmaak, formaat: { b, h }, gat: true, voet: true,
+  velden: [kolom('Naam', 'naam', true),
+    { naam: 'Groot', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
+    { naam: 'Regels', soort: 'tekst', meerregelig: true, herkomst: { type: 'aanvulling' }, verplicht: false },
+    { naam: 'Onderregel', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
+    { naam: 'Randkleur', soort: 'keuze', opties: RANDKLEUREN, herkomst: { type: 'aanvulling' }, verplicht: false }],
+  regelsVeld: 'Regels',
+  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], onder: [v('Onderregel')] },
+  kleuren: { rand: { sleutel: [v('Randkleur')], waarden: {
+    geel: '#ffff00', groen: '#00b050', blauw: '#0050ff', lichtblauw: '#00b0f0', rood: '#ff0000',
+    paars: '#7030a0', oranje: '#ff8c00', magenta: '#c000c0', wit: '#ffffff' } } },
+});
+
 export const DSL_SJABLONEN = [
   qrlabel('qrlabel', 'QR-label', 56),
   qrlabel('qrlabel-half', 'QR-label half', 28),
@@ -57,6 +73,8 @@ export const DSL_SJABLONEN = [
     plekken: { ...leeg, titel: ['Pipe & Drape'], groot: [v('Maat'), ' m'], eigenschappen: [{ kop: 'Inhoud', waarde: [v('Naam')] }] },
     kleuren: { rand: { veld: 'Maat', waarden: {} } },
   },
+  leegBordje('leeg-staand', 'Leeg bordje staand', 'staand', 74, 105),
+  leegBordje('leeg-liggend', 'Leeg bordje liggend', 'liggend', 105, 74),
   vrijBordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),
   vrijBordje('bordje-liggend', 'Bordje liggend', 'liggend', 105, 74),
   {

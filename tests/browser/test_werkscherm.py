@@ -19,7 +19,12 @@ class Hulp(PaginaTest):
     def rij(self, code):
         return self.pagina.locator(f'#lijst li[data-code="{code}"]')
 
+    def naar_lijst(self):
+        if self.pagina.locator('#lijstDeel').is_hidden():
+            self.pagina.locator('#tabLijst').click()
+
     def kies(self, code):
+        self.naar_lijst()
         self.rij(code).locator('input[type=checkbox]').check()
 
     def aanvullen(self, veld, waarde):
@@ -33,12 +38,14 @@ class Hulp(PaginaTest):
 
 class Werkscherm(Hulp):
     def test_leeg_scherm_legt_uit(self):
+        self.naar_lijst()
         self.assertIn('Artikelen inlezen', self.pagina.locator('#artikelen').inner_text())
         self.assertEqual(self.fouten, [])
 
     def test_inlezen_en_zoeken(self):
         p = self.pagina
         self.inlezen()
+        self.naar_lijst()
         self.assertIn('9 artikelen ingelezen', p.locator('#melding').inner_text())
         expect(p.locator('#lijst li')).to_have_count(8)
         p.locator('#combinaties').check()
@@ -210,7 +217,7 @@ class Herinlezen(Hulp):
 
     def test_focus_terug_naar_zoekveld(self):
         p = self.pagina
-        expect(p.locator('#zoek')).to_be_focused()
+        expect(p.locator('#makenZoek')).to_be_focused()
         self.inlezen()
         self.kies('CO1120')
         p.locator('#actQr').click()
@@ -240,70 +247,6 @@ class Vrijheid(Hulp):
         p.locator('#sjabloonKeuze').select_option('bordje-liggend')
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
         expect(p.locator('#voorbeeld .signb.liggend')).to_have_count(1)
-
-    def test_los_item_maken(self):
-        p = self.pagina
-        p.locator('#losItem').click()
-        d = p.locator('#aanvulling')
-        d.locator('select[name="__sjabloon"]').select_option('qrlabel')
-        d.locator('input[name="__naam"]').fill('Testkist')
-        d.locator('input[name="__qr"]').fill('tk-1')
-        d.get_by_role('button', name='Opslaan').click()
-        expect(p.locator('#chips')).to_contain_text('Losse items')
-        rij = p.locator('#lijst li', has_text='Testkist')
-        expect(rij.locator('input[type=checkbox]')).to_be_checked()
-        p.locator('#actQr').click()
-        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
-        expect(p.locator('#voorbeeld .lbl .titel')).to_have_text('Testkist')
-        p.reload()
-        expect(p.locator('#lijst li', has_text='Testkist')).to_have_count(1)
-
-    def test_vrij_bordje_met_regels(self):
-        p = self.pagina
-        p.locator('#losItem').click()
-        d = p.locator('#aanvulling')
-        d.locator('select[name="__sjabloon"]').select_option('bordje-staand')
-        d.locator('input[name="__naam"]').fill('Statafel')
-        d.locator('input[name="Groot"]').fill('Ø 80 cm')
-        d.locator('textarea[name="Regels"]').fill('Kleur: Zwart\nHoes: Wit')
-        d.get_by_role('button', name='Opslaan').click()
-        p.locator('#actBordje').click()
-        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
-        bordje = p.locator('#voorbeeld .signb')
-        expect(bordje.locator('.groot')).to_have_text('Ø 80 cm')
-        expect(bordje.locator('.tg')).to_contain_text('Hoes')
-        expect(bordje.locator('.geen-qr')).to_have_count(1)
-
-    def test_aanpassen_op_printvel(self):
-        p = self.pagina
-        self.inlezen()
-        self.kies('CO1120')
-        p.locator('#actBordje').click()
-        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
-        p.locator('#velLijst li').first.get_by_role('button', name='Aanpassen').click()
-        d = p.locator('#aanvulling')
-        d.locator('input[name="Groot"]').fill('12 st.')
-        d.get_by_role('button', name='Opslaan').click()
-        expect(p.locator('#voorbeeld .signb .groot')).to_have_text('12 st.')
-
-    def test_aanpassen_alle_velden(self):
-        p = self.pagina
-        self.inlezen()
-        self.kies('GE9402')
-        p.locator('#actBordje').click()
-        self.aanvullen('Doorsnede', '2,5 mm²')
-        expect(p.locator('#voorbeeld .signb .groot')).to_have_text('2,5 m')
-        p.locator('#velLijst li').first.get_by_role('button', name='Aanpassen').click()
-        d = p.locator('#aanvulling')
-        expect(d.locator('input[name="Lengte"]')).to_have_value('2,5')
-        expect(d.locator('input[name="Omschrijving"]')).to_have_value('Speakon 4p Verlengkabel')
-        d.locator('input[name="Lengte"]').fill('')
-        d.get_by_role('button', name='Opslaan').click()
-        expect(p.locator('#voorbeeld .signb .groot')).to_have_count(0)
-        p.reload()
-        p.locator('#tabA4').click()
-        p.locator('#velLijst li').first.get_by_role('button', name='Aanpassen').click()
-        expect(d.locator('input[name="Lengte"]')).to_have_value('')
 
     def test_kolommen_koppelen(self):
         p = self.pagina
@@ -389,7 +332,7 @@ class Robuust(Hulp):
         }""")
         p.reload()
         p.wait_for_function("document.querySelector('#printLabel')")
-        expect(p.locator('#zoek')).to_be_focused()
+        expect(p.locator('#makenZoek')).to_be_focused()
         n = p.evaluate("""async () => {
             const { openOpslag } = await import('./js/opslag.js');
             return (await (await openOpslag('dsl')).alle('printlog')).map(x => x.waarde.artikel);

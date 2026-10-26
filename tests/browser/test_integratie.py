@@ -23,6 +23,7 @@ class Integratie(PaginaTest):
         p.locator('#beheerScherm').get_by_role('button', name='Terug naar werkscherm').click()
         expect(p.locator('header')).to_be_visible()
         expect(p.locator('#beheerScherm')).to_be_hidden()
+        p.locator('#tabLijst').click()
         p.locator('#lijst li[data-code="CO1120"] input[type=checkbox]').check()
         p.locator('#actQr').click()
         expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
@@ -32,6 +33,7 @@ class Integratie(PaginaTest):
         p = self.pagina
         p.locator('#bestand').set_input_files(VOORBEELD)
         expect(p.locator('#melding')).to_contain_text('ingelezen')
+        p.locator('#tabLijst').click()
         p.locator('#lijst li[data-code="GE9412"] input[type=checkbox]').check()
         p.locator('#actBordje').click()
         d = p.locator('#aanvulling')

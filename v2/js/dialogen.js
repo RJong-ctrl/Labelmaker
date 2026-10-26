@@ -60,11 +60,11 @@ export function vraagLosItem(dlg, sjablonen, item = null, aanvullingen = {}) {
     const sj = sjablonen.find(s => s.id === sid);
     return (sj?.velden || []).filter(v => v.herkomst.type === 'aanvulling').map(v => veldInvoer(v, aanvullingen[v.naam] || '', { verplicht: false })).join('');
   };
-  const eerste = item?.sjabloon || sjablonen.find(s => s.printer === 'a4')?.id || sjablonen[0]?.id;
-  const html = `<form class="lositem"><h2>${item ? 'Los item bewerken' : 'Los item'}</h2>`
-    + '<p class="hint">Een label of bordje dat niet uit de export komt. Wordt bewaard in de lijst onder <b>Losse items</b>.</p>'
+  const eerste = item?.sjabloon || sjablonen.find(s => s.id === 'leeg-staand')?.id || sjablonen.find(s => s.printer === 'a4')?.id || sjablonen[0]?.id;
+  const html = `<form class="lositem"><h2>${item ? 'Bordje bewerken' : 'Nieuw bordje of label'}</h2>`
+    + '<p class="hint">Helemaal zelf maken, los van de artikelen. Begint met een leeg bordje; kies hieronder eventueel een ander sjabloon. Wordt bewaard onder <b>Losse items</b>.</p>'
     + `<label class="veld"><span>Sjabloon</span><select name="__sjabloon">${sjOpties(eerste)}</select></label>`
-    + `<label class="veld"><span>Naam</span><input type="text" name="__naam" required value="${esc(item?.naam || '')}"></label>`
+    + `<label class="veld"><span>Titel</span><input type="text" name="__naam" required value="${esc(item?.naam || '')}"></label>`
     + `<label class="veld"><span>QR-code (leeg = geen; meerdere met komma's)</span><input type="text" name="__qr" value="${esc(qrs.join(', '))}"></label>`
     + `<div class="twee"><label class="veld"><span>Code</span><input type="text" name="__code" value="${esc(item?.code || '')}"></label>`
     + `<label class="veld"><span>Locatie</span><input type="text" name="__locatie" value="${esc(item?.locatie || '')}"></label></div>`

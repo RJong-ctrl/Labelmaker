@@ -18,6 +18,7 @@ try {
 }
 const model = await laadModel(opslag, profielId, profiel?.standaard);
 const scherm = await start(document, model, { waarschuwing, profielId });
+document.body.dataset.klaar = '1'; // werkscherm is opgestart (tests wachten hierop)
 
 // Gedeelde basis van de site (data/<profiel>.json); zonder internet werkt de laatst geladen basis.
 (async () => {

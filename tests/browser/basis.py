@@ -71,6 +71,8 @@ class PaginaTest(unittest.TestCase):
         if self.init_script:
             self.pagina.add_init_script(self.init_script)
         self.pagina.goto(self.basis + self.pad)
+        if self.app_starten and self.pad.startswith('/v2/'):
+            self.pagina.wait_for_function("document.body.dataset.klaar === '1'", timeout=30000)
 
     def _console(self, m):
         # Een ontbrekend basisbestand (data/<profiel>.json) of nog niet samengevoegde

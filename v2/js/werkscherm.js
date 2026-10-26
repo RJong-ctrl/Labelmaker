@@ -9,6 +9,7 @@ import { A4 } from './indeling.js';
 import { esc } from './html.js';
 import { profielen, kiesProfiel, maakProfiel } from './profielen.js';
 import { vraagVelden, vraagLosItem, vraagKolommen, vraagProfiel } from './dialogen.js';
+import { startMaken } from './maken.js';
 
 const MAX_RIJEN = 200;
 const LAATST = '__laatst';
@@ -38,8 +39,10 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
 
   function indexeer() {
     const e = E();
-    st.artikelen = [...e.artikelen, ...e.losseItems.map(x => ({ ...x, map: 'Losse items', los: true }))];
-    st.perId = new Map(st.artikelen.map(a => [a.id || a.code, a]));
+    const losse = e.losseItems.map(x => ({ ...x, map: 'Losse items', los: true }));
+    // Tijdelijke losse items (aangepaste bordjes op het printvel) staan niet in de lijst, wel in perId.
+    st.artikelen = [...e.artikelen, ...losse.filter(x => !x.tijdelijk)];
+    st.perId = new Map([...e.artikelen, ...losse].map(a => [a.id || a.code, a]));
     st.qrIndex = new Map();
     st.zoektekst = new Map();
     for (const a of st.artikelen) {
@@ -53,7 +56,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
   indexeer();
 
   const opslagFout = (e) => melding('Opslaan mislukt: ' + (e?.message || e) + '. Wat je nu doet, is na herladen misschien weg.', true);
-  const bewaarInst = () => model.zetPcInstelling('werkscherm', { tab: st.tab, combinaties: st.combinaties }).catch(opslagFout);
+  const bewaarInst = () => model.zetPcInstelling('werkscherm', { tab: st.tab, combinaties: st.combinaties, paneel: typeof paneel === 'undefined' ? 'maken' : paneel }).catch(opslagFout);
   const bewaarVel = () => Promise.all([model.zetPrintvel('label', st.vel.label), model.zetPrintvel('a4', st.vel.a4)]).catch(opslagFout);
   const context = () => {
     const e = E();
@@ -85,7 +88,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     for (const a of st.artikelen) if (!a.los && a.map && (st.combinaties || !a.combinatie)) tel.set(a.map, (tel.get(a.map) || 0) + 1);
     const top = [...tel].sort((a, b) => b[1] - a[1] || nlSort.compare(a[0], b[0])).slice(0, 12);
     const chip = (waarde, tekst) => `<button type="button" class="chip" data-map="${esc(waarde ?? '')}" aria-pressed="${st.map === waarde}">${tekst}</button>`;
-    const nLos = E().losseItems.length;
+    const nLos = E().losseItems.filter(x => !x.tijdelijk).length;
     $('chips').innerHTML = chip(null, 'Alle') + chip(LAATST, 'Laatst geprint')
       + (nLos ? chip(LOS, `Losse items <span class="n">${nLos}</span>`) : '')
       + top.map(([m, n]) => chip(m, `${esc(m)} <span class="n">${n}</span>`)).join('');
@@ -259,32 +262,11 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     $('zoek').focus();
   }
 
-  async function aanpassen(item) {
-    const a = st.perId.get(item.artikel), sj = sjabloon(item.sjabloon);
-    if (!a || !sj) return;
-    if (a.los) return losItem(a);
-    // Alle velden van het sjabloon, ook die uit de export of uit de naam; leeg = niet op het bordje.
-    const aanv = E().aanvullingen[item.artikel] || {};
-    const BRON = { kolom: 'uit de export', naam: 'uit de naam' };
-    const velden = sj.velden.map(v => ({
-      ...v, verplicht: false, bron: BRON[v.herkomst.type] || '',
-      ...(v.herkomst.patroon === 'kabel' ? { keuzes: [{ waarde: 'ja', tekst: 'Ja' }, { waarde: '', tekst: 'Nee' }] } : {}),
-    }));
-    const huidig = Object.fromEntries(sj.velden.map(v => [v.naam, veldwaarde(v, a, aanv)]));
-    const w = await vraagVelden($('aanvulling'), {
-      titel: 'Aanpassen', onder: `${a.naam} · ${sj.naam}`, velden, waarden: huidig,
-      hint: 'Leeg laten = niet op het bordje. Wordt onthouden voor dit artikel, ook bij een volgende keer.',
-    });
-    if (!w) return;
-    const nieuw = { ...aanv };
-    for (const v of sj.velden) {
-      const waarde = String(w[v.naam] ?? '').trim();
-      if (v.herkomst.type === 'aanvulling') { if (waarde) nieuw[v.naam] = waarde; else delete nieuw[v.naam]; }
-      else if (waarde === natuurlijkeWaarde(v, a)) delete nieuw[v.naam];
-      else nieuw[v.naam] = waarde;
-    }
-    await model.vervangAanvulling(item.artikel, nieuw).catch(opslagFout);
-    tekenVel();
+  function aanpassen(item, index) {
+    if (!st.perId.get(item.artikel) || !sjabloon(item.sjabloon)) return;
+    zetPaneel('maken');
+    maken.laad(item, st.tab, index);
+    melding('Pas het bordje aan en klik op Bijwerken.');
   }
 
   async function losItem(bestaand = null) {
@@ -413,10 +395,12 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
   });
   $('inlezen').addEventListener('click', () => $('bestand').click());
   $('bestand').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) importeren(f); });
-  $('losItem').addEventListener('click', () => losItem());
+  $('losItem').addEventListener('click', () => { zetPaneel('maken'); maken.reset(); });
+  $('tabMaken').addEventListener('click', () => zetPaneel('maken'));
+  $('tabLijst').addEventListener('click', () => zetPaneel('lijst'));
   let zoekTimer;
-  $('zoek').addEventListener('input', () => { clearTimeout(zoekTimer); zoekTimer = setTimeout(tekenLijst, 120); });
-  $('zoek').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(zoekTimer); if (!scan()) tekenLijst(); } });
+  $('zoek').addEventListener('input', () => { zetPaneel('lijst'); clearTimeout(zoekTimer); zoekTimer = setTimeout(tekenLijst, 120); });
+  $('zoek').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); zetPaneel('lijst'); clearTimeout(zoekTimer); if (!scan()) tekenLijst(); } });
   $('chips').addEventListener('click', (e) => {
     const b = e.target.closest('button.chip');
     if (!b) return;
@@ -458,7 +442,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
       st.vel[st.tab].splice(+li.dataset.i, 1);
       bewaarVel();
       tekenVel();
-    } else if (e.target.closest('button.aanpassen')) aanpassen(st.vel[st.tab][+li.dataset.i]);
+    } else if (e.target.closest('button.aanpassen')) aanpassen(st.vel[st.tab][+li.dataset.i], +li.dataset.i);
   });
   $('velLeeg').addEventListener('click', () => { st.vel[st.tab] = []; bewaarVel(); tekenVel(); melding('Printvel leeggemaakt.'); });
   $('printLabel').addEventListener('click', () => printen('label'));
@@ -475,16 +459,48 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
   root.addEventListener('click', (e) => { if (!menu.hidden && !menu.contains(e.target)) zetMenu(false); });
   root.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) zetMenu(false); });
 
+  // ---------- panelen: Maken (standaard) en Lijst ----------
+  let paneel = inst.paneel === 'lijst' ? 'lijst' : 'maken';
+  function zetPaneel(p) {
+    if (paneel === p && !$('maken').hidden === (p === 'maken')) return;
+    paneel = p;
+    $('maken').hidden = p !== 'maken';
+    $('lijstDeel').hidden = p !== 'lijst';
+    $('tabMaken').setAttribute('aria-selected', p === 'maken');
+    $('tabLijst').setAttribute('aria-selected', p === 'lijst');
+  }
+  const maken = startMaken(root, {
+    model, E, sjabloon,
+    artikelen: () => st.artikelen, perId: () => st.perId, qrIndex: () => st.qrIndex,
+    voegToe, indexeer,
+    vervang: (printer, index, items) => {
+      st.vel[printer].splice(index, 1);
+      for (const it of items) { const p = sjabloon(it.sjabloon)?.printer || printer; st.vel[p].splice(p === printer ? index : st.vel[p].length, 0, it); }
+    },
+    naarPrinter: (p) => { st.tab = p; bewaarInst(); },
+    melding, bewaarVel,
+    tekenAlles: () => { tekenChips(); tekenLijst(); tekenVel(); },
+  });
+  zetPaneel(paneel);
+  $('maken').hidden = paneel !== 'maken'; $('lijstDeel').hidden = paneel !== 'lijst';
+
+  // Tijdelijke losse items die niet meer op het printvel staan, opruimen.
+  {
+    const inGebruik = new Set([...st.vel.label, ...st.vel.a4].map(i => i.artikel));
+    for (const x of E().losseItems) if (x.tijdelijk && !inGebruik.has(x.id)) await model.gooiWeg({ soort: 'los', id: x.id }).catch(() => {});
+  }
+
   /** Opnieuw tekenen na een wijziging elders (beheer, nieuwe basis); printvel opnieuw uit de opslag. */
   async function vernieuw(opnieuwLezen = true) {
     if (opnieuwLezen) { st.vel.label = await model.printvel('label'); st.vel.a4 = await model.printvel('a4'); }
     indexeer();
     for (const p of ['label', 'a4']) st.vel[p] = st.vel[p].filter(i => sjabloon(i.sjabloon));
     tekenProfielen(); tekenSjabloonKeuze(); tekenChips(); tekenLijst(); tekenVel();
+    maken?.vernieuw();
   }
 
   await vernieuw(false);
   if (waarschuwing) melding(waarschuwing, true);
-  $('zoek').focus();
+  (paneel === 'maken' ? $('makenZoek') : $('zoek'))?.focus();
   return { vernieuw, melding };
 }

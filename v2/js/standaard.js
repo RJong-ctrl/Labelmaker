@@ -1,7 +1,7 @@
 // Profielstandaarden: waar een profiel mee begint, vóór basis en lokale wijzigingen.
 // 'dsl' = DSL-sjablonen en -huisstijl met Rentman; 'basis' = neutraal profiel.
 
-import { DSL_SJABLONEN, DSL_REGELS, vrijBordje } from './sjablonen.js';
+import { DSL_SJABLONEN, DSL_REGELS, vrijBordje, leegBordje } from './sjablonen.js';
 import { RENTMAN } from './import.js';
 
 const kolom = (naam, k, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'kolom', kolom: k }, verplicht });
@@ -22,6 +22,8 @@ const BASIS_SJABLONEN = [
     velden: [kolom('Locatie', 'locatie', true), kolom('Naam', 'naam')],
     plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Naam')], qr: [v('Locatie')] },
   },
+  leegBordje('leeg-staand', 'Leeg bordje staand', 'staand', 74, 105),
+  leegBordje('leeg-liggend', 'Leeg bordje liggend', 'liggend', 105, 74),
   bordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),
   bordje('bordje-liggend', 'Bordje liggend', 'liggend', 105, 74),
   bordje('strook', 'Strook', 'strook', 180, 48, { logoBoven: true, plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], onder: ['Code ', v('Code')] } }),
