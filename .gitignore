@@ -6,3 +6,6 @@
 # Testbestanden worden tijdens de test gemaakt
 tests/fixtures/out/
 __pycache__/
+
+# Werkmappen van hulpagents
+.claude/worktrees/

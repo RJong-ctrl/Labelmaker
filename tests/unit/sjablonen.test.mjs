@@ -102,6 +102,9 @@ test('algemeen_bordje', () => {
   assert.equal(i.qr, 'kenporto-00');
   assert.equal(i.opmaak, 'staand');
   assert.deepEqual(ontbrekend(S['bordje-staand'], A.CO1120, {}), []);
+  const r = vul(S['bordje-staand'], A.CO1120, { Omschrijving: 'Portofoon', Regels: 'Kleur: Zwart\nlader erbij' }, '');
+  assert.deepEqual(r.eigenschappen, [['Omschrijving', 'Portofoon'], ['Kleur', 'Zwart'], ['', 'lader erbij']]);
+  assert.equal(S['bordje-staand'].velden.find(v => v.naam === 'Regels').meerregelig, true);
 });
 
 test('qrlabel_en_locatie', () => {

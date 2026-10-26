@@ -12,10 +12,11 @@
 <body>
 <header>
   <h1>Labelmaker</h1>
+  <select id="profiel" aria-label="Profiel"></select>
   <input type="search" id="zoek" placeholder="Zoek of scan: naam, code, QR, locatie" autocomplete="off" aria-label="Zoek of scan">
   <button type="button" id="inlezen">Artikelen inlezen</button>
   <input type="file" id="bestand" accept=".xlsx,.csv" hidden>
-  <button type="button" id="beheer" disabled title="Volgt in fase 2">Beheer</button>
+  <button type="button" id="beheer">Beheer</button>
   <div class="print">
     <button type="button" id="printLabel" class="primary" disabled>Print 0 op Citizen</button>
     <button type="button" id="printA4" class="primary" disabled>Print 0 op A4</button>
@@ -27,9 +28,9 @@
   </div>
 </header>
 <p id="melding" class="melding" role="status" hidden></p>
-<main>
+<main id="werkscherm">
   <section id="artikelen" class="kolom" aria-labelledby="kopArtikelen">
-    <div class="kop"><h2 id="kopArtikelen">Artikelen</h2><span id="aantalArtikelen" class="hint"></span></div>
+    <div class="kop"><h2 id="kopArtikelen">Artikelen</h2><span id="aantalArtikelen" class="hint"></span><button type="button" id="losItem" class="klein">+ Los item</button></div>
     <div id="leegArtikelen" class="leeg">Nog geen artikelen. Klik op <b>Artikelen inlezen</b> en kies de materiaalexport uit Rentman (.xlsx of .csv).</div>
     <div id="chips" class="chips" role="group" aria-label="Categorie"></div>
     <label class="vink"><input type="checkbox" id="combinaties"> Combinaties tonen</label>
@@ -41,6 +42,7 @@
       <button type="button" id="actBordje" disabled>Bordje of strook</button>
       <button type="button" id="actQr" disabled>QR-label</button>
       <button type="button" id="actLoc" disabled>Locatielabel</button>
+      <select id="sjabloonKeuze" aria-label="Ander sjabloon" disabled><option value="">Ander sjabloon…</option></select>
     </div>
   </section>
   <section id="printvel" class="kolom" aria-labelledby="kopPrintvel">

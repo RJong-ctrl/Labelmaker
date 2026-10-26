@@ -62,11 +62,21 @@ class PaginaTest(unittest.TestCase):
         if not self.app_starten:
             self.context.route('**/v2/js/app.js', lambda r: r.fulfill(status=200, content_type='text/javascript', body=''))
         self.fouten = []
-        self.pagina.on('console', lambda m: m.type == 'error' and self.fouten.append(m.text))
+        self.pagina.on('console', self._console)
         self.pagina.on('pageerror', lambda e: self.fouten.append(str(e)))
         if self.init_script:
             self.pagina.add_init_script(self.init_script)
         self.pagina.goto(self.basis + self.pad)
+
+    def _console(self, m):
+        # Een ontbrekend basisbestand (data/<profiel>.json) of nog niet samengevoegde
+        # module is geen fout van de pagina zelf.
+        if m.type != 'error':
+            return
+        url = (m.location or {}).get('url', '')
+        if 'Failed to load resource' in m.text and '/data/' in url:
+            return
+        self.fouten.append(m.text)
 
     def laad_voorbeeld(self):
         """Zet window.T klaar: modules, artikelen uit voorbeeld.xlsx (A) en sjablonen (S)."""

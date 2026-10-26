@@ -23,12 +23,15 @@ const locatie = (id, naam, h) => ({
   plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Naam')], qr: [v('Locatie')] },
 });
 
-/** Algemeen bordje (staand, liggend) of strook: naam, optioneel 'groot' en omschrijving, code onderaan. */
+/** Algemeen bordje (staand, liggend) of strook: naam, optioneel 'groot', omschrijving en vrije regels
+ *  ('Kop: waarde', één per regel), code onderaan. */
 export const vrijBordje = (id, naam, opmaak, b, h, extra = {}) => ({
   ...basis, id, naam, printer: 'a4', opmaak, formaat: { b, h }, gat: opmaak !== 'strook', voet: opmaak !== 'strook',
   velden: [kolom('Naam', 'naam', true), kolom('Code', 'code'),
     { naam: 'Groot', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
-    { naam: 'Omschrijving', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false }],
+    { naam: 'Omschrijving', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
+    { naam: 'Regels', soort: 'tekst', meerregelig: true, herkomst: { type: 'aanvulling' }, verplicht: false }],
+  regelsVeld: 'Regels',
   plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], eigenschappen: [{ kop: 'Omschrijving', waarde: [v('Omschrijving')] }], onder: [v('Code')] },
   kleuren: { rand: { sleutel: [v('Groot')], waarden: {} } },
   ...extra,

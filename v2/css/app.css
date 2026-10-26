@@ -84,3 +84,12 @@ dialog h2{margin:0 0 4px;font:700 20px/1.1 Bahnschrift,"Arial Narrow",Arial,sans
 dialog .veld{display:grid;gap:4px;margin:12px 0 0;font-weight:600;font-size:13px}
 dialog select,dialog input{width:100%}
 dialog .acties{justify-content:flex-end}
+
+#profiel{font-weight:600;max-width:160px}
+.kop #losItem{margin-left:auto}
+.kop .hint{margin:0}
+#sjabloonKeuze{max-width:170px}
+dialog textarea{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 9px;font:inherit;font-size:14px;resize:vertical}
+dialog .twee{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+dialog .acties .links{margin-right:auto;color:var(--err)}
+.lijst .bewerk{flex:0 0 auto}

@@ -202,6 +202,86 @@ class Herinlezen(Hulp):
         expect(p.locator('#zoek')).to_be_focused()
 
 
+class Vrijheid(Hulp):
+    def test_sjabloon_per_keer(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('GE9402')
+        p.locator('#sjabloonKeuze').select_option('qrlabel-half')
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        expect(p.locator('#velLijst')).to_contain_text('QR-label half')
+        expect(p.locator('#sjabloonKeuze')).to_have_value('')
+        expect(p.locator('#aanvulling')).to_be_hidden()
+
+    def test_ander_sjabloon_liggend(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('CO1120')
+        p.locator('#sjabloonKeuze').select_option('bordje-liggend')
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        expect(p.locator('#voorbeeld .signb.liggend')).to_have_count(1)
+
+    def test_los_item_maken(self):
+        p = self.pagina
+        p.locator('#losItem').click()
+        d = p.locator('#aanvulling')
+        d.locator('select[name="__sjabloon"]').select_option('qrlabel')
+        d.locator('input[name="__naam"]').fill('Testkist')
+        d.locator('input[name="__qr"]').fill('tk-1')
+        d.get_by_role('button', name='Opslaan').click()
+        expect(p.locator('#chips')).to_contain_text('Losse items')
+        rij = p.locator('#lijst li', has_text='Testkist')
+        expect(rij.locator('input[type=checkbox]')).to_be_checked()
+        p.locator('#actQr').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        expect(p.locator('#voorbeeld .lbl .titel')).to_have_text('Testkist')
+        p.reload()
+        expect(p.locator('#lijst li', has_text='Testkist')).to_have_count(1)
+
+    def test_vrij_bordje_met_regels(self):
+        p = self.pagina
+        p.locator('#losItem').click()
+        d = p.locator('#aanvulling')
+        d.locator('select[name="__sjabloon"]').select_option('bordje-staand')
+        d.locator('input[name="__naam"]').fill('Statafel')
+        d.locator('input[name="Groot"]').fill('Ø 80 cm')
+        d.locator('textarea[name="Regels"]').fill('Kleur: Zwart\nHoes: Wit')
+        d.get_by_role('button', name='Opslaan').click()
+        p.locator('#actBordje').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        bordje = p.locator('#voorbeeld .signb')
+        expect(bordje.locator('.groot')).to_have_text('Ø 80 cm')
+        expect(bordje.locator('.tg')).to_contain_text('Hoes')
+        expect(bordje.locator('.geen-qr')).to_have_count(1)
+
+    def test_aanpassen_op_printvel(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('CO1120')
+        p.locator('#actBordje').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        p.locator('#velLijst li').first.get_by_role('button', name='Aanpassen').click()
+        d = p.locator('#aanvulling')
+        d.locator('input[name="Groot"]').fill('12 st.')
+        d.get_by_role('button', name='Opslaan').click()
+        expect(p.locator('#voorbeeld .signb .groot')).to_have_text('12 st.')
+
+    def test_kolommen_koppelen(self):
+        p = self.pagina
+        csv = 'Omschrijving;Nummer;Plek\nStatafel zwart;T1;B-2\n'
+        p.locator('#bestand').set_input_files({'name': 'eigen.csv', 'mimeType': 'text/csv', 'buffer': csv.encode('utf-8')})
+        d = p.locator('#aanvulling')
+        d.locator('select[name="naam"]').select_option('Omschrijving')
+        d.locator('select[name="code"]').select_option('Nummer')
+        d.locator('select[name="locatie"]').select_option('Plek')
+        d.get_by_role('button', name='Inlezen').click()
+        expect(p.locator('#melding')).to_contain_text('1 artikel ingelezen')
+        expect(p.locator('#lijst li', has_text='Statafel zwart')).to_contain_text('B-2')
+        p.locator('#bestand').set_input_files({'name': 'eigen.csv', 'mimeType': 'text/csv', 'buffer': csv.encode('utf-8')})
+        expect(p.locator('#melding')).to_contain_text('1 artikel ingelezen')
+        expect(d).to_be_hidden()
+
+
 class Robuust(Hulp):
     init_script = """
         window.__faal = false;
