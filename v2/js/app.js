@@ -59,8 +59,8 @@ async function toonScherm() {
       terug: () => { location.hash = ''; },
       extraOnderdelen: beheerOnderdelen(document, model, { profielId }),
     });
-  } catch (e) {
-    document.getElementById('beheerScherm').innerHTML = `<p class="leeg">Beheer kon niet worden geopend (${String(e?.message || e).replace(/[<>&]/g, '')}).</p>`;
+  } catch {
+    document.getElementById('beheerScherm').innerHTML = '<div class="kolom"><p class="leeg">Beheer komt er binnenkort aan. <a href="#">Terug naar het werkscherm</a></p></div>';
   }
 }
 document.getElementById('beheer').addEventListener('click', () => { location.hash = location.hash === '#beheer' ? '' : '#beheer'; });
