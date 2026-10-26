@@ -7,7 +7,7 @@ class Opzet(PaginaTest):
     def test_v2_laadt_met_printknoppen_rechtsboven(self):
         p = self.pagina
         self.assertEqual(p.title(), 'Labelmaker')
-        knoppen = p.locator('header .print button')
+        knoppen = p.locator('header .print button.primary')
         self.assertEqual(knoppen.count(), 2)
         p.wait_for_function("document.querySelector('#printLabel').textContent.includes('Citizen')")
         self.assertEqual(knoppen.nth(0).inner_text().strip(), 'Print 0 op Citizen')

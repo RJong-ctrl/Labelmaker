@@ -56,6 +56,7 @@ class PaginaTest(unittest.TestCase):
     def setUp(self):
         self.context = self.browser.new_context(viewport=self.viewport, device_scale_factor=self.apparaatschaal)
         self.pagina = self.context.new_page()
+        self.pagina.set_default_timeout(8000)
         self.fouten = []
         self.pagina.on('console', lambda m: m.type == 'error' and self.fouten.append(m.text))
         self.pagina.on('pageerror', lambda e: self.fouten.append(str(e)))

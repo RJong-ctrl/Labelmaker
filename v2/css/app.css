@@ -43,3 +43,43 @@ main{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(340px,
 }
 .printbalk{position:fixed;top:64px;right:20px;z-index:30;display:flex;align-items:center;gap:10px;background:var(--panel);border:2px solid var(--accent);border-radius:10px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.18);font-weight:600}
 .printbalk .pijl{color:var(--muted)}
+
+/* ---------- werkscherm ---------- */
+.kop{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip{padding:4px 10px;border-radius:999px;font-weight:500;font-size:13px}
+.chip .n{color:var(--muted);font-size:12px;margin-left:2px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed="true"] .n{color:var(--accent-ink)}
+.vink{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:8px}
+.lijst{list-style:none;margin:0;padding:0;overflow:auto;flex:1 1 auto;min-height:0;border:1px solid var(--line);border-radius:8px;background:var(--field)}
+.lijst:empty{display:none}
+.lijst li{border-bottom:1px solid var(--line)}
+.lijst li:last-child{border-bottom:0}
+.lijst li.gekozen{background:var(--sel)}
+.lijst label{display:flex;align-items:center;gap:10px;padding:7px 10px;cursor:pointer;min-width:0}
+.lijst .txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.lijst .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lijst .sub{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lijst .map{flex:0 0 auto;max-width:34%;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:4px;background:var(--accent);color:var(--accent-ink);font-weight:600}
+.acties{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;flex:0 0 auto}
+.acties .hint{margin:0 auto 0 0}
+.tabs{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px;flex:0 0 auto}
+.tabs button{flex:1;border:0;border-radius:0;background:transparent;padding:8px}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.vel li{display:flex;align-items:center;gap:10px;padding:7px 10px}
+.stip{flex:0 0 auto;width:14px;height:14px;border-radius:50%;border:1px solid var(--line)}
+.vel .aantal{width:64px;padding:5px 6px}
+.vellen{flex:1 1 auto;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.vb{flex:0 0 auto;overflow:hidden;position:relative;border-radius:3px;box-shadow:0 1px 0 var(--line),0 6px 18px rgba(0,0,0,.14);background:#fff}
+.vb>*{position:absolute;left:0;top:0}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:40;display:flex;flex-direction:column;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.18);min-width:240px}
+.menu button{border:0;background:transparent;text-align:left;font-weight:500}
+.menu button:hover{background:var(--field)}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:20px 22px;min-width:340px;max-width:92vw}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog h2{margin:0 0 4px;font:700 20px/1.1 Bahnschrift,"Arial Narrow",Arial,sans-serif}
+dialog .veld{display:grid;gap:4px;margin:12px 0 0;font-weight:600;font-size:13px}
+dialog select,dialog input{width:100%}
+dialog .acties{justify-content:flex-end}
