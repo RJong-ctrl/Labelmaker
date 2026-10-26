@@ -4,6 +4,7 @@
 
 import { qrSvg } from './qr.js';
 import { tint, inkt, isLicht } from './kleuren.js';
+import { esc } from './html.js';
 
 export const HUISSTIJL_DSL = {
   logo: new URL('../assets/dsl-logo.svg', import.meta.url).href,
@@ -21,7 +22,6 @@ const GAT = 8;          // mm, gatmarkering
 const PT = 2.835;       // pt per mm
 const DPM = 203 / 25.4; // Citizen: punten per mm
 
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const mm = (n) => n.toFixed(2) + 'mm';
 
 function qrOfMelding(tekst, maat, klasse = 'qq') {

@@ -34,6 +34,8 @@ test('geen_valse_maat', () => {
     ['4 x Speakon 2p 10m snake grijs Verlengkabel', ''],
     ['Speakon 1 x 4P > 2 x 8P Verloop', ''],
     ['Pipe & drape baseplate 45x45cm', ''],
+    ['Truss 30 x 30 cm', ''],
+    ['Kabelgoot 10 x 5 mm', ''],
   ]);
   assert.equal(lengte('4 x Speakon 2p 10m snake grijs Verlengkabel'), '10');
 });

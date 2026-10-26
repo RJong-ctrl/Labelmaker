@@ -121,12 +121,17 @@ function vraag(tekst) {
   balk.hidden = false;
   balk.querySelector('[data-k="ja"]').focus();
   return new Promise(ok => {
-    balk.onclick = (e) => {
-      const k = e.target.closest('button')?.dataset.k;
-      if (!k) return;
+    const klaar = (ja) => {
       balk.hidden = true;
       balk.onclick = null;
-      ok(k === 'ja');
+      document.removeEventListener('keydown', esc);
+      ok(ja);
+    };
+    const esc = (e) => { if (e.key === 'Escape') klaar(false); };
+    document.addEventListener('keydown', esc);
+    balk.onclick = (e) => {
+      const k = e.target.closest('button')?.dataset.k;
+      if (k) klaar(k === 'ja');
     };
   });
 }

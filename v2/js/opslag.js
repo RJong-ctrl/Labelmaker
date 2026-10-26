@@ -1,5 +1,5 @@
 // Opslag in de browser, per profiel. GeheugenOpslag (tests) en IndexedDB
-// hebben dezelfde interface: lees, schrijf, schrijfVeel, alle, wis.
+// hebben dezelfde interface: lees, schrijf, schrijfVeel, vervangAlle, alle, wis.
 
 export const SOORTEN = ['artikelen', 'aanvullingen', 'printvel', 'printlog', 'instellingen'];
 const VERSIE = 1;
@@ -21,6 +21,11 @@ export class GeheugenOpslag {
   }
   async schrijfVeel(soort, items) {
     controleer(soort);
+    for (const { id, waarde } of items) this.data[soort].set(id, structuredClone(waarde));
+  }
+  async vervangAlle(soort, items) {
+    controleer(soort);
+    this.data[soort].clear();
     for (const { id, waarde } of items) this.data[soort].set(id, structuredClone(waarde));
   }
   async alle(soort) {
@@ -54,6 +59,15 @@ class IdbOpslag {
     controleer(soort);
     const tx = this.db.transaction(soort, 'readwrite');
     const st = tx.objectStore(soort);
+    for (const { id, waarde } of items) st.put(waarde, id);
+    return afgerond(tx);
+  }
+  /** Alles van deze soort vervangen, in één transactie (alles of niets). */
+  async vervangAlle(soort, items) {
+    controleer(soort);
+    const tx = this.db.transaction(soort, 'readwrite');
+    const st = tx.objectStore(soort);
+    st.clear();
     for (const { id, waarde } of items) st.put(waarde, id);
     return afgerond(tx);
   }

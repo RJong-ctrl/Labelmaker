@@ -2,8 +2,9 @@
 // kale naam. Getallen komen terug in Nederlandse notatie ('2,5', '3 × 1,2').
 
 const G = '\\d+(?:[.,]\\d+)?';
-// Tweede getal: gevolgd door 'm' (geen letter erna) of door iets anders dan letter/cijfer/komma.
-const MAAT = new RegExp(`(?<![\\d.,])(${G})\\s*[x×]\\s*(${G})(?:\\s*m(?![a-z²\\d])|(?![a-z\\d.,²]))`, 'i');
+// Tweede getal: gevolgd door 'm' (geen letter erna) of door iets anders dan letter/cijfer/komma,
+// maar niet door ' cm' of ' mm' (dan is het geen maat in meters).
+const MAAT = new RegExp(`(?<![\\d.,])(${G})\\s*[x×]\\s*(${G})(?:\\s*m(?![a-z²\\d])|(?![a-z\\d.,²]|\\s*[cm]m\\b))`, 'i');
 // Optioneel een bereik ervoor: '0,9-1,2m'.
 const LENGTE = new RegExp(`(?<![\\d.,])(?:(${G})\\s*-\\s*)?(${G})\\s*(?:meter|mtr|m)(?![a-z²\\d])`, 'i');
 const KWALITEIT = /(?:^|[\s(])([AB])\s*-?\s*kwaliteit\b/i;

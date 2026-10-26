@@ -6,13 +6,13 @@ import { DSL_SJABLONEN, vul, ontbrekend, qrsVoor, standaardSjabloon } from './sj
 import { HUISSTIJL_DSL } from './opmaak.js';
 import { tekenVellen, pasVellenAan, print, LABEL } from './printen.js';
 import { A4 } from './indeling.js';
+import { esc } from './html.js';
 
 const MAX_RIJEN = 200;
 const LAATST = '__laatst';
 const DERTIG_DAGEN = 30 * 24 * 3600 * 1000;
 const PX = 96 / 25.4;
 
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const norm = (s) => String(s ?? '').toLowerCase().replace(/×/g, 'x').replace(/,/g, '.').replace(/\s+/g, ' ').trim();
 const sjabloon = (id) => DSL_SJABLONEN.find(s => s.id === id);
 const nlSort = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' });
@@ -31,7 +31,12 @@ export async function start(root, opslag, { waarschuwing = '' } = {}) {
   st.aanvullingen = Object.fromEntries((await opslag.alle('aanvullingen')).map(x => [x.id, x.waarde]));
   st.vel.label = (await opslag.lees('printvel', 'label')) || [];
   st.vel.a4 = (await opslag.lees('printvel', 'a4')) || [];
-  st.printlog = (await opslag.alle('printlog')).map(x => x.waarde);
+  // Printlog: alleen de laatste 30 dagen worden gebruikt; ouder wordt opgeruimd.
+  const grensLog = Date.now() - DERTIG_DAGEN;
+  for (const { id, waarde } of await opslag.alle('printlog')) {
+    if ((waarde?.tijd || 0) < grensLog) await opslag.wis('printlog', id).catch(() => {});
+    else st.printlog.push(waarde);
+  }
   const inst = (await opslag.lees('instellingen', 'werkscherm')) || {};
   st.tab = inst.tab === 'a4' ? 'a4' : 'label';
   st.combinaties = !!inst.combinaties;
@@ -50,8 +55,9 @@ export async function start(root, opslag, { waarschuwing = '' } = {}) {
   }
   indexeer();
 
-  const bewaarInst = () => opslag.schrijf('instellingen', 'werkscherm', { tab: st.tab, combinaties: st.combinaties });
-  const bewaarVel = () => Promise.all([opslag.schrijf('printvel', 'label', st.vel.label), opslag.schrijf('printvel', 'a4', st.vel.a4)]);
+  const opslagFout = (e) => melding('Opslaan mislukt: ' + (e?.message || e) + '. Wat je nu doet, is na herladen misschien weg.', true);
+  const bewaarInst = () => opslag.schrijf('instellingen', 'werkscherm', { tab: st.tab, combinaties: st.combinaties }).catch(opslagFout);
+  const bewaarVel = () => Promise.all([opslag.schrijf('printvel', 'label', st.vel.label), opslag.schrijf('printvel', 'a4', st.vel.a4)]).catch(opslagFout);
   const context = () => ({ artikelen: st.perCode, sjablonen: DSL_SJABLONEN, aanvullingen: st.aanvullingen, huisstijl: HUISSTIJL_DSL });
 
   function melding(tekst, fout = false) {
@@ -219,7 +225,7 @@ export async function start(root, opslag, { waarschuwing = '' } = {}) {
         const w = await vraagAanvulling(a, mist);
         if (!w) { overgeslagen++; continue; }
         st.aanvullingen[code] = { ...(st.aanvullingen[code] || {}), ...w };
-        await opslag.schrijf('aanvullingen', code, st.aanvullingen[code]);
+        await opslag.schrijf('aanvullingen', code, st.aanvullingen[code]).catch(opslagFout);
       }
       const qrs = soort === 'locatie' ? [''] : (exemplaren ? [...exemplaren] : qrsVoor(a));
       for (const qr of qrs) { voegToe(sj.printer, { sjabloon: sid, artikel: code, qr, aantal: 1 }); toegevoegd++; }
@@ -238,30 +244,46 @@ export async function start(root, opslag, { waarschuwing = '' } = {}) {
     $('zoek').focus();
   }
 
+  let printBezig = false;
   async function printen(printer, alleenEerste = false) {
     const items = st.vel[printer];
-    if (!som(items)) return;
-    const gelukt = await print(printer, items, context(), { alleenEerste });
+    if (!som(items) || printBezig) return;
+    printBezig = true;
+    let gelukt;
+    try { gelukt = await print(printer, items, context(), { alleenEerste }); }
+    finally { printBezig = false; }
     if (!gelukt || alleenEerste) return;
     const tijd = Date.now(), stempel = new Date(tijd).toISOString();
     const regels = items.map((it, i) => ({ id: `${stempel}#${String(i).padStart(4, '0')}`, waarde: { ...it, tijd } }));
-    await opslag.schrijfVeel('printlog', regels);
+    await opslag.schrijfVeel('printlog', regels).catch(opslagFout);
     st.printlog.push(...regels.map(r => r.waarde));
     if (st.map === LAATST) tekenLijst();
   }
 
   async function importeren(file) {
+    let rijen;
     try {
       melding('Bezig met inlezen…');
-      const { artikelen, ontbrekend: mist } = importeer(await leesBestand(file));
+      rijen = await leesBestand(file);
+    } catch (e) {
+      melding('Kon het bestand niet lezen: ' + e.message, true);
+      $('bestand').value = '';
+      return;
+    }
+    try {
+      const { artikelen, ontbrekend: mist } = importeer(rijen);
       if (!artikelen.length) {
         melding(mist.includes('naam') || mist.includes('code')
           ? 'In dit bestand staan geen kolommen "Naam (in database)" en "Code". Kies de materiaalexport uit Rentman.'
           : 'Geen artikelen gevonden in dit bestand.', true);
         return;
       }
-      await opslag.wis('artikelen');
-      await opslag.schrijfVeel('artikelen', artikelen.map(a => ({ id: a.code, waarde: a })));
+      try {
+        await opslag.vervangAlle('artikelen', artikelen.map(a => ({ id: a.code, waarde: a })));
+      } catch (e) {
+        melding('De artikelen konden niet worden opgeslagen (' + (e?.message || e) + '). De vorige lijst is bewaard gebleven.', true);
+        return;
+      }
       st.artikelen = artikelen;
       indexeer();
       st.keuze.clear();
@@ -281,7 +303,7 @@ export async function start(root, opslag, { waarschuwing = '' } = {}) {
       if (weg) delen.push(`${weg} ${weg === 1 ? 'regel' : 'regels'} van het printvel verwijderd: artikel niet meer in de export.`);
       melding(delen.join(' '));
     } catch (e) {
-      melding('Kon het bestand niet lezen: ' + e.message, true);
+      melding('Inlezen mislukt: ' + e.message, true);
     } finally {
       $('bestand').value = '';
     }
@@ -292,9 +314,9 @@ export async function start(root, opslag, { waarschuwing = '' } = {}) {
     const hit = st.qrIndex.get(waarde) || (st.perCode.has($('zoek').value.trim()) ? { code: $('zoek').value.trim(), exemplaar: null } : null);
     if (!hit) return false;
     const a = st.perCode.get(hit.code);
-    if (hit.exemplaar) {
-      const huidig = st.keuze.get(hit.code);
-      st.keuze.set(hit.code, new Set([...(huidig || []), hit.exemplaar]));
+    const heelGekozen = st.keuze.has(hit.code) && st.keuze.get(hit.code) === null;
+    if (hit.exemplaar && !heelGekozen) {
+      st.keuze.set(hit.code, new Set([...(st.keuze.get(hit.code) || []), hit.exemplaar]));
     } else st.keuze.set(hit.code, null);
     if (a.combinatie && !st.combinaties) { st.combinaties = true; $('combinaties').checked = true; tekenChips(); }
     $('zoek').value = '';

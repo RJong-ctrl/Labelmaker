@@ -144,7 +144,7 @@ class Werkscherm(Hulp):
         self.kies('GE9402')
         p.locator('#actBordje').click()
         self.aanvullen('Doorsnede', '2,5 mm²')
-        p.evaluate('window.print = () => { window.geprint = true; }')
+        p.evaluate('() => { window.print = () => { window.geprint = true; }; }')
         p.locator('#printA4').click()
         p.locator('#printbalk').get_by_role('button', name='Printen').click()
         p.wait_for_function('window.geprint === true')
@@ -190,6 +190,114 @@ class Herinlezen(Hulp):
         p.locator('#actBordje').click()
         self.aanvullen('Doorsnede', '4 mm²')
         expect(p.locator('#zoek')).to_be_focused()
+
+
+class Robuust(Hulp):
+    init_script = """
+        window.__faal = false;
+        const put = IDBObjectStore.prototype.put;
+        IDBObjectStore.prototype.put = function (...a) {
+            if (window.__faal) throw new DOMException('vol', 'QuotaExceededError');
+            return put.apply(this, a);
+        };
+    """
+
+    def test_html_in_namen_blijft_tekst(self):
+        p = self.pagina
+        naam = '<img src=x onerror="window.__xss=1"> Kabel "pro" & co'
+        csv = 'Naam (in database);Code;QR-codes / RFID;Map (Map)\n"' + naam.replace('"', '""') + '";X1;q1;<b>map</b>\n'
+        p.locator('#bestand').set_input_files({'name': 'x.csv', 'mimeType': 'text/csv', 'buffer': csv.encode('utf-8')})
+        expect(p.locator('#lijst li')).to_have_count(1)
+        expect(p.locator('#lijst li .nm')).to_have_text(naam)
+        self.kies('X1')
+        p.locator('#actQr').click()
+        expect(p.locator('#voorbeeld .lbl .titel')).to_contain_text('Kabel "pro" & co')
+        self.assertIsNone(p.evaluate('window.__xss'))
+        expect(p.locator('#chips')).to_contain_text('<b>map</b>')
+
+    def test_scannen_artikel_qr(self):
+        p = self.pagina
+        self.inlezen()
+        p.locator('#zoek').fill('NL4-2.50M')
+        p.locator('#zoek').press('Enter')
+        self.assertTrue(self.rij('GE9402').locator('input[type=checkbox]').is_checked())
+        expect(self.rij('GE9402').locator('.tag')).to_have_count(0)
+
+    def test_exemplaar_scannen_houdt_heel_artikel(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('LI8163-B')
+        p.locator('#zoek').fill('bd6x3b-01')
+        p.locator('#zoek').press('Enter')
+        p.locator('#actQr').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 2 op Citizen')
+
+    def test_qrlabel_zonder_qr_melding(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('GE9407')
+        p.locator('#actQr').click()
+        expect(p.locator('#voorbeeld .lbl .geen-qr')).to_have_text('Geen QR-code')
+
+    def test_printvel_leegmaken(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('CO1120')
+        p.locator('#actQr').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        p.locator('#velLeeg').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 0 op Citizen')
+        expect(p.locator('#velLijst li')).to_have_count(0)
+
+    def test_oude_printlog_opgeruimd(self):
+        p = self.pagina
+        p.evaluate("""async () => {
+            const { openOpslag } = await import('./js/opslag.js');
+            const o = await openOpslag('dsl');
+            const oud = Date.now() - 40 * 24 * 3600 * 1000;
+            await o.schrijf('printlog', new Date(oud).toISOString() + '#0000', { sjabloon: 'qrlabel', artikel: 'X', qr: '', aantal: 1, tijd: oud });
+            await o.schrijf('printlog', new Date().toISOString() + '#0000', { sjabloon: 'qrlabel', artikel: 'Y', qr: '', aantal: 1, tijd: Date.now() });
+        }""")
+        p.reload()
+        p.wait_for_function("document.querySelector('#printLabel')")
+        expect(p.locator('#zoek')).to_be_focused()
+        n = p.evaluate("""async () => {
+            const { openOpslag } = await import('./js/opslag.js');
+            return (await (await openOpslag('dsl')).alle('printlog')).map(x => x.waarde.artikel);
+        }""")
+        self.assertEqual(n, ['Y'])
+
+    def test_dubbelklik_en_esc_bij_printen(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('CO1120')
+        p.locator('#actQr').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        p.evaluate('() => { window.print = () => { window.geprint = (window.geprint || 0) + 1; }; }')
+        p.locator('#printLabel').dblclick()
+        expect(p.locator('#printbalk')).to_be_visible()
+        p.keyboard.press('Escape')
+        expect(p.locator('#printbalk')).to_be_hidden()
+        p.locator('#printLabel').click()
+        p.locator('#printbalk').get_by_role('button', name='Printen').click()
+        p.wait_for_function('window.geprint === 1')
+        n = p.evaluate("""async () => {
+            const { openOpslag } = await import('./js/opslag.js');
+            return (await (await openOpslag('dsl')).alle('printlog')).length;
+        }""")
+        self.assertEqual(n, 1)
+
+    def test_opslaan_mislukt_geeft_melding(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('CO1120')
+        p.locator('#actQr').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        p.evaluate('window.__faal = true')
+        rij = p.locator('#velLijst li').first
+        rij.locator('input.aantal').fill('3')
+        rij.locator('input.aantal').press('Tab')
+        expect(p.locator('#melding')).to_contain_text('Opslaan mislukt')
 
 
 class ZonderOpslag(Hulp):

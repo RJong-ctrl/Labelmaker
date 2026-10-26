@@ -31,3 +31,10 @@ test('geheugen_schrijfveel_en_soorten_los', async () => {
   assert.deepEqual(await o.lees('aanvullingen', 'a'), { Doorsnede: '4 mm²' });
   await assert.rejects(() => o.schrijf('prijzen', 'x', 1), Error);
 });
+
+test('geheugen_vervang_alle', async () => {
+  const o = new GeheugenOpslag();
+  await o.schrijfVeel('artikelen', [{ id: 'oud', waarde: 1 }]);
+  await o.vervangAlle('artikelen', [{ id: 'nieuw', waarde: 2 }]);
+  assert.deepEqual(await o.alle('artikelen'), [{ id: 'nieuw', waarde: 2 }]);
+});

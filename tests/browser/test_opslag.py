@@ -36,6 +36,16 @@ class Opslag(PaginaTest):
         self.assertEqual(uit['na'], 3999)
         self.assertEqual(self.fouten, [])
 
+    def test_vervang_alle_in_een_keer(self):
+        uit = self.pagina.evaluate("""async () => {
+            const { openOpslag } = await import('./js/opslag.js');
+            const o = await openOpslag('test-v');
+            await o.schrijfVeel('artikelen', [{ id: 'oud', waarde: 1 }]);
+            await o.vervangAlle('artikelen', [{ id: 'nieuw', waarde: 2 }]);
+            return (await o.alle('artikelen')).map(x => x.id);
+        }""")
+        self.assertEqual(uit, ['nieuw'])
+
     def test_profielen_gescheiden(self):
         uit = self.pagina.evaluate("""async () => {
             const { openOpslag } = await import('./js/opslag.js');
