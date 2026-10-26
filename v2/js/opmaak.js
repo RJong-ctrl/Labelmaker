@@ -122,10 +122,11 @@ function bordje(i, hs) {
   const kleur = geldigeKleur(i.rand) || ONBEKEND, licht = isLicht(kleur);
   let gat = '', logoTop = 0, logoH = bw;
   if (i.gat) {
-    const r = Math.min(GAT / 2, bw / 2 - 1), cx = bw / 2, cy = Math.max(2.5, 2.5 * f) + r;
+    const r = Math.min(GAT / 2, bw / 2 - 1), cx = bw / 2, cy = H - Math.max(2.5, 2.5 * f) - r; // gatmarkering onderaan
     gat = `<svg class="gat" viewBox="-10 -10 20 20" style="left:${mm(cx - r)};top:${mm(cy - r)};width:${mm(2 * r)};height:${mm(2 * r)}"><circle r="9.6" fill="#fff" fill-opacity=".55" stroke="#000" stroke-width=".5" stroke-dasharray="1.6 1.2"/><path d="M-2.4 0H2.4M0-2.4V2.4" stroke="#000" stroke-width=".5"/></svg>`;
   }
-  if (!i.logoBoven) { logoH = bw; logoTop = H - 0.5 - logoH; }
+  // Logo altijd bovenaan (Robin, 26 okt); logoBoven blijft in het sjabloon voor oudere gegevens.
+  logoTop = 0.5;
   const el = document.createElement('div');
   el.className = 'signb ' + i.opmaak;
   el.dataset.sjabloon = i.sjabloon;

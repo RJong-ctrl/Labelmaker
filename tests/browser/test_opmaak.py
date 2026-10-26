@@ -152,12 +152,15 @@ class Opmaak(PaginaTest):
     def test_logo_positie(self):
         r = self.pagina.evaluate("""() => {
             const pos = (id, sel) => { const e = document.querySelector('#' + id + ' ' + sel); if (!e) return null; const b = document.getElementById(id).getBoundingClientRect(), r = e.getBoundingClientRect(); return [(r.top - b.top) / b.height, (r.bottom - b.top) / b.height]; };
-            return { strookLogo: pos('strook', '.blg'), strookGat: pos('strook', '.gat'), bdLogo: pos('backdrop', '.blg'), bdGat: pos('backdrop', '.gat') };
+            return { strookLogo: pos('strook', '.blg'), strookGat: pos('strook', '.gat'), bdLogo: pos('backdrop', '.blg'), bdGat: pos('backdrop', '.gat'), pdLogo: pos('pd', '.blg'), pdGat: pos('pd', '.gat') };
         }""")
+        # Logo altijd bovenaan, gatmarkering (perforatie) onderaan.
         self.assertLess(r['strookLogo'][0], 0.2)
         self.assertIsNone(r['strookGat'])
-        self.assertGreater(r['bdLogo'][1], 0.95)
-        self.assertLess(r['bdGat'][1], 0.25)
+        self.assertLess(r['bdLogo'][0], 0.05)
+        self.assertGreater(r['bdGat'][0], 0.75)
+        self.assertLess(r['pdLogo'][0], 0.05)
+        self.assertGreater(r['pdGat'][0], 0.6)
 
 
 # ---------- huisstijl uit het profiel ----------
