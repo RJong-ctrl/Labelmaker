@@ -221,7 +221,15 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
       const sj = sjabloon(sid);
       if (!sj) { overgeslagen++; continue; }
       const isLocatie = sj.opmaak === 'locatie';
-      if (isLocatie && !a.locatie) { zonderLocatie++; continue; }
+      if (isLocatie && !a.locatie && !E().aanvullingen[id]?.Locatie) {
+        const w = await vraagVelden($('aanvulling'), {
+          titel: 'Locatie ontbreekt', onder: `${a.naam}${a.code ? ' · ' + a.code : ''}`,
+          velden: [{ naam: 'Locatie', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: true }],
+          hint: 'Vul de locatie in; die wordt onthouden. Zet hem ook in Rentman, dan staat hij er bij de volgende export vanzelf in.',
+        });
+        if (!w?.Locatie) { zonderLocatie++; continue; }
+        await model.zetAanvulling(id, { Locatie: w.Locatie }).catch(opslagFout);
+      }
       const mist = ontbrekend(sj, a, E().aanvullingen[id] || {});
       if (mist.length) {
         const w = await vraagVelden($('aanvulling'), { titel: 'Aanvullen', onder: `${a.naam} · ${a.code || ''}`, velden: mist });
@@ -247,7 +255,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     const delen = [`${toegevoegd} toegevoegd aan het printvel`];
     if (zonderLocatie) delen.push(`${zonderLocatie} zonder locatie overgeslagen`);
     if (overgeslagen) delen.push(`${overgeslagen} overgeslagen`);
-    melding(delen.join(', ') + '.');
+    melding(delen.join(', ') + '.', zonderLocatie > 0 || overgeslagen > 0);
     $('zoek').focus();
   }
 

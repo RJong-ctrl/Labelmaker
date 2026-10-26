@@ -75,7 +75,8 @@ export const DSL_SJABLONEN = [
 /** Waarde van één veld voor dit artikel. */
 export function veldwaarde(veld, artikel, aanvullingen = {}) {
   const h = veld.herkomst;
-  if (h.type === 'kolom') return String(artikel[h.kolom] ?? '').trim();
+  // Kolom uit de export; is die leeg, dan telt een aanvulling met dezelfde naam (bijv. Locatie).
+  if (h.type === 'kolom') return String(artikel[h.kolom] ?? '').trim() || String(aanvullingen[veld.naam] ?? '').trim();
   if (h.type === 'naam') return (PATRONEN[h.patroon] || (() => ''))(artikel.naam || '');
   return String(aanvullingen[veld.naam] ?? '').trim();
 }

@@ -89,8 +89,28 @@ class Werkscherm(Hulp):
         self.kies('GE9402')
         self.kies('GE9412')
         p.locator('#actLoc').click()
-        p.wait_for_function("document.querySelector('#printLabel').textContent.includes('Print 1')")
-        self.assertIn('zonder locatie', p.locator('#melding').inner_text())
+        d = p.locator('#aanvulling')
+        expect(d).to_contain_text('Locatie ontbreekt')
+        d.get_by_role('button', name='Annuleren').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        expect(p.locator('#melding')).to_contain_text('1 zonder locatie overgeslagen')
+        expect(p.locator('#melding')).to_have_class('melding fout')
+
+    def test_locatie_invullen_en_onthouden(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('GE9412')
+        p.locator('#actLoc').click()
+        d = p.locator('#aanvulling')
+        expect(d).to_contain_text('Locatie ontbreekt')
+        d.locator('input[name="Locatie"]').fill('B-3')
+        d.get_by_role('button', name='Opslaan').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        expect(p.locator('#voorbeeld .lbl .titel')).to_have_text('B-3')
+        self.kies('GE9412')
+        p.locator('#actLoc').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 2 op Citizen')
+        expect(d).to_be_hidden()
 
     def test_blijft_na_herladen(self):
         p = self.pagina

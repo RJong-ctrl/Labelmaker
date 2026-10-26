@@ -198,3 +198,9 @@ test('los_item_eigen_sjabloon', () => {
   assert.equal(standaardSjabloon(los, 'bordje'), 'backdrop');
   assert.equal(standaardSjabloon(los, 'locatie'), 'locatie');
 });
+
+test('kolomveld_aangevuld_als_leeg', () => {
+  // Locatie uit de export wint; ontbreekt die, dan telt een aanvulling 'Locatie'.
+  assert.equal(vul(S.locatie, A.GE9412, { Locatie: 'B-3' }, '').titel, 'B-3');
+  assert.equal(vul(S.locatie, A.GE9402, { Locatie: 'B-3' }, '').titel, 'V-1-2');
+});
