@@ -2,3 +2,7 @@
 *.xlsx
 *.xls
 *.csv
+
+# Testbestanden worden tijdens de test gemaakt
+tests/fixtures/out/
+__pycache__/
