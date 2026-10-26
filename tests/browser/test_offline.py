@@ -73,6 +73,7 @@ class OfflineBasis(PaginaTest):
     """Per test een eigen server op een verse kopie van v2/ (zodat een test die kan aanpassen)."""
 
     basis_blokkeren = False
+    service_workers = 'allow'
 
     def setUp(self):
         self.map = tempfile.mkdtemp(prefix='labelmaker-offline-')

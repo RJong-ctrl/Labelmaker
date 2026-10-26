@@ -38,6 +38,7 @@ class PaginaTest(unittest.TestCase):
     apparaatschaal = 1
     app_starten = True  # False: alleen de modules testen, zonder werkscherm
     init_script = None  # JavaScript dat vóór de pagina draait
+    service_workers = 'block'  # alleen de offline-tests zetten dit op 'allow'
     basis_blokkeren = True  # v2/data/*.json niet laden (anders laadt elke test de echte basis)
 
     @classmethod
@@ -57,7 +58,7 @@ class PaginaTest(unittest.TestCase):
         cls.server.server_close()
 
     def setUp(self):
-        self.context = self.browser.new_context(viewport=self.viewport, device_scale_factor=self.apparaatschaal)
+        self.context = self.browser.new_context(viewport=self.viewport, device_scale_factor=self.apparaatschaal, service_workers=self.service_workers)
         self.pagina = self.context.new_page()
         self.pagina.set_default_timeout(15000)  # ruim: tests draaien soms naast elkaar
         if self.basis_blokkeren:
