@@ -349,7 +349,7 @@ class Robuust(Hulp):
         self.inlezen()
         p.locator('#zoek').fill('NL4-2.50M')
         p.locator('#zoek').press('Enter')
-        self.assertTrue(self.rij('GE9402').locator('input[type=checkbox]').is_checked())
+        expect(self.rij('GE9402').locator('input[type=checkbox]')).to_be_checked()
         expect(self.rij('GE9402').locator('.tag')).to_have_count(0)
 
     def test_exemplaar_scannen_houdt_heel_artikel(self):
