@@ -4,18 +4,41 @@
 import { vul } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { A4, a4Indeling, verdeel } from './indeling.js';
+import { esc } from './html.js';
 
 export const LABEL = { b: 76, h: 56 };
+const LABEL_NAAM = 'Citizen CL-E321';
 const SNIJ = 3, SNIJ_AFSTAND = 1;
 
+/** Standaard (zonder profiel): de Citizen 76 × 56. Het formaat en de naam van een profiel: printerInfo(). */
 export const PRINTERS = {
-  label: { tekst: 'Kies printer: Citizen CL-E321', papier: `@page { size: ${LABEL.b}mm ${LABEL.h}mm; margin: 0; }` },
+  label: { tekst: `Kies printer: ${LABEL_NAAM}`, papier: `@page { size: ${LABEL.b}mm ${LABEL.h}mm; margin: 0; }` },
   a4: { tekst: 'Kies je A4-printer', papier: `@page { size: ${A4.b}mm ${A4.h}mm; margin: 0; }` },
 };
 
+const maat = (x, standaard) => {
+  const n = typeof x === 'string' ? parseFloat(x.replace(',', '.')) : x;
+  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : standaard;
+};
+
+/** Labelprinter uit het profiel (`context.printers.label`): { naam, b, h }; ontbreekt iets, dan de standaard. */
+export function labelFormaat(context) {
+  const l = context?.printers?.label;
+  const naam = typeof l?.naam === 'string' ? l.naam.trim() : '';
+  return { naam: naam || (l ? 'Labelprinter' : LABEL_NAAM), b: maat(l?.b, LABEL.b), h: maat(l?.h, LABEL.h) };
+}
+
+/** Melding voor de printerkeuze en papierformaat voor @page. De naam van de A4-printer wordt niet getoond. */
+export function printerInfo(printer, context) {
+  if (printer !== 'label') return PRINTERS.a4;
+  const l = labelFormaat(context);
+  return { tekst: `Kies printer: ${l.naam}`, papier: `@page { size: ${l.b}mm ${l.h}mm; margin: 0; }` };
+}
+
 /**
  * context = { artikelen: Map<code, Artikel>, sjablonen: Sjabloon[],
- *             aanvullingen: Record<code, Record<veld, string>>, huisstijl }
+ *             aanvullingen: Record<code, Record<veld, string>>, huisstijl,
+ *             printers?: { label: { naam, b, h }, a4: { naam } } }
  */
 function elementen(printer, items, context) {
   const uit = [];
@@ -75,30 +98,34 @@ function a4Vellen(lijst) {
   return vellen;
 }
 
-function labelVellen(lijst) {
+// Een label per pagina; labels van hoogstens de halve labelhoogte gaan met twee op één label.
+function labelVellen(lijst, label) {
   const vellen = [];
+  const pagina = (klasse) => {
+    const p = document.createElement('div');
+    p.className = klasse;
+    p.style.width = label.b + 'mm';
+    p.style.height = label.h + 'mm';
+    vellen.push(p);
+    return p;
+  };
   let half = null;
   for (const { el, formaat } of lijst) {
-    if (formaat.h * 2 <= LABEL.h) {
+    if (formaat.h * 2 <= label.h) {
       if (half) { half.appendChild(el); half = null; continue; }
-      half = document.createElement('div');
-      half.className = 'pagina tweeling';
+      half = pagina('pagina tweeling');
       half.appendChild(el);
-      vellen.push(half);
       continue;
     }
-    const p = document.createElement('div');
-    p.className = 'pagina';
-    p.appendChild(el);
-    vellen.push(p);
+    pagina('pagina').appendChild(el);
   }
   return vellen;
 }
 
-/** Pagina's (A4-vellen of Citizen-labels) voor deze printopdracht; nog niet passend gemaakt. */
+/** Pagina's (A4-vellen of labels voor de labelprinter van het profiel) voor deze printopdracht; nog niet passend gemaakt. */
 export function tekenVellen(printer, items, context) {
   const lijst = elementen(printer, items, context);
-  return printer === 'label' ? labelVellen(lijst) : a4Vellen(lijst);
+  return printer === 'label' ? labelVellen(lijst, labelFormaat(context)) : a4Vellen(lijst);
 }
 
 /** Tekst in alle vellen passend maken. Gelijke items worden één keer gemeten. */
@@ -116,7 +143,8 @@ export async function pasVellenAan(vellen) {
 
 function vraag(tekst) {
   const balk = document.getElementById('printbalk');
-  balk.innerHTML = `<span>${tekst}</span><span class="pijl" aria-hidden="true">→</span>` +
+  // De tekst kan een printernaam uit het profiel bevatten: altijd als tekst tonen.
+  balk.innerHTML = `<span>${esc(tekst)}</span><span class="pijl" aria-hidden="true">→</span>` +
     '<button type="button" class="primary" data-k="ja">Printen</button><button type="button" data-k="nee">Annuleren</button>';
   balk.hidden = false;
   balk.querySelector('[data-k="ja"]').focus();
@@ -124,11 +152,11 @@ function vraag(tekst) {
     const klaar = (ja) => {
       balk.hidden = true;
       balk.onclick = null;
-      document.removeEventListener('keydown', esc);
+      document.removeEventListener('keydown', toets);
       ok(ja);
     };
-    const esc = (e) => { if (e.key === 'Escape') klaar(false); };
-    document.addEventListener('keydown', esc);
+    const toets = (e) => { if (e.key === 'Escape') klaar(false); };
+    document.addEventListener('keydown', toets);
     balk.onclick = (e) => {
       const k = e.target.closest('button')?.dataset.k;
       if (k) klaar(k === 'ja');
@@ -145,8 +173,9 @@ export async function print(printer, items, context, { alleenEerste = false } = 
   doel.replaceChildren(...vellen);
   doel.dataset.printer = printer;
   await pasVellenAan(vellen);
-  if (!(await vraag(PRINTERS[printer].tekst))) return false;
-  document.getElementById('papier').textContent = PRINTERS[printer].papier;
+  const info = printerInfo(printer, context);
+  if (!(await vraag(info.tekst))) return false;
+  document.getElementById('papier').textContent = info.papier;
   window.print();
   return true;
 }

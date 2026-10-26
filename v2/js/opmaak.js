@@ -3,9 +3,12 @@
 // element in de pagina staat.
 
 import { qrSvg } from './qr.js';
-import { tint, inkt, isLicht } from './kleuren.js';
+import { tint, inkt, isLicht, ONBEKEND } from './kleuren.js';
+import { geldigeKleur } from './sjablonen.js';
 import { esc } from './html.js';
 
+// Oud formaat (fase 1); teken() neemt ook het profielformaat
+// { logo: string|null, voet: string[], certIcoon: string|null, lettertype: 'futura'|'barlow'|'arial'|'eigen' }.
 export const HUISSTIJL_DSL = {
   logo: new URL('../assets/dsl-logo.svg', import.meta.url).href,
   voet: [
@@ -15,6 +18,21 @@ export const HUISSTIJL_DSL = {
   lettertype: 'DSL Futura',
   labelLettertype: 'DSL Label',
 };
+
+const LETTERTYPEN = ['futura', 'barlow', 'arial', 'eigen'];
+
+/** Huisstijl (profiel of oud formaat) in één vaste vorm; onbekende lettertypen worden Futura. */
+function huisstijlVan(hs) {
+  const h = hs && typeof hs === 'object' ? hs : HUISSTIJL_DSL;
+  const tekst = (x) => (typeof x === 'string' && x.trim() ? x.trim() : null);
+  return {
+    logo: tekst(h.logo),
+    voet: Array.isArray(h.voet) ? h.voet.map(l => String(l ?? '').trim()).filter(Boolean) : [],
+    // Alleen een ingebouwde afbeelding (data-URL): nooit een bron van buiten.
+    certIcoon: /^data:image\//i.test(tekst(h.certIcoon) || '') ? tekst(h.certIcoon) : null,
+    lettertype: LETTERTYPEN.includes(h.lettertype) ? h.lettertype : 'futura',   // ook het oude 'DSL Futura'
+  };
+}
 
 const STREEP = 1;       // mm, volle kleur aan de binnenkant van het kleurvlak
 const TINT = 0.25;      // kleurvlak
@@ -49,9 +67,12 @@ function bordje(i, hs) {
   const tabel = rijen.length
     ? '<div class="tg">' + rijen.map((r, n) => (n ? '<div class="sep"></div>' : '') + `<div class="tk">${esc(r[0])}</div><div class="tv">${esc(r[1])}</div>`).join('') + '</div>'
     : '';
-  const kleurLabel = i.label ? i.label.kleur : '#7f7f7f';
-  const cert = i.cert ? `<div class="cert" style="font-size:${(5.5 * f).toFixed(1)}pt"><span>${esc(i.cert)}</span></div>` : '';
-  const voet = i.voet
+  const kleurLabel = geldigeKleur(i.label?.kleur) || ONBEKEND;
+  const certIcoon = hs.certIcoon ? `<img alt="" src="${esc(hs.certIcoon)}" style="width:${mm(5 * f)};height:${mm(5 * f)}">` : '';
+  const cert = i.cert ? `<div class="cert" style="font-size:${(5.5 * f).toFixed(1)}pt">${certIcoon}<span>${esc(i.cert)}</span></div>` : '';
+  // Geen voettekst in de huisstijl: dan geen voet, ook als het sjabloon er een vraagt.
+  const heeftVoet = !!i.voet && hs.voet.length > 0;
+  const voet = heeftVoet
     ? `<div class="ft" style="font-size:${(5 * f).toFixed(1)}pt;margin-top:${mm(2.6 * f)};padding-top:${mm(1.6 * f)}">` +
       hs.voet.map(l => '<div>' + l.split('|').map(x => esc(x.trim())).join('<span class="fsep" aria-hidden="true"></span>') + '</div>').join('') + '</div>'
     : '';
@@ -94,7 +115,7 @@ function bordje(i, hs) {
       + voet;
   }
 
-  const kleur = i.rand || '#7f7f7f', licht = isLicht(kleur);
+  const kleur = geldigeKleur(i.rand) || ONBEKEND, licht = isLicht(kleur);
   let gat = '', logoTop = 0, logoH = bw;
   if (i.gat) {
     const r = Math.min(GAT / 2, bw / 2 - 1), cx = bw / 2, cy = Math.max(2.5, 2.5 * f) + r;
@@ -109,9 +130,9 @@ function bordje(i, hs) {
   el.innerHTML =
     `<div class="band vlak" style="left:0;width:${mm(bw)};background:${licht ? '#f1f1f1' : tint(kleur, TINT)}"></div>`
     + `<div class="band streep" style="left:${mm(bw)};width:${mm(licht ? 1.2 : STREEP)};background:${esc(kleur)}${licht ? ';box-shadow:inset .25mm 0 0 #000,inset -.25mm 0 0 #000' : ''}"></div>`
-    + `<div class="blg" style="left:0;top:${mm(logoTop)};width:${mm(bw)};height:${mm(logoH)}"><img alt="" src="${esc(hs.logo)}"></div>`
+    + (hs.logo ? `<div class="blg" style="left:0;top:${mm(logoTop)};width:${mm(bw)};height:${mm(logoH)}"><img alt="" src="${esc(hs.logo)}"></div>` : '')
     + gat
-    + `<div class="bm" style="left:${mm(bw + STREEP + gap)};right:${mm(pad)};top:${mm(pad)};bottom:${mm(i.voet ? 3.2 * f : pad)}">${main}</div>`;
+    + `<div class="bm" style="left:${mm(bw + STREEP + gap)};right:${mm(pad)};top:${mm(pad)};bottom:${mm(heeftVoet ? 3.2 * f : pad)}">${main}</div>`;
   return el;
 }
 
@@ -154,7 +175,7 @@ function qrLabel(i, hs) {
     + `<div class="bot" style="height:${mm(sz)}">${qrOfMelding(i.qr, sz, 'qr')}`
     + `<div class="meta" style="padding-bottom:${mm(qz)}">${i.onder ? vak('t2', Math.round(H * 0.25), esc(i.onder), '', 5) : ''}`
     + `<div class="metarow">${i.qr ? `<div class="code">${esc(i.qr)}</div>` : '<div></div>'}</div></div>`
-    + `<img class="logo" alt="" src="${esc(hs.logo)}" style="height:${mm(Math.min(H * 0.18, sz - qz))};margin-bottom:${mm(qz)}">`
+    + (hs.logo ? `<img class="logo" alt="" src="${esc(hs.logo)}" style="height:${mm(Math.min(H * 0.18, sz - qz))};margin-bottom:${mm(qz)}">` : '')
     + '</div>';
   return el;
 }
@@ -172,11 +193,18 @@ function locatieLabel(i) {
   return el;
 }
 
-/** Bouwt het element voor deze Inhoud (nog niet passend gemaakt). */
+/**
+ * Bouwt het element voor deze Inhoud (nog niet passend gemaakt).
+ * huisstijl: profielformaat of het oude HUISSTIJL_DSL; het lettertype komt als
+ * data-lettertype op het element (de CSS kiest de letter).
+ */
 export function teken(inhoud, huisstijl = HUISSTIJL_DSL) {
-  if (inhoud.opmaak === 'qrlabel') return qrLabel(inhoud, huisstijl);
-  if (inhoud.opmaak === 'locatie') return locatieLabel(inhoud);
-  return bordje(inhoud, huisstijl);
+  const hs = huisstijlVan(huisstijl);
+  const el = inhoud.opmaak === 'qrlabel' ? qrLabel(inhoud, hs)
+    : inhoud.opmaak === 'locatie' ? locatieLabel(inhoud)
+      : bordje(inhoud, hs);
+  el.dataset.lettertype = hs.lettertype;
+  return el;
 }
 
 // ---------- passend maken ----------
@@ -229,6 +257,10 @@ function laadLettertypes() {
 /** Tekst passend maken; het element moet in de pagina staan. */
 export async function pasAan(el) {
   await laadLettertypes();
+  // Eigen lettertype: elders als FontFace geregistreerd; zo niet, dan valt de CSS terug op DSL Futura.
+  if (el.dataset.lettertype === 'eigen') {
+    await Promise.all(['400', '500', '700'].map(w => document.fonts?.load?.(`${w} 12pt "DSL Eigen"`).catch(() => null)));
+  }
   await Promise.all([...el.querySelectorAll('img')].map(img => (img.decode ? img.decode().catch(() => {}) : null)));
   el.querySelectorAll('.fb').forEach(maakPassend);
   el.querySelectorAll('.hp').forEach(b => b.classList.add('fitted'));
