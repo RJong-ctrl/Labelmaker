@@ -344,6 +344,91 @@ class Editor(Hulp):
         self.assertIsNone(p.evaluate('window.__xss'))
         self.assertEqual(self.fouten, [])
 
+    def test_sjabloon_weg_printvel_en_regel(self):
+        p = self.pagina
+        self.maak_model()
+        p.evaluate("""async () => {
+            const { DSL_REGELS } = await import('./js/sjablonen.js');
+            const s = structuredClone(model.effectief().sjablonen.find(s => s.id === 'bordje-staand'));
+            await model.zetSjabloon({ ...s, id: 'kist', naam: 'Kist' });
+            await model.zetPrintvel('a4', [
+                { sjabloon: 'kist', artikel: 'CO1120', qr: 'kenporto-00', aantal: 2 },
+                { sjabloon: 'gitterbox', artikel: 'GE9402', qr: 'nl4-2.50m', aantal: 1 },
+                { sjabloon: 'kist', artikel: 'GE9391', qr: 'nl8-koppel', aantal: 1 }]);
+            await model.zetPrintvel('label', [{ sjabloon: 'qrlabel', artikel: 'CO1120', qr: 'kenporto-00', aantal: 1 }]);
+            await model.zetInstelling('regels', { bordje: [{ pad: 'Portofoon', sjabloon: 'kist' }, ...DSL_REGELS.bordje],
+                                                  standaard: { ...DSL_REGELS.standaard, bordje: 'kist' } });
+        }""")
+        self.start()
+        self.open('sjabloon:kist')
+        f = p.locator('#beheerForm')
+        vraag = p.locator('#beheerVraag')
+        f.get_by_role('button', name='Verwijderen', exact=True).click()
+        expect(vraag).to_be_visible()
+        expect(vraag).to_contain_text('2 regels van het printvel')
+        expect(vraag).to_contain_text('1 categorie-regel')
+        vraag.get_by_role('button', name='Annuleren').click()
+        expect(vraag).to_be_hidden()
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:kist"]')).to_have_count(1)
+        f.get_by_role('button', name='Verwijderen', exact=True).click()
+        vraag.get_by_role('button', name='Verwijderen', exact=True).click()
+        melding = p.locator('#beheerMelding')
+        expect(melding).to_contain_text('Sjabloon "Kist" verwijderd')
+        expect(melding).to_contain_text('2 regels van het printvel')
+        expect(melding).to_contain_text('1 categorie-regel')
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:kist"]')).to_have_count(0)
+        uit = p.evaluate("""async () => {
+            const { standaardSjabloon } = await import('./js/sjablonen.js');
+            const e = model.effectief();
+            return { a4: (await model.printvel('a4')).map(i => i.sjabloon), label: (await model.printvel('label')).length,
+                     regels: e.regels.bordje.map(r => r.sjabloon), standaard: e.regels.standaard.bordje,
+                     co: standaardSjabloon(T.A['CO1120'], 'bordje', e.regels), kist: e.sjablonen.some(s => s.id === 'kist'),
+                     wijz: model.wijzigingen().map(w => w.id) };
+        }""")
+        self.assertEqual(uit['a4'], ['gitterbox'])
+        self.assertEqual(uit['label'], 1)
+        self.assertNotIn('kist', uit['regels'])
+        self.assertEqual(uit['standaard'], 'bordje-staand')
+        self.assertEqual(uit['co'], 'bordje-staand')
+        self.assertFalse(uit['kist'])
+        self.assertNotIn('kist', uit['wijz'], 'alleen-lokaal sjabloon laat geen "verwijderd" achter')
+        self.assertEqual(self.fouten, [])
+
+    def test_dsl_sjabloon_niet_weg_wel_terugzetten(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:gitterbox')
+        f = p.locator('#beheerForm')
+        expect(f.get_by_role('button', name='Verwijderen', exact=True)).to_have_count(0)
+        terug = f.get_by_role('button', name='Terugzetten')
+        expect(terug).to_be_disabled()
+        f.locator('[data-pad="naam"]').fill('Anders')
+        expect(terug).to_be_enabled()
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:gitterbox"]')).to_contain_text('Anders')
+        terug.click()
+        p.locator('#beheerVraag').get_by_role('button', name='Terugzetten').click()
+        expect(f.locator('[data-pad="naam"]')).to_have_value('Gitterbox-strook')
+        expect(p.locator('#beheerTitel')).to_have_text('Gitterbox-strook')
+        expect(f.get_by_role('button', name='Terugzetten')).to_be_disabled()
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:gitterbox"]')).to_contain_text('Gitterbox-strook')
+        self.assertEqual(self.model("m.wijzigingen().filter(w => w.soort === 'sjabloon').length"), 0)
+        self.assertEqual(self.fouten, [])
+
+    def test_dupliceren(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:backdrop')
+        p.locator('#beheerForm').get_by_role('button', name='Dupliceren').click()
+        expect(p.locator('#beheerForm')).to_have_attribute('data-onderdeel', 'sjabloon:backdrop-kopie')
+        expect(p.locator('#beheerTitel')).to_have_text('Backdrop (kopie)')
+        expect(p.locator('#beheerMenu')).to_contain_text('Backdrop (kopie)')
+        expect(p.locator('#beheerForm').get_by_role('button', name='Verwijderen', exact=True)).to_have_count(1)
+        gelijk = self.model("JSON.stringify(e.sjablonen.find(s => s.id === 'backdrop-kopie').velden) === JSON.stringify(e.sjablonen.find(s => s.id === 'backdrop').velden)")
+        self.assertTrue(gelijk)
+        self.assertEqual(self.fouten, [])
+
     def test_tokens_heen_en_terug(self):
         uit = self.pagina.evaluate("""async () => {
             const { naarTokens, naarTekst } = await import('./js/editor.js');

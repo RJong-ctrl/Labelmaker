@@ -107,7 +107,10 @@
 .beheer-poort form{width:min(360px,100%);padding:22px;overflow:visible}
 .beheer-poort .acties{justify-content:flex-end}
 
+.beheer-vraag{max-width:min(460px,92vw)}
 .beheer-vraag p{margin:8px 0 0}
+.beheer-vraag .acties{margin-top:18px}
+.beheer-vraag .bevestig{background:var(--err);border-color:var(--err);color:var(--panel)}
 
 @media (max-width:1000px){
   .beheer-romp{grid-template-columns:1fr;overflow:auto}

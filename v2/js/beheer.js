@@ -26,7 +26,10 @@ const ONDERDELEN = [
 ];
 const PINCODE = { id: 'pincode', titel: 'Pincode' };
 
+const ACTIES = { bordje: 'Bordje of strook', qrlabel: 'QR-label', locatie: 'Locatielabel' };
+
 const meervoud = (n, een, meer) => `${n} ${n === 1 ? een : meer}`;
+const lijstTekst = (delen) => (delen.length < 2 ? delen.join('') : `${delen.slice(0, -1).join(', ')} en ${delen[delen.length - 1]}`);
 
 /**
  * Start beheer in #beheerScherm. Geeft { stop() } terug: bewaart wat nog wacht en
@@ -280,10 +283,115 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     naam?.select();
   }
 
+  async function dupliceer() {
+    await bewaarNu();
+    const bron = st.werkSjabloon || sjabloonVan(st.sjabloonId);
+    if (!bron) return;
+    const kopie = { ...structuredClone(bron), id: uniekeId(bron.id + '-kopie'), naam: `${bron.naam || bron.id} (kopie)` };
+    if (!(await bewaar(() => model.zetSjabloon(kopie)))) return;
+    meld('sjabloon', kopie.id);
+    await open('sjabloon:' + kopie.id);
+    melding(`Kopie gemaakt: ${kopie.naam}.`);
+  }
+
+  async function zetTerug(id) {
+    await bewaarNu();
+    const w = sjabloonWijziging(id);
+    if (!w) return;
+    const naam = sjabloonVan(id)?.naam || id;
+    if (!(await vraag(`"${naam}" terugzetten?`, ['Je wijzigingen aan dit sjabloon op deze pc gaan verloren.'], 'Terugzetten'))) return;
+    if (!(await bewaar(() => model.gooiWeg(w)))) return;
+    meld('sjabloon', id);
+    await open('sjabloon:' + id);
+    melding(`"${sjabloonVan(id)?.naam || naam}" teruggezet.`);
+  }
+
+  /** Waar het sjabloon nog gebruikt wordt: printvellen, categorie-regels, standaard per actie. */
+  async function gebruik(id) {
+    const vel = { label: await model.printvel('label'), a4: await model.printvel('a4') };
+    const regels = model.effectief().regels;
+    return {
+      vel, regels,
+      nVel: vel.label.filter(i => i.sjabloon === id).length + vel.a4.filter(i => i.sjabloon === id).length,
+      nRegels: (regels.bordje || []).filter(r => r.sjabloon === id).length,
+      standaard: Object.keys(ACTIES).filter(a => regels.standaard?.[a] === id),
+    };
+  }
+  const gevolgen = (g) => [
+    ...(g.nVel ? [`${meervoud(g.nVel, 'regel', 'regels')} van het printvel`] : []),
+    ...(g.nRegels ? [meervoud(g.nRegels, 'categorie-regel', 'categorie-regels')] : []),
+    ...g.standaard.map(a => `de standaard voor ${ACTIES[a]}`),
+  ];
+
+  /** Printvelregels en categorie-regels van een verdwenen sjabloon weghalen; standaard valt terug. */
+  async function ruimOp(id, g) {
+    for (const p of ['label', 'a4']) {
+      const rest = g.vel[p].filter(i => i.sjabloon !== id);
+      if (rest.length !== g.vel[p].length) await model.zetPrintvel(p, rest);
+    }
+    if (g.nRegels || g.standaard.length) {
+      const standaard = { ...g.regels.standaard };
+      for (const a of g.standaard) standaard[a] = DSL_REGELS.standaard[a];
+      await model.zetInstelling('regels', { ...g.regels, bordje: (g.regels.bordje || []).filter(r => r.sjabloon !== id), standaard });
+    }
+  }
+
+  async function verwijder(id) {
+    await bewaarNu();
+    const sj = sjabloonVan(id);
+    if (!sj || BESCHERMD.has(id)) return;
+    const g = await gebruik(id);
+    const delen = gevolgen(g);
+    const ok = await vraag(`Sjabloon "${sj.naam || id}" verwijderen?`,
+      [delen.length ? `Dit haalt ook weg: ${lijstTekst(delen)}.` : 'Het staat niet op het printvel en in geen categorie-regel.'], 'Verwijderen');
+    if (!ok) return;
+    const gelukt = await bewaar(async () => {
+      await ruimOp(id, g);
+      const w = sjabloonWijziging(id);
+      if (w) await model.gooiWeg(w);
+      if (sjabloonVan(id)) await model.verwijderSjabloon(id);
+    });
+    if (!gelukt) return;
+    meld('sjabloon', id);
+    if (g.nVel) meld('printvel', id);
+    if (g.nRegels || g.standaard.length) meld('instelling', 'regels');
+    st.sjabloonId = null;
+    scherm._laatsteSjabloon = null;
+    await open('sjabloon:' + (eersteSjabloon()?.id || ''));
+    menu.querySelector('[aria-current="page"]')?.focus();
+    melding(`Sjabloon "${sj.naam || id}" verwijderd` + (delen.length ? `; ${lijstTekst(delen)} weggehaald.` : '.'));
+  }
+
+  /** Bevestigen in een dialoog; Annuleren staat voorop (Esc = annuleren). */
+  function vraag(titel, regels, ja) {
+    const dlg = $('beheerVraag');
+    const terugFocus = document.activeElement;
+    dlg.innerHTML = `<form method="dialog"><h2>${esc(titel)}</h2>${regels.map(r => `<p>${esc(r)}</p>`).join('')}`
+      + `<div class="acties"><button type="button" data-k="nee">Annuleren</button><button type="submit" class="bevestig">${esc(ja)}</button></div></form>`;
+    return new Promise(ok => {
+      let klaar = false;
+      const einde = (w) => {
+        if (klaar) return;
+        klaar = true;
+        if (dlg.open) dlg.close();
+        if (terugFocus?.isConnected) terugFocus.focus();
+        ok(w);
+      };
+      dlg.querySelector('form').addEventListener('submit', (ev) => { ev.preventDefault(); einde(true); });
+      dlg.querySelector('[data-k="nee"]').addEventListener('click', () => einde(false));
+      dlg.addEventListener('cancel', () => einde(false), { once: true });
+      dlg.showModal();
+      dlg.querySelector('[data-k="nee"]').focus();
+    });
+  }
+
   async function formKlik(ev) {
     const knop = ev.target.closest('button[data-beheer]');
     if (!knop) return;
     const actie = knop.dataset.beheer;
+    if (actie === 'dupliceren') return dupliceer();
+    if (actie === 'terugzetten') return zetTerug(st.sjabloonId);
+    if (actie === 'verwijderen') return verwijder(st.sjabloonId);
     if (actie === 'pin-zet') return zetPincode();
     if (actie === 'pin-wis') return wisPincode();
   }
