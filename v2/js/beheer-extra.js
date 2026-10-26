@@ -119,6 +119,7 @@ export async function neemV25Over(model, gelezen) {
     const rand = s.kleuren?.rand || { sleutel: [], waarden: {} };
     await model.zetSjabloon({ ...s, kleuren: { ...s.kleuren, rand: { ...rand, waarden: { ...rand.waarden, ...waarden } } } });
   }
+  if (gelezen.certIcoon && !e.huisstijl?.certIcoon) await model.zetInstelling('huisstijl', { ...e.huisstijl, certIcoon: gelezen.certIcoon });
   for (const item of gelezen.losseItems) await model.zetLosItem(item);
   for (const [id, w] of Object.entries(gelezen.aanvullingen || {})) await model.zetAanvulling(id, w);
 }

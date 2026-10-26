@@ -3,7 +3,9 @@ import unittest
 
 from playwright.sync_api import expect
 
-from basis import PaginaTest
+import os
+
+from basis import ROOT, PaginaTest
 
 OPZET = """async (profielId) => {
     const { GeheugenOpslag } = await import('./js/opslag.js');
@@ -70,19 +72,19 @@ class BeheerExtra(PaginaTest):
 
     def test_v25_overnemen_uit_browser(self):
         p = self.pagina
-        fixture = json.load(open('tests/fixtures/v25-voorbeeld.json', encoding='utf-8'))
+        fixture = json.load(open(os.path.join(ROOT, 'tests', 'fixtures', 'v25-voorbeeld.json'), encoding='utf-8'))
         p.evaluate("""(f) => {
-            const sleutels = f.localStorage || {};
-            for (const [k, v] of Object.entries(sleutels)) localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+            for (const [k, v] of Object.entries(f)) if (k.startsWith('lm-') && v !== null) localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
         }""", fixture)
         self.teken('v25')
         p.get_by_role('button', name='Uit deze browser overnemen').click()
         expect(p.locator('.v25-resultaat')).to_contain_text('gevonden')
-        p.get_by_role('button', name='Overnemen').click()
+        p.get_by_role('button', name='Overnemen', exact=True).click()
         expect(p.locator('.v25-resultaat')).to_contain_text('Overgenomen')
         r = p.evaluate("""() => { const e = window.M.effectief(); return [e.losseItems.length, e.sjablonen.find(s => s.id === 'backdrop').kleuren.rand.waarden['6×3,5']]; }""")
         self.assertGreater(r[0], 0)
         self.assertEqual(r[1], '#b000b0')
+        self.assertTrue(p.evaluate("() => (window.M.effectief().huisstijl.certIcoon || '').startsWith('data:image/')"))
 
 
 if __name__ == '__main__':
