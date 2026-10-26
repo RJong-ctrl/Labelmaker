@@ -133,6 +133,9 @@ class Indeling(Hulp):
         expect(menu.get_by_role('button', name='Publiceren')).to_have_attribute('aria-current', 'page')
         self.assertEqual(p.locator('#beheerScherm').get_by_role('button', name=re.compile(r'^Print(\s|$)|printen', re.I)).count(), 0,
                          'geen printknoppen in beheer')
+        # Opnieuw starten zonder dat onderdeel: dan gewoon het eerste sjabloon.
+        self.start(extra=False)
+        expect(p.locator('#beheerForm')).to_have_attribute('data-onderdeel', 'sjabloon:qrlabel')
         self.assertEqual(self.fouten, [])
 
     def test_drie_kolommen_op_1100(self):

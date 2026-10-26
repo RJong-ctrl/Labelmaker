@@ -166,10 +166,11 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     + `<p id="beheerMelding" class="melding" role="status" hidden></p>`;
   scherm.classList.add('beheer');
 
+  let opWegTerug = false;
   scherm.addEventListener('click', async (ev) => {
-    if (!ev.target.closest('#beheerTerug')) return;
-    await bewaarNu();
-    terug();
+    if (!ev.target.closest('#beheerTerug') || opWegTerug) return;
+    opWegTerug = true;
+    try { await bewaarNu(); terug(); } finally { opWegTerug = false; }
   }, { signal });
 
   // ---------- indeling ----------
@@ -245,8 +246,10 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     await bewaarNu();
     if (beurt !== openBeurt || gestopt) return;
     st.werkHuisstijl = null;
+    melding('');
     if (id === 'nieuw') return nieuwSjabloon();
-    if (id.startsWith('sjabloon:') && !sjabloonVan(id.slice(9))) id = 'sjabloon:' + (eersteSjabloon()?.id || '');
+    const bekend = [...ONDERDELEN, ...extra, PINCODE].some(o => o.id === id) || (id.startsWith('sjabloon:') && sjabloonVan(id.slice(9)));
+    if (!bekend) id = 'sjabloon:' + (eersteSjabloon()?.id || '');
     st.onderdeel = id;
     scherm._laatsteOnderdeel = id;
     form.dataset.onderdeel = id;
