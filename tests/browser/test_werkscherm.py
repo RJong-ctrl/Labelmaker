@@ -161,6 +161,47 @@ class Werkscherm(Hulp):
         self.assertIn('Citizen CL-E321', p.locator('#printbalk').inner_text())
 
 
+class Herinlezen(Hulp):
+    def test_verdwenen_artikel_gaat_van_printvel(self):
+        p = self.pagina
+        self.inlezen()
+        self.kies('CO1120')
+        p.locator('#actQr').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        csv = 'Naam (in database);Code;QR-codes / RFID\nSpeakon 8p Koppelbus;GE9391;nl8-koppel\n'
+        p.locator('#bestand').set_input_files({'name': 'nieuw.csv', 'mimeType': 'text/csv', 'buffer': csv.encode('utf-8')})
+        expect(p.locator('#melding')).to_contain_text('1 artikel ingelezen')
+        expect(p.locator('#melding')).to_contain_text('niet meer in de export')
+        expect(p.locator('#printLabel')).to_have_text('Print 0 op Citizen')
+        expect(p.locator('#velLijst li')).to_have_count(0)
+        p.reload()
+        expect(p.locator('#printLabel')).to_have_text('Print 0 op Citizen')
+
+    def test_focus_terug_naar_zoekveld(self):
+        p = self.pagina
+        expect(p.locator('#zoek')).to_be_focused()
+        self.inlezen()
+        self.kies('CO1120')
+        p.locator('#actQr').click()
+        expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
+        expect(p.locator('#zoek')).to_be_focused()
+        self.kies('GE9402')
+        p.locator('#actBordje').click()
+        self.aanvullen('Doorsnede', '4 mm²')
+        expect(p.locator('#zoek')).to_be_focused()
+
+
+class ZonderOpslag(Hulp):
+    init_script = "Object.defineProperty(window, 'indexedDB', { get() { throw new Error('geblokkeerd'); } });"
+
+    def test_werkt_in_geheugen_met_melding(self):
+        p = self.pagina
+        expect(p.locator('#melding')).to_contain_text('slaat niets op')
+        self.inlezen()
+        expect(p.locator('#melding')).to_contain_text('9 artikelen ingelezen')
+        expect(p.locator('#lijst li')).to_have_count(8)
+
+
 class Scannen(Hulp):
     """Voorbeeld-QR uitlezen gaat beter met een hogere pixeldichtheid."""
     apparaatschaal = 3

@@ -17,7 +17,7 @@ const norm = (s) => String(s ?? '').toLowerCase().replace(/×/g, 'x').replace(/,
 const sjabloon = (id) => DSL_SJABLONEN.find(s => s.id === id);
 const nlSort = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' });
 
-export async function start(root, opslag) {
+export async function start(root, opslag, { waarschuwing = '' } = {}) {
   const $ = (id) => root.getElementById(id);
   const st = {
     artikelen: [], perCode: new Map(), qrIndex: new Map(), zoektekst: new Map(),
@@ -235,6 +235,7 @@ export async function start(root, opslag) {
     if (zonderLocatie) delen.push(`${zonderLocatie} zonder locatie overgeslagen`);
     if (overgeslagen) delen.push(`${overgeslagen} overgeslagen`);
     melding(delen.join(', ') + '.');
+    $('zoek').focus();
   }
 
   async function printen(printer, alleenEerste = false) {
@@ -264,10 +265,21 @@ export async function start(root, opslag) {
       st.artikelen = artikelen;
       indexeer();
       st.keuze.clear();
+      // Regels op het printvel waarvan het artikel niet meer bestaat, kunnen niet geprint worden.
+      let weg = 0;
+      for (const p of ['label', 'a4']) {
+        const voor = st.vel[p].length;
+        st.vel[p] = st.vel[p].filter(i => st.perCode.has(i.artikel));
+        weg += voor - st.vel[p].length;
+      }
+      if (weg) await bewaarVel();
       tekenChips();
       tekenLijst();
       tekenVel();
-      melding(`${artikelen.length} artikelen ingelezen` + (mist.length ? `. Kolommen niet gevonden: ${mist.map(v => RENTMAN[v]).join(', ')}.` : '.'));
+      const delen = [`${artikelen.length} ${artikelen.length === 1 ? 'artikel' : 'artikelen'} ingelezen.`];
+      if (mist.length) delen.push(`Kolommen niet gevonden: ${mist.map(v => RENTMAN[v]).join(', ')}.`);
+      if (weg) delen.push(`${weg} ${weg === 1 ? 'regel' : 'regels'} van het printvel verwijderd: artikel niet meer in de export.`);
+      melding(delen.join(' '));
     } catch (e) {
       melding('Kon het bestand niet lezen: ' + e.message, true);
     } finally {
@@ -349,4 +361,6 @@ export async function start(root, opslag) {
   tekenChips();
   tekenLijst();
   tekenVel();
+  if (waarschuwing) melding(waarschuwing, true);
+  $('zoek').focus();
 }

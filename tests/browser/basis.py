@@ -37,6 +37,7 @@ class PaginaTest(unittest.TestCase):
     viewport = {'width': 1400, 'height': 900}
     apparaatschaal = 1
     app_starten = True  # False: alleen de modules testen, zonder werkscherm
+    init_script = None  # JavaScript dat vóór de pagina draait
 
     @classmethod
     def setUpClass(cls):
@@ -63,6 +64,8 @@ class PaginaTest(unittest.TestCase):
         self.fouten = []
         self.pagina.on('console', lambda m: m.type == 'error' and self.fouten.append(m.text))
         self.pagina.on('pageerror', lambda e: self.fouten.append(str(e)))
+        if self.init_script:
+            self.pagina.add_init_script(self.init_script)
         self.pagina.goto(self.basis + self.pad)
 
     def laad_voorbeeld(self):
