@@ -46,6 +46,21 @@ class Opslag(PaginaTest):
         }""")
         self.assertEqual(uit, ['nieuw'])
 
+    def test_opslag_upgrade_v1_naar_v2(self):
+        uit = self.pagina.evaluate("""async () => {
+            await new Promise((ok, fout) => {
+                const r = indexedDB.open('labelmaker-oud', 1);
+                r.onupgradeneeded = () => { for (const s of ['artikelen', 'aanvullingen', 'printvel', 'printlog', 'instellingen']) r.result.createObjectStore(s); };
+                r.onsuccess = () => { const tx = r.result.transaction('artikelen', 'readwrite'); tx.objectStore('artikelen').put({ naam: 'Kabel' }, 'K1'); tx.oncomplete = () => { r.result.close(); ok(); }; };
+                r.onerror = fout;
+            });
+            const { openOpslag } = await import('./js/opslag.js');
+            const o = await openOpslag('oud');
+            await o.schrijf('sjablonen', 'x', { id: 'x' });
+            return [await o.lees('artikelen', 'K1'), (await o.alle('sjablonen')).length, (await o.alle('losse')).length, (await o.alle('basis')).length];
+        }""")
+        self.assertEqual(uit, [{'naam': 'Kabel'}, 1, 0, 0])
+
     def test_profielen_gescheiden(self):
         uit = self.pagina.evaluate("""async () => {
             const { openOpslag } = await import('./js/opslag.js');

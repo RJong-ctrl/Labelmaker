@@ -80,9 +80,24 @@ function plek(tokens = [], w) {
   return tokens.map(t => (typeof t === 'string' ? t : w[t.veld] || '')).join('').replace(/\s+/g, ' ').trim();
 }
 
+/** Alleen #rrggbb is een geldige kleur (komt in een style-attribuut terecht). */
+export function geldigeKleur(hex) {
+  return /^#[0-9a-f]{6}$/i.test(String(hex ?? '').trim()) ? String(hex).trim().toLowerCase() : null;
+}
+
+// Kleurregel: { sleutel: Token[], waarden } of het oudere { veld, waarden }.
 function kleur(regel, w) {
   if (!regel) return ONBEKEND;
-  return regel.waarden[sleutel(w[regel.veld])] || ONBEKEND;
+  const tokens = regel.sleutel || [{ veld: regel.veld }];
+  return geldigeKleur(regel.waarden?.[sleutel(plek(tokens, w))]) || ONBEKEND;
+}
+
+// Vrije regels 'Kop: waarde' (één per regel) als eigenschappen.
+function regelsUit(tekst) {
+  return String(tekst || '').split(/\r?\n/).map(r => r.trim()).filter(Boolean).map(r => {
+    const i = r.indexOf(':');
+    return i > 0 ? [r.slice(0, i).trim(), r.slice(i + 1).trim()] : ['', r];
+  });
 }
 
 export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
@@ -96,7 +111,7 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     titel: plek(p.titel, w),
     groot: plek(p.groot, w),
     label: labelTekst ? { tekst: labelTekst, kleur: kleur(sjabloon.kleuren.label, w) } : null,
-    eigenschappen: (p.eigenschappen || []).map(e => [e.kop, plek(e.waarde, w)]).filter(e => e[1]),
+    eigenschappen: [...(p.eigenschappen || []).map(e => [e.kop, plek(e.waarde, w)]), ...(sjabloon.regelsVeld ? regelsUit(w[sjabloon.regelsVeld]) : [])].filter(e => e[1]),
     onder: plek(p.onder, w),
     qr: p.qr ? plek(p.qr, w) : String(qr || ''),
     rand: kleur(sjabloon.kleuren.rand, w),
@@ -120,13 +135,22 @@ export function qrsVoor(artikel) {
   return [artikel.qr || ''];
 }
 
-/** Sjabloon dat bij het artikel past (volgt de map in Rentman). */
-export function standaardSjabloon(artikel, actie) {
-  if (actie === 'qrlabel') return 'qrlabel';
-  if (actie === 'locatie') return 'locatie';
-  const pad = artikel.pad || '';
-  if (/speakon/i.test(pad)) return 'gitterbox';
-  if (/\/\s*backdrop/i.test(pad)) return 'backdrop';
-  if (/pipe en drape/i.test(pad) && /doek/i.test(artikel.naam || '')) return 'pipe-drape';
-  return 'qrlabel';
+/** Standaardregels DSL: welk sjabloon bij welke categorie (pad) en naam. */
+export const DSL_REGELS = {
+  bordje: [
+    { pad: 'speakon', sjabloon: 'gitterbox' },
+    { pad: '/ backdrop', sjabloon: 'backdrop' },
+    { pad: 'pipe en drape', naam: 'doek', sjabloon: 'pipe-drape' },
+  ],
+  standaard: { bordje: 'qrlabel', qrlabel: 'qrlabel', locatie: 'locatie' },
+};
+
+const bevat = (tekst, deel) => !deel || String(tekst || '').toLowerCase().includes(String(deel).toLowerCase());
+
+/** Sjabloon dat bij het artikel past. Een los item gebruikt bij 'bordje' zijn eigen sjabloon. */
+export function standaardSjabloon(artikel, actie, regels = DSL_REGELS) {
+  if (actie !== 'bordje') return regels.standaard[actie] || DSL_REGELS.standaard[actie];
+  if (artikel.sjabloon) return artikel.sjabloon;
+  const regel = (regels.bordje || []).find(r => (r.pad || r.naam) && bevat(artikel.pad, r.pad) && bevat(artikel.naam, r.naam));
+  return regel ? regel.sjabloon : regels.standaard.bordje;
 }

@@ -1,8 +1,8 @@
 // Opslag in de browser, per profiel. GeheugenOpslag (tests) en IndexedDB
 // hebben dezelfde interface: lees, schrijf, schrijfVeel, vervangAlle, alle, wis.
 
-export const SOORTEN = ['artikelen', 'aanvullingen', 'printvel', 'printlog', 'instellingen'];
-const VERSIE = 1;
+export const SOORTEN = ['artikelen', 'aanvullingen', 'printvel', 'printlog', 'instellingen', 'sjablonen', 'basis', 'losse'];
+const VERSIE = 2; // 2: sjablonen, basis en losse items erbij (bestaande gegevens blijven)
 
 function controleer(soort) {
   if (!SOORTEN.includes(soort)) throw new Error('Onbekende opslagsoort: ' + soort);

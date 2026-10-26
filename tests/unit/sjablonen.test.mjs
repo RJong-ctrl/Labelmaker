@@ -131,3 +131,58 @@ test('kleuren', () => {
   assert.equal(tint('#ff0000', 0.25), 'rgb(255,191,191)');
   assert.equal(KLEURNAMEN.oranje, '#ff8c00');
 });
+
+// ---------- fase 2 ----------
+import { geldigeKleur, DSL_REGELS } from '../../v2/js/sjablonen.js';
+
+const vrij = (extra = {}) => ({
+  id: 'proef', naam: 'Proef', printer: 'a4', opmaak: 'staand', formaat: { b: 74, h: 105 }, gat: true, voet: true, logoBoven: false, cert: '',
+  velden: [
+    { naam: 'Breedte', soort: 'getal', herkomst: { type: 'aanvulling' }, verplicht: false },
+    { naam: 'Hoogte', soort: 'getal', herkomst: { type: 'aanvulling' }, verplicht: false },
+    { naam: 'Regels', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
+  ],
+  plekken: { titel: ['Proef'], groot: [{ veld: 'Breedte' }, ' × ', { veld: 'Hoogte' }, ' m'], label: [], eigenschappen: [], onder: [] },
+  kleuren: { rand: { sleutel: [{ veld: 'Breedte' }, ' × ', { veld: 'Hoogte' }], waarden: { '6×3,5': '#c000c0' } } },
+  ...extra,
+});
+
+test('kleursleutel_tokens', () => {
+  const i = vul(vrij(), A.GE9402, { Breedte: '6', Hoogte: '3,5' }, 'x');
+  assert.equal(i.rand, '#c000c0');
+  assert.equal(i.groot, '6 × 3,5 m');
+});
+
+test('oud_kleurformaat_werkt', () => {
+  assert.equal(vul(S.gitterbox, A.GE9402, { Doorsnede: '2,5 mm²' }, 'x').rand, '#ffff00');
+});
+
+test('ongeldige_kleur_wordt_grijs', () => {
+  const s = vrij({ kleuren: { rand: { sleutel: [{ veld: 'Breedte' }], waarden: { '6': 'red;background:url(x)' } } } });
+  assert.equal(vul(s, A.GE9402, { Breedte: '6' }, 'x').rand, '#7f7f7f');
+});
+
+test('regelsveld', () => {
+  const i = vul(vrij({ regelsVeld: 'Regels' }), A.GE9402, { Regels: 'Breedte: 6 m\nKleur: Zwart\nlos' }, 'x');
+  assert.deepEqual(i.eigenschappen, [['Breedte', '6 m'], ['Kleur', 'Zwart'], ['', 'los']]);
+});
+
+test('geldige_kleur', () => {
+  assert.equal(geldigeKleur('#FFAA00'), '#ffaa00');
+  assert.equal(geldigeKleur('red'), null);
+  assert.equal(geldigeKleur('"><b>'), null);
+  assert.equal(geldigeKleur('#fff'), null);
+});
+
+test('regels_instelbaar', () => {
+  const regels = { bordje: [{ pad: 'Portofoon', sjabloon: 'qrlabel-half' }, ...DSL_REGELS.bordje], standaard: DSL_REGELS.standaard };
+  assert.equal(standaardSjabloon(A.CO1120, 'bordje', regels), 'qrlabel-half');
+  assert.equal(standaardSjabloon(A.GE9402, 'bordje', regels), 'gitterbox');
+  assert.equal(standaardSjabloon(A.GE9402, 'qrlabel', { ...regels, standaard: { ...regels.standaard, qrlabel: 'qrlabel-half' } }), 'qrlabel-half');
+});
+
+test('los_item_eigen_sjabloon', () => {
+  const los = { ...A.GE9402, id: 'los-1', sjabloon: 'backdrop' };
+  assert.equal(standaardSjabloon(los, 'bordje'), 'backdrop');
+  assert.equal(standaardSjabloon(los, 'locatie'), 'locatie');
+});
