@@ -1,11 +1,14 @@
 """Beheerscherm: pincode, sjablonen en editor, instellingen, wijzigingen op deze pc.
 Draait zonder werkscherm (app_starten = False) op een model met GeheugenOpslag."""
+import os
 import re
+import struct
 import unittest
+import zlib
 
 from playwright.sync_api import expect
 
-from basis import PaginaTest
+from basis import ROOT, PaginaTest
 
 MODEL = """async ({ artikelen }) => {
     const { GeheugenOpslag } = await import('./js/opslag.js');
@@ -94,11 +97,11 @@ class Toegang(Hulp):
         self.open('pincode')
         f = p.locator('#beheerForm')
         expect(f).to_contain_text('geen pincode')
-        f.locator('#nieuwePincode').fill('12')
+        f.locator('#beheerNieuwePincode').fill('12')
         f.get_by_role('button', name='Pincode instellen').click()
         expect(f).to_contain_text('4 tot 8 cijfers')
         self.assertIsNone(p.evaluate("() => model.pcInstelling('pincode')"))
-        f.locator('#nieuwePincode').fill('4321')
+        f.locator('#beheerNieuwePincode').fill('4321')
         f.get_by_role('button', name='Pincode instellen').click()
         p.wait_for_function("async () => (await model.pcInstelling('pincode')) === '4321'")
         expect(f).to_contain_text('pincode ingesteld')
@@ -122,6 +125,9 @@ class Indeling(Hulp):
         for naam in ('Gitterbox-strook', 'Backdrop', 'QR-label', 'Nieuw sjabloon', 'Categorie → sjabloon', 'Huisstijl',
                      'Printers', 'Artikelen inlezen', 'Wijzigingen op deze pc', 'Pincode', 'Publiceren'):
             expect(menu.get_by_role('button', name=naam, exact=True)).to_have_count(1)
+        dubbel = p.evaluate("""() => [...document.querySelectorAll('#beheerScherm [id]')]
+            .filter(el => document.querySelectorAll('#' + CSS.escape(el.id)).length > 1).map(el => el.id)""")
+        self.assertEqual(dubbel, [], 'ids in beheer botsen met het werkscherm')
         menu.get_by_role('button', name='Publiceren').click()
         expect(p.locator('#extraInhoud')).to_have_text('Hallo')
         expect(menu.get_by_role('button', name='Publiceren')).to_have_attribute('aria-current', 'page')
@@ -194,10 +200,12 @@ class Editor(Hulp):
         self.maak_model()
         self.start()
         self.open('sjabloon:gitterbox')
-        p.locator('#voorbeeldArtikel').fill('GE9412')
-        p.locator('#voorbeeldArtikel').press('Enter')
-        streep = p.locator('#voorbeeldDoel .band.streep')
+        p.locator('#beheerArtikel').fill('GE9412')
+        p.locator('#beheerArtikel').press('Enter')
+        streep = p.locator('#beheerVoorbeeldDoel .band.streep')
         expect(streep).to_have_css('background-color', 'rgb(127, 127, 127)')
+        expect(p.locator('#beheerVoorbeeldInfo')).to_have_text('Speakon 4p Verlengkabel 12,5m · GE9412')
+        self.assertGreater(p.locator('#beheerVoorbeeldInfo').bounding_box()['height'], 10)
         rand = self.kleurrand()
         expect(rand.locator('[data-zonder]')).to_contain_text('12,5')
         rand.get_by_role('button', name='Waarde toevoegen').click()
@@ -329,7 +337,7 @@ class Editor(Hulp):
         f.locator('[data-pad="naam"]').fill('<b id="vet">Vet</b>')
         boos = '"><img src=x onerror="window.__xss=1">'
         f.locator('[data-pad="plek.titel"]').fill(boos)
-        expect(p.locator('#voorbeeldDoel .titel')).to_contain_text('<img src=x')
+        expect(p.locator('#beheerVoorbeeldDoel .titel')).to_contain_text('<img src=x')
         expect(p.locator('#beheerMenu')).to_contain_text('<b id="vet">Vet</b>')
         expect(p.locator('#beheerTitel')).to_have_text('<b id="vet">Vet</b>')
         self.wacht_model("e.sjablonen.some(s => s.naam === '<b id=\"vet\">Vet</b>')")
@@ -338,7 +346,7 @@ class Editor(Hulp):
         self.open('sjabloon:' + sid)
         expect(f.locator('[data-pad="naam"]')).to_have_value('<b id="vet">Vet</b>')
         expect(f.locator('[data-pad="plek.titel"]')).to_have_value(boos)
-        expect(p.locator('#voorbeeldDoel .titel')).to_contain_text('<img src=x')
+        expect(p.locator('#beheerVoorbeeldDoel .titel')).to_contain_text('<img src=x')
         expect(p.locator('#vet')).to_have_count(0)
         expect(p.locator('img[src="x"]')).to_have_count(0)
         self.assertIsNone(p.evaluate('window.__xss'))
@@ -439,6 +447,151 @@ class Editor(Hulp):
         self.assertEqual(uit[1], [{'veld': 'Lengte'}, ' m'])
         self.assertEqual(uit[2], ['{} en {Kleur'])
         self.assertEqual(uit[3], '{Connector} {Doorsnede}')
+
+
+def png(breedte=2, hoogte=2):
+    """Klein, geldig PNG-bestand (rood)."""
+    def blok(soort, data):
+        return struct.pack('>I', len(data)) + soort + data + struct.pack('>I', zlib.crc32(soort + data) & 0xffffffff)
+    rauw = b''.join(b'\x00' + b'\xff\x00\x00' * breedte for _ in range(hoogte))
+    return (b'\x89PNG\r\n\x1a\n' + blok(b'IHDR', struct.pack('>IIBBBBB', breedte, hoogte, 8, 2, 0, 0, 0))
+            + blok(b'IDAT', zlib.compress(rauw)) + blok(b'IEND', b''))
+
+
+class Instellingen(Hulp):
+    def test_categorie_regels(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('regels')
+        f = p.locator('#beheerForm')
+        expect(f.locator('tr.regelrij')).to_have_count(3)
+        f.get_by_role('button', name='Regel toevoegen').click()
+        rij = f.locator('tr.regelrij').last
+        expect(rij.locator('[data-veld="pad"]')).to_be_focused()
+        rij.locator('[data-veld="pad"]').fill('Portofoon')
+        rij.locator('select[data-veld="sjabloon"]').select_option('qrlabel-half')
+        self.wacht_model("e.regels.bordje.length === 4 && e.regels.bordje[3].pad === 'Portofoon' && e.regels.bordje[3].sjabloon === 'qrlabel-half'")
+        for i in (3, 2, 1):
+            f.locator('tr.regelrij').nth(i).get_by_role('button', name='omhoog').click()
+            expect(f.locator('tr.regelrij').nth(i - 1).get_by_role('button', name='omhoog')).to_be_focused() if i > 1 else None
+        expect(f.locator('tr.regelrij').first.locator('[data-veld="pad"]')).to_have_value('Portofoon')
+        f.locator('select[data-standaard="bordje"]').select_option('bordje-liggend')
+        f.get_by_role('button', name='Regel toevoegen').click()
+        expect(f.locator('[data-melding="regels"]')).to_contain_text('telt niet mee')
+        self.wacht_model("e.regels.bordje[0].pad === 'Portofoon' && e.regels.standaard.bordje === 'bordje-liggend'")
+        uit = p.evaluate("""async () => {
+            const { standaardSjabloon } = await import('./js/sjablonen.js');
+            const r = model.effectief().regels;
+            return { n: r.bordje.length, eerste: r.bordje[0], keys: r.bordje.map(x => Object.keys(x).sort().join(',')),
+                     sj: ['CO1120', 'GE9402', 'PD5143', '*PD1011'].map(c => standaardSjabloon(T.A[c], 'bordje', r)) };
+        }""")
+        self.assertEqual(uit['n'], 4, 'lege regel telt niet mee')
+        self.assertEqual(uit['eerste'], {'pad': 'Portofoon', 'sjabloon': 'qrlabel-half'})
+        self.assertEqual(uit['sj'], ['qrlabel-half', 'gitterbox', 'pipe-drape', 'bordje-liggend'])
+        f.locator('tr.regelrij').first.get_by_role('button', name='verwijderen').click()
+        self.wacht_model("e.regels.bordje.length === 3 && !e.regels.bordje.some(r => r.pad === 'Portofoon')")
+        self.assertEqual(self.fouten, [])
+
+    def test_huisstijl_logo_upload(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('huisstijl')
+        f = p.locator('#beheerForm')
+        f.locator('#beheer-logo-bestand').set_input_files({'name': 'logo.png', 'mimeType': 'image/png', 'buffer': png()})
+        self.wacht_model("String(e.huisstijl.logo).startsWith('data:image/png;base64,')")
+        expect(f.locator('img[data-voor="logo"]')).to_have_attribute('src', re.compile('^data:image/png;base64,'))
+        expect(p.locator('#beheerVoorbeeldDoel img[src^="data:image/png"]')).to_have_count(1)
+        klein = self.model('e.huisstijl.logo')
+        f.locator('#beheer-logo-bestand').set_input_files({'name': 'groot.png', 'mimeType': 'image/png', 'buffer': bytes(400 * 1024)})
+        expect(f.locator('[data-melding="logo"]')).to_contain_text('300 kB')
+        self.assertEqual(self.model('e.huisstijl.logo'), klein)
+        f.locator('#beheer-certIcoon-bestand').set_input_files({'name': 'x.txt', 'mimeType': 'text/plain', 'buffer': b'hoi'})
+        expect(f.locator('[data-melding="certIcoon"]')).to_contain_text('afbeelding')
+        f.locator('#beheer-certIcoon-bestand').set_input_files({'name': 'cert.png', 'mimeType': 'image/png', 'buffer': png(3, 3)})
+        self.wacht_model("String(e.huisstijl.certIcoon).startsWith('data:image/png;base64,')")
+        f.locator('[data-huisstijl="voet"]').fill('Regel een\n\nRegel twee | info')
+        self.wacht_model("JSON.stringify(e.huisstijl.voet) === JSON.stringify(['Regel een', 'Regel twee | info'])")
+        f.get_by_label('Arial').check()
+        self.wacht_model("e.huisstijl.lettertype === 'arial'")
+        f.get_by_role('button', name='Logo weghalen').click()
+        self.wacht_model('e.huisstijl.logo === null')
+        self.assertTrue(self.model("String(e.huisstijl.certIcoon).startsWith('data:image/png')"))
+        self.assertEqual(self.fouten, [])
+
+    def test_eigen_lettertype_alleen_op_deze_pc(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('huisstijl')
+        f = p.locator('#beheerForm')
+        expect(f).to_contain_text('Wordt niet gepubliceerd')
+        with open(os.path.join(ROOT, 'v2', 'fonts', 'jost-400.woff'), 'rb') as bestand:
+            woff = bestand.read()
+        f.locator('#beheer-font-bestand').set_input_files({'name': 'Mijn Letter.woff', 'mimeType': 'font/woff', 'buffer': woff})
+        p.wait_for_function("async () => (await model.pcInstelling('eigenLettertype'))?.naam === 'Mijn Letter.woff'")
+        expect(f).to_contain_text('Mijn Letter.woff')
+        lengte = p.evaluate("async () => atob((await model.pcInstelling('eigenLettertype')).data).length")
+        self.assertEqual(lengte, len(woff))
+        self.assertNotIn('Mijn Letter', self.model('JSON.stringify(e)'))
+        self.assertTrue(p.evaluate("""() => [...document.fonts].some(f => f.family.replace(/"/g, '') === 'DSL Eigen' && f.status === 'loaded')"""))
+        f.get_by_label('Eigen lettertype').check()
+        self.wacht_model("e.huisstijl.lettertype === 'eigen'")
+        f.locator('#beheer-font-bestand').set_input_files({'name': 'kapot.ttf', 'mimeType': 'font/ttf', 'buffer': b'geen lettertype'})
+        expect(f.locator('[data-melding="font"]')).to_contain_text('niet lezen')
+        p.wait_for_function("async () => (await model.pcInstelling('eigenLettertype'))?.naam === 'Mijn Letter.woff'")
+        f.get_by_role('button', name='Lettertype weghalen').click()
+        p.wait_for_function("async () => (await model.pcInstelling('eigenLettertype')) === undefined")
+        self.assertEqual(self.fouten, [])
+
+    def test_printers(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('printers')
+        f = p.locator('#beheerForm')
+        expect(f.locator('[data-printer="label.naam"]')).to_have_value('Citizen CL-E321')
+        f.locator('[data-printer="label.naam"]').fill('Zebra')
+        f.locator('[data-printer="label.b"]').fill('100')
+        f.locator('[data-printer="label.h"]').fill('50')
+        f.locator('[data-printer="a4.naam"]').fill('Kantoor')
+        self.wacht_model("e.printers.label.naam === 'Zebra' && e.printers.label.b === 100 && e.printers.label.h === 50 && e.printers.a4.naam === 'Kantoor'")
+        f.locator('[data-printer="label.b"]').fill('0')
+        f.locator('[data-printer="label.b"]').press('Tab')
+        expect(f.locator('[data-melding="printers"]')).to_contain_text('tussen')
+        p.wait_for_timeout(500)
+        self.assertEqual(self.model('e.printers.label.b'), 100)
+        self.assertEqual(self.fouten, [])
+
+    def test_artikelen_inlezen_kolommen(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('kolommen')
+        f = p.locator('#beheerForm')
+        expect(f.get_by_label('Rentman')).to_be_checked()
+        expect(f.locator('[data-kolom="naam"]')).to_be_disabled()
+        expect(f.locator('[data-kolom="naam"]')).to_have_value('Naam (in database)')
+        f.get_by_label('Eigen kolomnamen').check()
+        expect(f.locator('[data-kolom="naam"]')).to_be_enabled()
+        f.locator('[data-kolom="naam"]').fill('Omschrijving')
+        f.locator('[data-kolom="code"]').fill('Nummer')
+        self.wacht_model("e.kolommen.naam === 'Omschrijving' && e.kolommen.code === 'Nummer' && e.kolommen.qr === 'QR-codes / RFID'")
+        uit = p.evaluate("""async () => {
+            const { importeer, TOEGESTANE_VELDEN } = await import('./js/import.js');
+            const k = model.effectief().kolommen;
+            return { n: importeer([['Omschrijving', 'Nummer'], ['Kabel', 'K1']], k).artikelen.length,
+                     vreemd: Object.keys(k).filter(x => !TOEGESTANE_VELDEN.includes(x)) };
+        }""")
+        self.assertEqual(uit, {'n': 1, 'vreemd': []})
+        f.locator('[data-kolom="code"]').fill('')
+        f.locator('[data-kolom="code"]').press('Tab')
+        expect(f.locator('[data-melding="kolommen"]')).to_contain_text('nodig')
+        f.get_by_label('Rentman').check()
+        self.wacht_model("JSON.stringify(e.kolommen) === JSON.stringify({ naam: 'Naam (in database)', code: 'Code', qr: 'QR-codes / RFID', exemplaren: 'QR-codes / RFID exemplaren', pad: 'Pad', map: 'Map (Map)', locatie: 'Locatie in magazijn per voorraadlocatie [Standaard voorraadlocatie]', soort: 'Methode voorraadberekening', type: 'Type materiaal', aantal: 'Huidig aantal' })")
+        expect(f.locator('[data-melding="kolommen"]')).to_have_text('')
+        self.assertEqual(self.fouten, [])
 
 
 if __name__ == '__main__':

@@ -96,6 +96,29 @@
 .kleurcel .hex{flex:0 0 92px;width:92px;font-family:ui-monospace,Consolas,monospace}
 .beheer input[type=color]{flex:0 0 auto;width:40px;height:35px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--field);cursor:pointer}
 
+/* categorie → sjabloon */
+.regeltabel{border-collapse:collapse;width:100%;margin-top:4px}
+.regeltabel th{text-align:left;font-size:12px;font-weight:600;color:var(--muted);padding:2px 4px}
+.regeltabel td{padding:3px 4px;vertical-align:middle}
+.regeltabel td:nth-child(-n+2){width:30%}
+.regeltabel input,.regeltabel select{width:100%;min-width:0}
+.regelknoppen{white-space:nowrap;width:1%}
+.regelknoppen button{margin-left:2px;min-width:30px}
+.beheer-form>h3{margin:18px 0 8px;font-size:17px}
+
+/* huisstijl */
+.upload{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.upload h3{margin:0 0 8px;font-size:17px}
+.upload p{margin:4px 0 8px}
+.upload-rij{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.miniatuur{width:120px;height:64px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.miniatuur img{max-width:100%;max-height:100%;object-fit:contain}
+.miniatuur .hint{margin:0;color:#5E656C}
+.beheer fieldset.keuzes{border:0;margin:16px 0 0;padding:12px 0 0;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 20px}
+.beheer fieldset.keuzes legend{float:left;width:100%;padding:0;margin:0 0 4px;font:700 17px/1.1 Bahnschrift,"Arial Narrow",Arial,sans-serif}
+.beheer .keuzes .vink input{accent-color:var(--accent)}
+.raster.kolommen{margin-top:12px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+
 /* ---------- voorbeeld ---------- */
 .beheer-voorbeeld{gap:8px}
 .beheer-voorbeeld>*{flex:0 0 auto}

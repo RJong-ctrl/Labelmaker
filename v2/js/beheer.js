@@ -4,7 +4,8 @@
 import { DSL_SJABLONEN, DSL_REGELS, vul, qrsVoor, standaardSjabloon } from './sjablonen.js';
 import { PROFIEL_STANDAARD } from './standaard.js';
 import { teken, pasAan } from './opmaak.js';
-import { tekenEditor, STANDAARD_FORMAAT } from './editor.js';
+import { tekenEditor, STANDAARD_FORMAAT, KOLOM_NAMEN } from './editor.js';
+import { RENTMAN, TOEGESTANE_VELDEN } from './import.js';
 import { profielen } from './profielen.js';
 import { esc } from './html.js';
 
@@ -27,8 +28,46 @@ const ONDERDELEN = [
 const PINCODE = { id: 'pincode', titel: 'Pincode' };
 
 const ACTIES = { bordje: 'Bordje of strook', qrlabel: 'QR-label', locatie: 'Locatielabel' };
+const LETTERTYPES = { futura: 'Futura', barlow: 'Barlow Condensed', arial: 'Arial', eigen: 'Eigen lettertype' };
+const AFBEELDINGEN = { logo: 'Logo', certIcoon: 'Certificaat-icoon' };
+const MAX_AFBEELDING = 300 * 1024;
+const MAX_LETTERTYPE = 5 * 1024 * 1024;
+const LABELMAAT = [10, 300];
 
 const meervoud = (n, een, meer) => `${n} ${n === 1 ? een : meer}`;
+const getal = (s) => { const t = String(s ?? '').trim().replace(',', '.'); const n = Number(t); return t && Number.isFinite(n) ? n : NaN; };
+const kB = (n) => Math.ceil(n / 1024);
+const opt = (waarde, tekst, gekozen) => `<option value="${esc(waarde)}"${gekozen ? ' selected' : ''}>${esc(tekst)}</option>`;
+const leesBestand = (file, als) => new Promise((ok, fout) => {
+  const r = new FileReader();
+  r.onload = () => ok(r.result);
+  r.onerror = () => fout(r.error || new Error('Bestand niet te lezen'));
+  if (als === 'url') r.readAsDataURL(file); else r.readAsArrayBuffer(file);
+});
+function naarBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+/**
+ * Eigen lettertype (pc-instelling { naam, data: base64 }) als "DSL Eigen" in deze pagina zetten.
+ * Geeft false als het bestand geen bruikbaar lettertype is.
+ */
+export async function registreerEigenLettertype(lettertype) {
+  if (!lettertype?.data || typeof FontFace !== 'function') return false;
+  try {
+    const bytes = Uint8Array.from(atob(lettertype.data), c => c.charCodeAt(0));
+    const ff = new FontFace('DSL Eigen', bytes.buffer);
+    await ff.load();
+    for (const f of [...document.fonts]) if (f.family.replace(/"/g, '') === 'DSL Eigen') document.fonts.delete(f);
+    document.fonts.add(ff);
+    return true;
+  } catch {
+    return false;
+  }
+}
 const lijstTekst = (delen) => (delen.length < 2 ? delen.join('') : `${delen.slice(0, -1).join(', ')} en ${delen[delen.length - 1]}`);
 
 /**
@@ -53,7 +92,8 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
   const wacht = new Map();
   let keten = Promise.resolve(), lopend = 0, gestopt = false;
 
-  const $ = (id) => root.getElementById(id);
+  // Alleen binnen beheer zoeken: het werkscherm heeft eigen ids.
+  const $ = (id) => scherm.querySelector('#' + CSS.escape(id));
   function status(tekst, fout = false) {
     const s = $('beheerStatus');
     if (!s) return;
@@ -138,10 +178,10 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
       + '<nav id="beheerMenu" class="kolom beheer-menu" aria-label="Onderdelen van beheer"></nav>'
       + '<section id="beheerForm" class="kolom beheer-form" aria-labelledby="beheerTitel"></section>'
       + '<aside id="beheerVoorbeeld" class="kolom beheer-voorbeeld" aria-labelledby="kopBeheerVoorbeeld">'
-      + '<div class="kop"><h2 id="kopBeheerVoorbeeld">Voorbeeld</h2><span id="voorbeeldSjabloon" class="hint"></span></div>'
-      + '<label class="veld"><span>Artikel</span><input type="text" id="voorbeeldArtikel" list="beheerArtikelen" autocomplete="off" placeholder="Zoek op naam of code"></label>'
+      + '<div class="kop"><h2 id="kopBeheerVoorbeeld">Voorbeeld</h2><span id="beheerVoorbeeldSjabloon" class="hint"></span></div>'
+      + '<label class="veld"><span>Artikel</span><input type="text" id="beheerArtikel" list="beheerArtikelen" autocomplete="off" placeholder="Zoek op naam of code"></label>'
       + '<datalist id="beheerArtikelen"></datalist>'
-      + '<p id="voorbeeldInfo" class="hint"></p><div id="voorbeeldDoel" class="voorbeeld-doel"></div></aside>'
+      + '<p id="beheerVoorbeeldInfo" class="hint"></p><div id="beheerVoorbeeldDoel" class="voorbeeld-doel"></div></aside>'
       + '</div><dialog id="beheerVraag" class="beheer-vraag"></dialog>';
     form = $('beheerForm');
     menu = $('beheerMenu');
@@ -150,14 +190,14 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     form.addEventListener('click', formKlik, { signal });
     form.addEventListener('input', formInvoer, { signal });
     form.addEventListener('change', formInvoer, { signal });
-    const kies = $('voorbeeldArtikel');
+    const kies = $('beheerArtikel');
     kies.addEventListener('input', () => kiesArtikel(false), { signal });
     kies.addEventListener('change', () => kiesArtikel(true), { signal });
     kies.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); kiesArtikel(true); } }, { signal });
     if (typeof ResizeObserver === 'function') {
       let breedte = 0;
       waarnemer = new ResizeObserver(([e]) => { if (Math.abs(e.contentRect.width - breedte) > 2) { breedte = e.contentRect.width; voorbeeldLater(80); } });
-      waarnemer.observe($('voorbeeldDoel'));
+      waarnemer.observe($('beheerVoorbeeldDoel'));
     }
     vulArtikelLijst();
     const eerste = scherm._laatsteOnderdeel && (scherm._laatsteOnderdeel !== 'nieuw') ? scherm._laatsteOnderdeel : 'sjabloon:' + (eersteSjabloon()?.id || '');
@@ -174,11 +214,11 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     const gewijzigd = new Set(model.wijzigingen().filter(w => w.soort === 'sjabloon').map(w => w.id));
     const knop = (id, inhoud, klasse = '') => `<li><button type="button" data-onderdeel="${esc(id)}"${klasse ? ` class="${klasse}"` : ''}`
       + `${st.onderdeel === id ? ' aria-current="page"' : ''}>${inhoud}</button></li>`;
-    menu.innerHTML = '<h2 class="menukop" id="menuSjablonen">Sjablonen</h2><ul aria-labelledby="menuSjablonen">'
+    menu.innerHTML = '<h2 class="menukop" id="beheerMenuSjablonen">Sjablonen</h2><ul aria-labelledby="beheerMenuSjablonen">'
       + sjablonen().map(s => knop('sjabloon:' + s.id, `<span class="nm">${esc(s.naam || s.id)}</span>`
         + (gewijzigd.has(s.id) ? '<span class="gewijzigd" title="Gewijzigd op deze pc"><span class="bh-sr">, gewijzigd op deze pc</span></span>' : ''))).join('')
       + knop('nieuw', '<span aria-hidden="true">+ </span>Nieuw sjabloon', 'nieuw')
-      + '</ul><h2 class="menukop" id="menuInstellingen">Instellingen</h2><ul aria-labelledby="menuInstellingen">'
+      + '</ul><h2 class="menukop" id="beheerMenuInstellingen">Instellingen</h2><ul aria-labelledby="beheerMenuInstellingen">'
       + [...ONDERDELEN, ...extra, PINCODE].map(o => knop(o.id, esc(o.titel))).join('')
       + '</ul>';
     if (actief) menu.querySelector(`[data-onderdeel="${CSS.escape(actief)}"]`)?.focus();
@@ -213,9 +253,262 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     form.scrollTop = 0;
     if (id.startsWith('sjabloon:')) tekenSjabloon(id.slice(9));
     else if (id === 'pincode') await tekenPincode();
+    else if (id === 'regels') tekenRegels();
+    else if (id === 'huisstijl') await tekenHuisstijl();
+    else if (id === 'printers') tekenPrinters();
+    else if (id === 'kolommen') tekenKolommen();
     else if (id.startsWith('extra:')) await tekenExtra(extra.find(o => o.id === id));
     else form.innerHTML = formKop(ONDERDELEN.find(o => o.id === id)?.titel || id) + '<p class="hint">Volgt.</p>';
     voorbeeldLater(0);
+  }
+
+  const zetMelding = (soort, tekst) => { const m = form.querySelector(`[data-melding="${soort}"]`); if (m) m.textContent = tekst || ''; };
+
+  // ---------- categorie → sjabloon ----------
+  function tekenRegels() {
+    const r = model.effectief().regels || DSL_REGELS;
+    st.regels = {
+      bordje: (r.bordje || []).map(x => ({ pad: x.pad || '', naam: x.naam || '', sjabloon: x.sjabloon || '' })),
+      standaard: { ...DSL_REGELS.standaard, ...(r.standaard || {}) },
+    };
+    form.innerHTML = formKop('Categorie → sjabloon')
+      + '<p class="hint">Bij <b>Bordje of strook</b> geldt de eerste regel die past. Hoofdletters maken niet uit; staan pad en naam er allebei, dan moeten ze allebei passen. Losse items houden hun eigen sjabloon.</p>'
+      + '<table class="regeltabel"><thead><tr><th scope="col">Pad bevat</th><th scope="col">Naam bevat</th><th scope="col">Sjabloon</th>'
+      + '<th scope="col"><span class="bh-sr">Volgorde en verwijderen</span></th></tr></thead><tbody></tbody></table>'
+      + '<div class="acties links"><button type="button" data-beheer="regel-erbij">Regel toevoegen</button></div>'
+      + '<p class="fout" data-melding="regels" role="status"></p>'
+      + '<h3>Standaard per knop</h3><div class="raster">'
+      + Object.entries(ACTIES).map(([a, titel]) => `<label class="veld"><span>${esc(titel)}</span><select data-standaard="${a}">${sjabloonOpties(st.regels.standaard[a], a === 'bordje' ? null : a)}</select></label>`).join('')
+      + '</div>';
+    tekenRegelRijen();
+  }
+
+  function sjabloonOpties(gekozen, opmaak = null) {
+    const lijst = sjablonen().filter(s => !opmaak || s.opmaak === opmaak || s.id === gekozen);
+    const onbekend = gekozen && !lijst.some(s => s.id === gekozen) ? opt(gekozen, `(onbekend: ${gekozen})`, true) : '';
+    return (gekozen ? '' : opt('', 'Kies…', true)) + onbekend + lijst.map(s => opt(s.id, s.naam || s.id, s.id === gekozen)).join('');
+  }
+
+  function tekenRegelRijen(focus = null) {
+    const rijen = st.regels.bordje;
+    form.querySelector('.regeltabel tbody').innerHTML = rijen.map((r, i) => `<tr class="regelrij" data-i="${i}">`
+      + `<td><input type="text" data-veld="pad" value="${esc(r.pad)}" aria-label="Regel ${i + 1}: pad bevat" autocomplete="off"></td>`
+      + `<td><input type="text" data-veld="naam" value="${esc(r.naam)}" aria-label="Regel ${i + 1}: naam bevat" autocomplete="off"></td>`
+      + `<td><select data-veld="sjabloon" aria-label="Regel ${i + 1}: sjabloon">${sjabloonOpties(r.sjabloon)}</select></td>`
+      + `<td class="regelknoppen"><button type="button" class="klein" data-beheer="regel-op" data-i="${i}" aria-label="Regel ${i + 1} omhoog" title="Omhoog"${i ? '' : ' disabled'}>↑</button>`
+      + `<button type="button" class="klein" data-beheer="regel-neer" data-i="${i}" aria-label="Regel ${i + 1} omlaag" title="Omlaag"${i < rijen.length - 1 ? '' : ' disabled'}>↓</button>`
+      + `<button type="button" class="klein weg" data-beheer="regel-weg" data-i="${i}" aria-label="Regel ${i + 1} verwijderen" title="Verwijderen">×</button></td></tr>`).join('');
+    if (focus) form.querySelector(focus)?.focus();
+    controleerRegels();
+  }
+
+  function controleerRegels() {
+    const los = st.regels.bordje.map((r, i) => (!r.pad.trim() && !r.naam.trim()) || !r.sjabloon ? i + 1 : 0).filter(Boolean);
+    zetMelding('regels', los.length ? `${los.length === 1 ? 'Regel' : 'Regels'} ${lijstTekst(los.map(String))} ${los.length === 1 ? 'telt' : 'tellen'} niet mee: vul pad of naam in en kies een sjabloon.` : '');
+  }
+
+  function bewaarRegels() {
+    controleerRegels();
+    const regels = {
+      ...model.effectief().regels,
+      bordje: st.regels.bordje.filter(r => (r.pad.trim() || r.naam.trim()) && r.sjabloon).map(r => ({
+        ...(r.pad.trim() ? { pad: r.pad.trim() } : {}), ...(r.naam.trim() ? { naam: r.naam.trim() } : {}), sjabloon: r.sjabloon,
+      })),
+      standaard: { ...st.regels.standaard },
+    };
+    bewaarLater('instelling:regels', async () => { await model.zetInstelling('regels', regels); meld('instelling', 'regels'); });
+    voorbeeldLater();
+  }
+
+  function regelKlik(actie, i) {
+    const rijen = st.regels.bordje;
+    if (actie === 'regel-erbij') {
+      rijen.push({ pad: '', naam: '', sjabloon: '' });
+      tekenRegelRijen(`tr.regelrij[data-i="${rijen.length - 1}"] [data-veld="pad"]`);
+    } else if (actie === 'regel-weg') {
+      rijen.splice(i, 1);
+      tekenRegelRijen(rijen.length ? `tr.regelrij[data-i="${Math.min(i, rijen.length - 1)}"] [data-beheer="regel-weg"]` : '[data-beheer="regel-erbij"]');
+    } else {
+      const j = actie === 'regel-op' ? i - 1 : i + 1;
+      if (j < 0 || j >= rijen.length) return;
+      [rijen[i], rijen[j]] = [rijen[j], rijen[i]];
+      const knop = (j === 0 && actie === 'regel-op') || (j === rijen.length - 1 && actie === 'regel-neer') ? (actie === 'regel-op' ? 'regel-neer' : 'regel-op') : actie;
+      tekenRegelRijen(`tr.regelrij[data-i="${j}"] [data-beheer="${knop}"]`);
+    }
+    bewaarRegels();
+  }
+
+  function regelInvoer(el, soort) {
+    const rij = el.closest('tr.regelrij');
+    if (rij && el.dataset.veld) st.regels.bordje[+rij.dataset.i][el.dataset.veld] = el.value;
+    else if (el.dataset.standaard && soort === 'change') st.regels.standaard[el.dataset.standaard] = el.value;
+    else return;
+    bewaarRegels();
+  }
+
+  // ---------- huisstijl ----------
+  async function tekenHuisstijl(focus = null) {
+    const hs = st.werkHuisstijl || { ...model.effectief().huisstijl };
+    st.werkHuisstijl = hs;
+    const lt = await model.pcInstelling('eigenLettertype').catch(() => undefined);
+    const afbeelding = (k) => {
+      const titel = AFBEELDINGEN[k], src = hs[k];
+      return `<div class="upload"><h3>${titel}</h3><div class="upload-rij">`
+        + `<div class="miniatuur">${src ? `<img data-voor="${k}" alt="${titel}" src="${esc(src)}">` : '<span class="hint">Geen</span>'}</div>`
+        + `<button type="button" data-beheer="kies" data-voor="${k}">${titel} kiezen…</button>`
+        + (src ? `<button type="button" data-beheer="weg" data-voor="${k}">${titel} weghalen</button>` : '')
+        + `<input type="file" id="beheer-${k}-bestand" data-bestand="${k}" accept="image/png,image/jpeg,image/svg+xml,image/webp" hidden></div>`
+        + `<p class="hint">PNG, JPG, SVG of WebP, hoogstens 300 kB.</p><p class="fout" data-melding="${k}" role="alert"></p></div>`;
+    };
+    form.innerHTML = formKop('Huisstijl')
+      + '<label class="veld"><span>Voettekst <small>één regel per regel; | wordt een scheidingsstreepje</small></span>'
+      + `<textarea data-huisstijl="voet" rows="3" spellcheck="false">${esc((hs.voet || []).join('\n'))}</textarea></label>`
+      + afbeelding('logo') + afbeelding('certIcoon')
+      + '<fieldset class="keuzes"><legend>Lettertype</legend>'
+      + Object.entries(LETTERTYPES).map(([k, t]) => `<label class="vink"><input type="radio" name="lettertype" value="${k}"${(hs.lettertype || 'futura') === k ? ' checked' : ''}> ${t}</label>`).join('')
+      + '</fieldset>'
+      + '<div class="upload"><h3>Eigen lettertype</h3>'
+      + '<p class="hint">Alleen op deze pc. Wordt niet gepubliceerd (licentie van het lettertype).</p>'
+      + `<p>${lt ? `Op deze pc: <b>${esc(lt.naam)}</b>` : 'Op deze pc staat geen eigen lettertype.'}</p>`
+      + '<div class="upload-rij"><button type="button" data-beheer="kies" data-voor="font">Lettertype kiezen…</button>'
+      + (lt ? '<button type="button" data-beheer="weg" data-voor="font">Lettertype weghalen</button>' : '')
+      + '<input type="file" id="beheer-font-bestand" data-bestand="font" accept=".ttf,.otf,.woff,.woff2" hidden></div>'
+      + '<p class="hint">TTF, OTF, WOFF of WOFF2.</p><p class="fout" data-melding="font" role="alert"></p></div>';
+    if (focus) form.querySelector(focus)?.focus();
+  }
+
+  function bewaarHuisstijl() {
+    const hs = { ...st.werkHuisstijl };
+    bewaarLater('instelling:huisstijl', async () => { await model.zetInstelling('huisstijl', hs); meld('instelling', 'huisstijl'); });
+    voorbeeldLater();
+  }
+
+  async function laadAfbeelding(k, file) {
+    const titel = AFBEELDINGEN[k];
+    if (!/^image\/(png|jpeg|svg\+xml|webp|gif)$/.test(file.type)) { zetMelding(k, 'Kies een afbeelding: PNG, JPG, SVG of WebP.'); return; }
+    if (file.size > MAX_AFBEELDING) {
+      zetMelding(k, `${titel} is ${kB(file.size)} kB; dat mag hoogstens 300 kB zijn. Maak het bestand kleiner en kies het opnieuw.`);
+      return;
+    }
+    let url;
+    try { url = await leesBestand(file, 'url'); } catch (e) { zetMelding(k, 'Kon het bestand niet lezen: ' + (e?.message || e)); return; }
+    st.werkHuisstijl = { ...st.werkHuisstijl, [k]: url };
+    bewaarHuisstijl();
+    await tekenHuisstijl(`[data-beheer="kies"][data-voor="${k}"]`);
+  }
+
+  async function laadLettertype(file) {
+    if (!/\.(ttf|otf|woff2?)$/i.test(file.name)) { zetMelding('font', 'Kies een lettertype: TTF, OTF, WOFF of WOFF2.'); return; }
+    if (file.size > MAX_LETTERTYPE) { zetMelding('font', `Dit lettertype is ${kB(file.size)} kB; hoogstens 5 MB.`); return; }
+    let lt;
+    try { lt = { naam: file.name, data: naarBase64(await leesBestand(file, 'buffer')) }; }
+    catch (e) { zetMelding('font', 'Kon het bestand niet lezen: ' + (e?.message || e)); return; }
+    if (!(await registreerEigenLettertype(lt))) { zetMelding('font', `Kan "${file.name}" niet lezen als lettertype. Kies een ander bestand.`); return; }
+    if (!(await bewaar(() => model.zetPcInstelling('eigenLettertype', lt)))) return;
+    meld('pc', 'eigenLettertype');
+    await tekenHuisstijl('[data-beheer="kies"][data-voor="font"]');
+    voorbeeldLater(0);
+  }
+
+  async function huisstijlKlik(knop) {
+    const k = knop.dataset.voor;
+    if (knop.dataset.beheer === 'kies') { form.querySelector(`[data-bestand="${k}"]`)?.click(); return; }
+    if (k === 'font') {
+      if (!(await bewaar(() => model.zetPcInstelling('eigenLettertype', null)))) return;
+      for (const f of [...document.fonts]) if (f.family.replace(/"/g, '') === 'DSL Eigen') document.fonts.delete(f);
+      meld('pc', 'eigenLettertype');
+      await tekenHuisstijl('[data-beheer="kies"][data-voor="font"]');
+      return;
+    }
+    st.werkHuisstijl = { ...st.werkHuisstijl, [k]: null };
+    bewaarHuisstijl();
+    await tekenHuisstijl(`[data-beheer="kies"][data-voor="${k}"]`);
+  }
+
+  function huisstijlInvoer(el, soort) {
+    if (el.type === 'file') {
+      const file = el.files?.[0];
+      if (soort !== 'change' || !file) return;
+      el.value = '';
+      zetMelding(el.dataset.bestand, '');
+      if (el.dataset.bestand === 'font') laadLettertype(file); else laadAfbeelding(el.dataset.bestand, file);
+    } else if (el.dataset.huisstijl === 'voet') {
+      st.werkHuisstijl = { ...st.werkHuisstijl, voet: el.value.split(/\r?\n/).map(r => r.trim()).filter(Boolean) };
+      bewaarHuisstijl();
+    } else if (el.name === 'lettertype' && soort === 'change') {
+      st.werkHuisstijl = { ...st.werkHuisstijl, lettertype: el.value };
+      bewaarHuisstijl();
+    }
+  }
+
+  // ---------- printers ----------
+  function tekenPrinters() {
+    const p = model.effectief().printers;
+    const veld = (pad, titel, waarde, extra = '') => `<label class="veld"><span>${titel}</span><input type="${extra ? 'number' : 'text'}" data-printer="${pad}" value="${esc(waarde)}"${extra} autocomplete="off"></label>`;
+    const maat = ` min="${LABELMAAT[0]}" max="${LABELMAAT[1]}" step="any"`;
+    form.innerHTML = formKop('Printers')
+      + '<h3>Labelprinter</h3><div class="raster">' + veld('label.naam', 'Naam', p.label?.naam || '')
+      + veld('label.b', 'Breedte in mm', p.label?.b ?? '', maat) + veld('label.h', 'Hoogte in mm', p.label?.h ?? '', maat) + '</div>'
+      + '<h3>A4-printer</h3><div class="raster">' + veld('a4.naam', 'Naam', p.a4?.naam || '') + '</div>'
+      + '<p class="hint">De naam komt in de melding vóór het printen (<i>Kies printer: …</i>). De labelmaat bepaalt het papierformaat op de labelprinter.</p>'
+      + '<p class="fout" data-melding="printers" role="alert"></p>';
+  }
+
+  function printerInvoer(el, soort) {
+    if (!el.dataset.printer) return;
+    const lees = (k) => form.querySelector(`[data-printer="${k}"]`).value;
+    const e = model.effectief().printers || {};
+    const p = {
+      ...e,
+      label: { ...(e.label || {}), naam: lees('label.naam').trim(), b: getal(lees('label.b')), h: getal(lees('label.h')) },
+      a4: { ...(e.a4 || {}), naam: lees('a4.naam').trim() },
+    };
+    const goed = (n) => n >= LABELMAAT[0] && n <= LABELMAAT[1];
+    const fout = !p.label.naam || !p.a4.naam ? 'Geef beide printers een naam.'
+      : !goed(p.label.b) || !goed(p.label.h) ? `De labelmaat moet tussen ${LABELMAAT[0]} en ${LABELMAAT[1]} mm liggen.` : '';
+    if (fout) { if (soort === 'change') zetMelding('printers', fout); return; }
+    zetMelding('printers', '');
+    bewaarLater('instelling:printers', async () => { await model.zetInstelling('printers', p); meld('instelling', 'printers'); });
+  }
+
+  // ---------- artikelen inlezen ----------
+  const isRentman = (k) => TOEGESTANE_VELDEN.every(v => (k?.[v] || '') === (RENTMAN[v] || ''));
+
+  function tekenKolommen(eigen = null) {
+    const k = model.effectief().kolommen || RENTMAN;
+    const rentman = eigen === null ? isRentman(k) : !eigen;
+    const waarden = rentman ? RENTMAN : (eigen === true && isRentman(k) ? { ...RENTMAN } : k);
+    form.innerHTML = formKop('Artikelen inlezen')
+      + '<p class="hint">Welke kolom uit je export bij welk veld hoort. Prijzen, interne opmerkingen en alle andere kolommen worden nooit ingelezen. Inlezen doe je in het werkscherm met <b>Artikelen inlezen</b>.</p>'
+      + '<fieldset class="keuzes"><legend>Kolomnamen</legend>'
+      + `<label class="vink"><input type="radio" name="kolomSoort" value="rentman"${rentman ? ' checked' : ''}> Rentman-export (voorinstelling)</label>`
+      + `<label class="vink"><input type="radio" name="kolomSoort" value="eigen"${rentman ? '' : ' checked'}> Eigen kolomnamen</label></fieldset>`
+      + '<div class="raster kolommen">' + TOEGESTANE_VELDEN.map(v => `<label class="veld"><span>${esc(KOLOM_NAMEN[v] || v)}${v === 'naam' || v === 'code' ? ' <small>nodig</small>' : ''}</span>`
+        + `<input type="text" data-kolom="${v}" value="${esc(waarden[v] || '')}"${rentman ? ' disabled' : ''} autocomplete="off" spellcheck="false"></label>`).join('') + '</div>'
+      + '<p class="fout" data-melding="kolommen" role="alert"></p>';
+  }
+
+  function kolomInvoer(el, soort) {
+    if (el.name === 'kolomSoort') {
+      if (soort !== 'change') return;
+      const eigen = el.value === 'eigen';
+      tekenKolommen(eigen);
+      form.querySelector(`input[name="kolomSoort"][value="${el.value}"]`)?.focus();
+      if (!eigen) bewaarLater('instelling:kolommen', async () => { await model.zetInstelling('kolommen', { ...RENTMAN }); meld('instelling', 'kolommen'); });
+      return;
+    }
+    if (el.dataset.kolom) bewaarKolommen(soort === 'change');
+  }
+
+  function bewaarKolommen(melden) {
+    const k = {};
+    for (const v of TOEGESTANE_VELDEN) {
+      const w = form.querySelector(`[data-kolom="${v}"]`)?.value.trim();
+      if (w) k[v] = w;
+    }
+    if (!k.naam || !k.code) { if (melden) zetMelding('kolommen', 'Naam en Artikelnummer zijn nodig om te kunnen inlezen.'); return; }
+    zetMelding('kolommen', '');
+    bewaarLater('instelling:kolommen', async () => { await model.zetInstelling('kolommen', k); meld('instelling', 'kolommen'); });
   }
 
   async function tekenExtra(o) {
@@ -228,7 +521,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
   function tekenSjabloon(id) {
     const sj = sjabloonVan(id);
     if (!sj) { form.innerHTML = formKop('Sjablonen') + '<p class="leeg">Er zijn geen sjablonen. Klik op <b>Nieuw sjabloon</b>.</p>'; return; }
-    if (st.sjabloonId !== id) { st.keuze = null; $('voorbeeldArtikel').value = ''; }
+    if (st.sjabloonId !== id) { st.keuze = null; $('beheerArtikel').value = ''; }
     st.sjabloonId = id;
     scherm._laatsteSjabloon = id;
     st.werkSjabloon = sj;
@@ -394,9 +687,18 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     if (actie === 'verwijderen') return verwijder(st.sjabloonId);
     if (actie === 'pin-zet') return zetPincode();
     if (actie === 'pin-wis') return wisPincode();
+    if (actie.startsWith('regel-')) return regelKlik(actie, +knop.dataset.i);
+    if (actie === 'kies' || actie === 'weg') return huisstijlKlik(knop);
   }
 
-  function formInvoer() { /* per onderdeel ingevuld */ }
+  function formInvoer(ev) {
+    const el = ev.target;
+    if (ev.type === 'input' && (el.tagName === 'SELECT' || ['checkbox', 'radio', 'file'].includes(el.type))) return;
+    if (st.onderdeel === 'regels') regelInvoer(el, ev.type);
+    else if (st.onderdeel === 'huisstijl') huisstijlInvoer(el, ev.type);
+    else if (st.onderdeel === 'printers') printerInvoer(el, ev.type);
+    else if (st.onderdeel === 'kolommen') kolomInvoer(el, ev.type);
+  }
 
   // ---------- pincode instellen ----------
   async function tekenPincode() {
@@ -405,14 +707,14 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
       + `<p>${heeft ? 'Op deze pc is een pincode ingesteld.' : 'Op deze pc is geen pincode ingesteld.'}</p>`
       + '<p class="hint">Een drempel, geen beveiliging. Geldt alleen op deze pc en wordt nooit gepubliceerd.</p>'
       + `<div class="raster smal"><label class="veld"><span>${heeft ? 'Nieuwe pincode' : 'Pincode'}</span>`
-      + '<input type="password" id="nieuwePincode" inputmode="numeric" autocomplete="new-password"></label></div>'
+      + '<input type="password" id="beheerNieuwePincode" inputmode="numeric" autocomplete="new-password"></label></div>'
       + '<p class="fout" data-melding="pincode" role="alert"></p>'
       + `<div class="acties links"><button type="button" class="primary" data-beheer="pin-zet">Pincode instellen</button>`
       + (heeft ? '<button type="button" data-beheer="pin-wis">Pincode wissen</button>' : '') + '</div>';
-    form.querySelector('#nieuwePincode').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); zetPincode(); } });
+    form.querySelector('#beheerNieuwePincode').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); zetPincode(); } });
   }
   async function zetPincode() {
-    const v = form.querySelector('#nieuwePincode').value.trim();
+    const v = form.querySelector('#beheerNieuwePincode').value.trim();
     if (!/^\d{4,8}$/.test(v)) { form.querySelector('[data-melding="pincode"]').textContent = 'Een pincode is 4 tot 8 cijfers.'; return; }
     if (!(await bewaar(() => model.zetPcInstelling('pincode', v)))) return;
     meld('pc', 'pincode');
@@ -440,11 +742,11 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
   }
 
   function kiesArtikel(definitief) {
-    const v = $('voorbeeldArtikel').value.trim();
+    const v = $('beheerArtikel').value.trim();
     const a = st.perLabel.get(v) || st.perCode.get(v.toLowerCase());
     if (a) { st.keuze = sleutelVan(a); voorbeeldLater(0); return; }
     if (definitief && !v) { st.keuze = null; voorbeeldLater(0); }
-    else if (definitief) $('voorbeeldInfo').textContent = `Geen artikel "${v}" gevonden.`;
+    else if (definitief) $('beheerVoorbeeldInfo').textContent = `Geen artikel "${v}" gevonden.`;
   }
 
   function pastBij(sj, a, regels) {
@@ -455,7 +757,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     return standaardSjabloon(a, 'bordje', regels) === sj.id;
   }
 
-  function voorbeeldArtikel(sj) {
+  function beheerArtikel(sj) {
     const e = model.effectief();
     if (st.keuze !== null) { const a = st.lijst.find(x => sleutelVan(x) === st.keuze); if (a) return { a, hoe: 'gekozen' }; }
     const a = st.lijst.find(x => pastBij(sj, x, e.regels));
@@ -477,9 +779,14 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     return [...gezien].sort(nlSort.compare);
   }
 
+  /** Het sjabloon in het voorbeeld: het geopende; bij Huisstijl een bordje met voettekst. */
   function voorbeeldSjabloon() {
     if (st.onderdeel?.startsWith('sjabloon:') && st.werkSjabloon) return st.werkSjabloon;
-    return sjabloonVan(st.sjabloonId) || sjablonen().find(s => s.opmaak === 'staand') || eersteSjabloon();
+    const laatste = sjabloonVan(st.sjabloonId);
+    if (st.onderdeel === 'huisstijl' && !(laatste?.voet && laatste.opmaak !== 'strook')) {
+      return sjablonen().find(s => s.voet && s.opmaak === 'staand') || sjablonen().find(s => s.voet) || laatste || eersteSjabloon();
+    }
+    return laatste || sjablonen().find(s => s.opmaak === 'staand') || eersteSjabloon();
   }
 
   let voorbeeldTimer, voorbeeldBeurt = 0;
@@ -488,14 +795,14 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     voorbeeldTimer = setTimeout(tekenVoorbeeld, ms);
   }
   async function tekenVoorbeeld() {
-    if (gestopt || !$('voorbeeldDoel')) return;
+    if (gestopt || !$('beheerVoorbeeldDoel')) return;
     const beurt = ++voorbeeldBeurt;
-    const doel = $('voorbeeldDoel'), info = $('voorbeeldInfo');
+    const doel = $('beheerVoorbeeldDoel'), info = $('beheerVoorbeeldInfo');
     const sj = voorbeeldSjabloon();
     if (!sj) { doel.replaceChildren(); info.textContent = ''; return; }
     const e = model.effectief();
-    const { a, hoe } = voorbeeldArtikel(sj);
-    $('voorbeeldSjabloon').textContent = `${sj.naam || sj.id} · ${sj.formaat.b} × ${sj.formaat.h} mm`;
+    const { a, hoe } = beheerArtikel(sj);
+    $('beheerVoorbeeldSjabloon').textContent = `${sj.naam || sj.id} · ${sj.formaat.b} × ${sj.formaat.h} mm`;
     info.textContent = hoe === 'nep' ? 'Voorbeeldartikel: er past geen artikel bij dit sjabloon.' : `${a.naam}${a.code ? ' · ' + a.code : ''}`;
     let el;
     try { el = teken(vul(sj, a, e.aanvullingen[sleutelVan(a)] || {}, qrsVoor(a)[0] || ''), st.werkHuisstijl || e.huisstijl); }
@@ -516,16 +823,16 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
   }
 
   function tekenPoort() {
-    scherm.innerHTML = kop + `<div class="beheer-poort"><form id="pinForm" class="kolom" autocomplete="off">`
+    scherm.innerHTML = kop + `<div class="beheer-poort"><form id="beheerPinForm" class="kolom" autocomplete="off">`
       + `<h2>Pincode</h2><p class="hint">Beheer is afgeschermd op deze pc.</p>`
       + `<label class="veld"><span>Pincode</span><input type="password" id="pincode" inputmode="numeric" autocomplete="off"></label>`
-      + `<p id="pinFout" class="fout" role="alert"></p>`
+      + `<p id="beheerPinFout" class="fout" role="alert"></p>`
       + `<div class="acties"><button type="submit" class="primary">Openen</button></div></form></div>`;
-    $('pinForm').addEventListener('submit', (ev) => {
+    $('beheerPinForm').addEventListener('submit', (ev) => {
       ev.preventDefault();
       const invoer = $('pincode');
       if (invoer.value.trim() === String(pin)) { tekenBeheer(); return; }
-      $('pinFout').textContent = 'Onjuiste pincode';
+      $('beheerPinFout').textContent = 'Onjuiste pincode';
       invoer.value = '';
       invoer.focus();
     }, { signal });
