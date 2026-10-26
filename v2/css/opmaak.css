@@ -1,0 +1,93 @@
+/* Labels en bordjes: huisstijl uit versie 25. Alle maten in mm, zwart op wit. */
+/* Bordjes: Futura Bk BT als die op de pc staat, anders het meegeleverde Jost.
+   Labels: het meegeleverde Barlow Condensed. Zo werkt het op elke pc en offline. */
+@font-face{font-family:"DSL Futura";font-weight:400;font-display:block;src:local("Futura Bk BT"),local("FuturaBT-Book"),local("Futura Book"),local("Futura-Book"),url("../fonts/jost-400.woff") format("woff")}
+@font-face{font-family:"DSL Futura";font-weight:500 600;font-display:block;src:local("Futura Md BT"),local("FuturaBT-Medium"),local("Futura Medium"),local("Futura-Medium"),url("../fonts/jost-500.woff") format("woff")}
+@font-face{font-family:"DSL Futura";font-weight:700 900;font-display:block;src:local("Futura Hv BT"),local("FuturaBT-Heavy"),local("Futura Bold"),local("Futura-Bold"),url("../fonts/jost-700.woff") format("woff")}
+@font-face{font-family:"DSL Label";font-weight:400 600;font-display:block;src:url("../fonts/barlow-condensed-500.woff2") format("woff2")}
+@font-face{font-family:"DSL Label";font-weight:700 900;font-display:block;src:url("../fonts/barlow-condensed-700.woff2") format("woff2")}
+
+.signb,.lbl{-webkit-print-color-adjust:exact;print-color-adjust:exact;color:#000;background:#fff;box-sizing:border-box;overflow:hidden;position:relative;flex:0 0 auto}
+.signb *,.lbl *{box-sizing:border-box}
+.fb{display:flex;flex-direction:column;justify-content:center;overflow:hidden;min-height:0;min-width:0}
+.fb>span{display:block;width:100%}
+.geen-qr{display:flex;align-items:center;justify-content:center;text-align:center;font:600 7pt/1.15 Arial,sans-serif;color:#b00;border:.3mm dashed #b00;padding:1mm}
+
+/* ---------- bordjes ---------- */
+.signb{border:.25mm solid #000;font-family:"DSL Futura","Century Gothic",Arial,sans-serif;line-height:1.15}
+.signb .band{position:absolute;left:0;top:0;bottom:0}
+.signb .gat{position:absolute;display:block;overflow:visible}
+.signb .blg{position:absolute;left:0;top:0;display:flex;align-items:center;justify-content:center}
+.signb .blg img{width:74%;height:74%;object-fit:contain}
+.signb .bm{position:absolute;display:flex;flex-direction:column}
+.signb .t>span,.signb .h>span{white-space:nowrap;font-weight:700;line-height:1}
+.signb .h>span{letter-spacing:-.01em}
+.signb .tb{flex:1 1 auto;justify-content:flex-start}
+.signb .tg{display:grid;grid-template-columns:auto 1fr;column-gap:.9em;align-items:baseline;row-gap:.32em}
+.signb .tg .sep{grid-column:1/-1;height:.2mm;background:#c8c8c8;align-self:center}
+.signb .tk{font-size:.76em;color:#555;white-space:nowrap}
+.signb .tv{font-weight:600}
+.signb .bot{display:flex;align-items:flex-end;justify-content:space-between;gap:2mm;flex:0 0 auto}
+.signb .cert{display:flex;align-items:center;gap:1.2mm;min-width:0;color:#333;line-height:1.25}
+.signb .qbox{flex:0 0 auto;display:flex;flex-direction:column;align-items:center}
+.signb .qq svg{display:block;width:100%;height:100%}
+.signb .qc{font-family:Arial,sans-serif;font-weight:600;line-height:1.1;margin-top:.5mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.signb .sr{flex:1 1 auto;min-height:0;display:flex;align-items:stretch}
+.signb .sa{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:space-between}
+.signb .stop{display:flex;align-items:flex-end;flex:0 0 auto;overflow:visible}
+.signb .stop .hs{overflow:visible}
+.signb .stop .fb{height:100%;justify-content:flex-end}
+.signb .smid{display:flex;align-items:center;gap:1em}
+.signb .sbot{border-top:.2mm solid #000;display:flex;flex-wrap:wrap;gap:.3em 1.6em;line-height:1.2;font-weight:600}
+.signb .pill{border-radius:999px;padding:.28em .9em;font-weight:700;white-space:nowrap;letter-spacing:.02em}
+.signb .hs{justify-content:flex-end}
+.signb .hs>span{text-align:right}
+.signb .badge{flex:0 0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;letter-spacing:.02em;line-height:1.05;box-shadow:inset 0 0 0 .25mm rgba(0,0,0,.35)}
+.signb .ft{flex:0 0 auto;border-top:.2mm solid #000;color:#222;line-height:1.5;letter-spacing:.01em}
+.signb .ft>div{text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.signb .fsep{display:inline-block;width:.2mm;height:.85em;background:#9a9a9a;margin:0 .6em;vertical-align:-.08em}
+
+/* ---------- labels (Citizen) ---------- */
+.lbl{font-family:"DSL Label","Arial Narrow",Arial,sans-serif;display:flex}
+.lbl .qr svg{display:block;width:100%;height:100%}
+.lbl .t1,.lbl .t2{display:flex;flex-direction:column;justify-content:center;overflow:hidden;min-height:0}
+.lbl .t1>span,.lbl .t2>span{display:block;width:100%;line-height:1.02;overflow-wrap:normal;word-break:normal}
+.lbl .t1>span{font-weight:700}
+.lbl .t2>span{font-weight:500}
+.lbl.lay-top{flex-direction:column;padding:var(--pad);gap:calc(var(--pad) * .8)}
+.lbl.lay-top .t1{flex:1 1 auto;justify-content:flex-start}
+.lbl .bot{display:flex;gap:var(--pad);flex:0 0 auto;min-height:0}
+.lbl .bot .qr{flex:0 0 auto}
+.lbl .meta{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:1mm}
+.lbl .meta .t2{flex:1 1 auto;justify-content:flex-start}
+.lbl .metarow{display:flex;align-items:flex-end;justify-content:space-between;gap:2mm;flex:0 0 auto}
+.lbl .code{font:700 var(--capPt)/1 Arial,sans-serif;margin-bottom:-.15em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lbl .logo{display:block;object-fit:contain;flex:0 1 auto;min-width:0;max-width:38%;object-position:right bottom;align-self:flex-end}
+.lbl.half{flex-direction:row;align-items:center;gap:var(--pad);padding:calc(var(--pad) * .8) var(--pad)}
+.lbl .hq{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;align-self:stretch}
+.lbl .cap{font:600 var(--capPt)/1.1 Arial,sans-serif;margin-top:.6mm;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.lbl .hp{flex:1 1 auto;min-width:0;align-self:stretch;display:flex;flex-direction:column;gap:.8mm;justify-content:center}
+.lbl .hp .t1{flex:1 1 auto}
+.lbl .hp.fitted .t1{flex:0 0 auto}
+.lbl .hp .t2{flex:0 0 auto;height:4.2mm}
+.lbl.loc{flex-direction:column;padding:var(--pad);gap:calc(var(--pad) * .8)}
+.lbl.loc.half{padding:calc(var(--pad) * .8) var(--pad);gap:calc(var(--pad) * .5);align-items:stretch}
+.lbl .lc{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;overflow:hidden;min-height:0}
+.lbl .lc>span{display:block;width:100%;white-space:nowrap;font-weight:700;line-height:1;text-align:center}
+.lbl .lbot{display:flex;gap:var(--pad);align-items:stretch;flex:0 0 auto}
+.lbl .ld{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.lbl .ld>span{display:block;width:100%;line-height:1.05;text-align:center}
+
+/* ---------- printvellen ---------- */
+.drukwerk{position:absolute;left:-10000px;top:0}
+.a4{width:210mm;height:297mm;position:relative;background:#fff;overflow:hidden}
+.a4 .plek{position:absolute}
+.a4 .plek>*{position:absolute;left:0;top:0;transform-origin:0 0}
+.pagina{width:76mm;height:56mm;position:relative;overflow:hidden;background:#fff}
+.pagina.tweeling{display:flex;flex-direction:column}
+.pagina.tweeling::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:.25mm dashed #000}
+@media print{
+  .drukwerk{position:static;left:auto}
+  .a4,.pagina{break-after:page;page-break-after:always}
+  .a4:last-child,.pagina:last-child{break-after:auto;page-break-after:auto}
+}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labelmaker</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/opmaak.css">
+<style id="papier">@page { size: 210mm 297mm; margin: 0; }</style>
+</head>
+<body>
+<header>
+  <h1>Labelmaker</h1>
+  <input type="search" id="zoek" placeholder="Zoek of scan: naam, code, QR, locatie" autocomplete="off" aria-label="Zoek of scan">
+  <button type="button" id="inlezen">Artikelen inlezen</button>
+  <input type="file" id="bestand" accept=".xlsx,.csv" hidden>
+  <button type="button" id="beheer" disabled title="Volgt in fase 2">Beheer</button>
+  <div class="print">
+    <button type="button" id="printLabel" class="primary" disabled>Print 0 op Citizen</button>
+    <button type="button" id="printA4" class="primary" disabled>Print 0 op A4</button>
+    <button type="button" id="printMeer" aria-label="Meer printopties" aria-haspopup="true" aria-expanded="false" aria-controls="printMenu">▾</button>
+    <div id="printMenu" class="menu" hidden>
+      <button type="button" data-printer="label">Alleen eerste label (Citizen)</button>
+      <button type="button" data-printer="a4">Alleen eerste vel (A4)</button>
+    </div>
+  </div>
+</header>
+<p id="melding" class="melding" role="status" hidden></p>
+<main>
+  <section id="artikelen" class="kolom" aria-labelledby="kopArtikelen">
+    <div class="kop"><h2 id="kopArtikelen">Artikelen</h2><span id="aantalArtikelen" class="hint"></span></div>
+    <div id="leegArtikelen" class="leeg">Nog geen artikelen. Klik op <b>Artikelen inlezen</b> en kies de materiaalexport uit Rentman (.xlsx of .csv).</div>
+    <div id="chips" class="chips" role="group" aria-label="Categorie"></div>
+    <label class="vink"><input type="checkbox" id="combinaties"> Combinaties tonen</label>
+    <ul id="lijst" class="lijst"></ul>
+    <p id="lijstmelding" class="hint" hidden></p>
+    <div class="acties">
+      <span id="gekozen" class="hint">Niets gekozen</span>
+      <button type="button" id="actBordje" disabled>Bordje of strook</button>
+      <button type="button" id="actQr" disabled>QR-label</button>
+      <button type="button" id="actLoc" disabled>Locatielabel</button>
+    </div>
+  </section>
+  <section id="printvel" class="kolom" aria-labelledby="kopPrintvel">
+    <div class="kop"><h2 id="kopPrintvel">Printvel</h2></div>
+    <div class="tabs" role="tablist">
+      <button type="button" id="tabLabel" role="tab" aria-selected="true">Citizen (0)</button>
+      <button type="button" id="tabA4" role="tab" aria-selected="false">A4 (0)</button>
+    </div>
+    <ul id="velLijst" class="lijst vel"></ul>
+    <div id="leegVel" class="leeg">Kies artikelen en klik op <b>Bordje of strook</b>, <b>QR-label</b> of <b>Locatielabel</b>.</div>
+    <div class="acties"><button type="button" id="velLeeg">Printvel leegmaken</button></div>
+  </section>
+  <section id="voorbeeld" class="kolom" aria-labelledby="kopVoorbeeld">
+    <div class="kop"><h2 id="kopVoorbeeld">Voorbeeld</h2><span id="voorbeeldInfo" class="hint"></span></div>
+    <div id="vellen" class="vellen"></div>
+  </section>
+</main>
+<div id="printbalk" class="printbalk" role="dialog" aria-label="Printen" hidden></div>
+<div id="drukwerk" class="drukwerk" aria-hidden="true"></div>
+<dialog id="aanvulling"></dialog>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

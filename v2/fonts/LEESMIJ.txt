@@ -1,0 +1,8 @@
+Lettertypes die met de Labelmaker worden meegeleverd, zodat labels en bordjes
+op elke pc hetzelfde worden getekend (ook offline):
+
+- Jost (indestructible type, SIL Open Font License, zie OFL-Jost.txt) —
+  vervanger voor Futura Bk BT. Staat Futura op de pc, dan wordt die gebruikt.
+  Bewerkt: beperkt tot Latijnse tekens en omgezet naar WOFF.
+- Barlow Condensed (Jeremy Tribby, SIL Open Font License, zie OFL-Barlow.txt) —
+  voor de labels op de Citizen. Ongewijzigd.
