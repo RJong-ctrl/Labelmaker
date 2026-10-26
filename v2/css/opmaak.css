@@ -73,3 +73,17 @@
 .lbl .lbot{display:flex;gap:var(--pad);align-items:stretch;flex:0 0 auto}
 .lbl .ld{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 .lbl .ld>span{display:block;width:100%;line-height:1.05;text-align:center}
+
+/* ---------- printvellen ---------- */
+.drukwerk{position:absolute;left:-10000px;top:0}
+.a4{width:210mm;height:297mm;position:relative;background:#fff;overflow:hidden}
+.a4 .plek{position:absolute}
+.a4 .plek>*{position:absolute;left:0;top:0;transform-origin:0 0}
+.pagina{width:76mm;height:56mm;position:relative;overflow:hidden;background:#fff}
+.pagina.tweeling{display:flex;flex-direction:column}
+.pagina.tweeling::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:.25mm dashed #000}
+@media print{
+  .drukwerk{position:static;left:auto}
+  .a4,.pagina{break-after:page;page-break-after:always}
+  .a4:last-child,.pagina:last-child{break-after:auto;page-break-after:auto}
+}
