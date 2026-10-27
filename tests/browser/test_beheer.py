@@ -592,6 +592,11 @@ class Instellingen(Hulp):
             expect(f.locator('tr.regelrij').nth(i - 1).get_by_role('button', name='omhoog')).to_be_focused() if i > 1 else None
         expect(f.locator('tr.regelrij').first.locator('[data-veld="pad"]')).to_have_value('Portofoon')
         f.locator('select[data-standaard="bordje"]').select_option('bordje-liggend')
+        # kist met bekende inhoud: keuze tussen het klassieke en het moderne materiaalbordje
+        kist = f.locator('select[data-standaard="kist"]')
+        expect(kist).to_have_value('kist')
+        kist.select_option('kist-modern')
+        self.wacht_model("e.regels.standaard.kist === 'kist-modern'")
         f.get_by_role('button', name='Regel toevoegen').click()
         expect(f.locator('[data-melding="regels"]')).to_contain_text('telt niet mee')
         self.wacht_model("e.regels.bordje[0].pad === 'Portofoon' && e.regels.standaard.bordje === 'bordje-liggend'")

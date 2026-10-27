@@ -55,7 +55,7 @@ export const PROFIEL_STANDAARD = {
   },
   basis: {
     sjablonen: BASIS_SJABLONEN,
-    regels: { bordje: [], standaard: { bordje: 'bordje-staand', qrlabel: 'qrlabel', locatie: 'locatie' } },
+    regels: { bordje: [], standaard: { bordje: 'bordje-staand', qrlabel: 'qrlabel', locatie: 'locatie', kist: 'kist' } },
     huisstijl: { logo: null, voet: [], certIcoon: null, lettertype: 'futura' },
     printers: { label: { naam: 'Labelprinter', b: 76, h: 56 }, a4: { naam: 'A4-printer' } },
     kolommen: { naam: 'Naam', code: 'Code', qr: 'QR', exemplaren: 'Exemplaren', locatie: 'Locatie', map: 'Categorie' },

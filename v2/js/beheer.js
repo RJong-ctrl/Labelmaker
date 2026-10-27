@@ -27,7 +27,7 @@ const ONDERDELEN = [
 ];
 const PINCODE = { id: 'pincode', titel: 'Pincode' };
 
-const ACTIES = { bordje: 'Bordje of strook', qrlabel: 'QR-label', locatie: 'Locatielabel' };
+const ACTIES = { bordje: 'Bordje of strook', qrlabel: 'QR-label', locatie: 'Locatielabel', kist: 'Kist met bekende inhoud' };
 const LETTERTYPES = { futura: 'Futura', barlow: 'Barlow Condensed', arial: 'Arial', eigen: 'Eigen lettertype' };
 const AFBEELDINGEN = { logo: 'Logo', certIcoon: 'Certificaat-icoon' };
 const MAX_AFBEELDING = 300 * 1024;
@@ -289,7 +289,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
   }
 
   function sjabloonOpties(gekozen, opmaak = null) {
-    const lijst = sjablonen().filter(s => !opmaak || s.opmaak === opmaak || s.id === gekozen);
+    const lijst = sjablonen().filter(s => !opmaak || s.opmaak === opmaak || (opmaak === 'kist' && s.opmaak?.startsWith('kist')) || s.id === gekozen);
     const onbekend = gekozen && !lijst.some(s => s.id === gekozen) ? opt(gekozen, `(onbekend: ${gekozen})`, true) : '';
     return (gekozen ? '' : opt('', 'Kies…', true)) + onbekend + lijst.map(s => opt(s.id, s.naam || s.id, s.id === gekozen)).join('');
   }

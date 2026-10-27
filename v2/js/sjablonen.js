@@ -132,7 +132,9 @@ export function veldwaarde(veld, artikel, aanvullingen = {}, qr = '') {
 export function natuurlijkeWaarde(veld, artikel, qr = '') {
   const h = veld.herkomst;
   if (h.type === 'exemplaar') {
-    const kist = artikel.kisten?.[qr];
+    // QR van een kist (exemplaar); de eigen QR van het artikel of geen QR: de eerste kist.
+    const kisten = artikel.kisten || {};
+    const kist = kisten[qr] || (!qr || qr === artikel.qr ? Object.values(kisten)[0] : undefined);
     const w = String(kist?.[h.sleutel] ?? '').trim();
     return w || (h.kolom ? String(artikel[h.kolom] ?? '').trim() : '');
   }
@@ -237,7 +239,7 @@ export const DSL_REGELS = {
     { pad: '/ backdrop', sjabloon: 'backdrop' },
     { pad: 'pipe en drape', naam: 'doek', sjabloon: 'pipe-drape' },
   ],
-  standaard: { bordje: 'bordje-staand', qrlabel: 'qrlabel', locatie: 'locatie' },
+  standaard: { bordje: 'bordje-staand', qrlabel: 'qrlabel', locatie: 'locatie', kist: 'kist' },
 };
 
 const bevat = (tekst, deel) => !deel || String(tekst || '').toLowerCase().includes(String(deel).toLowerCase());
@@ -247,5 +249,9 @@ export function standaardSjabloon(artikel, actie, regels = DSL_REGELS) {
   if (actie !== 'bordje') return regels.standaard[actie] || DSL_REGELS.standaard[actie];
   if (artikel.sjabloon) return artikel.sjabloon;
   const regel = (regels.bordje || []).find(r => (r.pad || r.naam) && bevat(artikel.pad, r.pad) && bevat(artikel.naam, r.naam));
-  return regel ? regel.sjabloon : regels.standaard.bordje;
+  if (regel) return regel.sjabloon;
+  // Kist met bekende inhoud (uit de exemplaren-export): het materiaalbordje.
+  const kist = regels.standaard?.kist ?? DSL_REGELS.standaard.kist;
+  if (kist && Object.values(artikel.kisten || {}).some(k => k?.inhoud)) return kist;
+  return regels.standaard.bordje;
 }

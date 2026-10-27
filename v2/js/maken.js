@@ -29,7 +29,9 @@ export function startMaken(root, h) {
     for (const k of m.bewerkt) o[k] = m.waarden[k] ?? '';
     return o;
   };
-  const qrWaarde = () => (m.qrBewerkt ? m.qr : (m.artikel?.qr || m.artikel?.exemplaren?.[0] || ''));
+  // Materiaalbordje met bekende kisten: standaard de QR van de eerste kist (die past bij de inhoud).
+  const kistQr = () => (huidigSjabloon()?.velden?.some(v => v.herkomst?.type === 'exemplaar') ? Object.keys(m.artikel?.kisten || {})[0] : '');
+  const qrWaarde = () => (m.qrBewerkt ? m.qr : (kistQr() || m.artikel?.qr || m.artikel?.exemplaren?.[0] || ''));
   // Een QR van het artikel zelf (artikel-QR of een van zijn exemplaren) is geen eigen wijziging.
   const qrEigen = () => m.qrBewerkt && !(m.artikel && (m.qr === (m.artikel.qr || '') || (m.artikel.exemplaren || []).includes(m.qr)));
 

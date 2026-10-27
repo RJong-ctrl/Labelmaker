@@ -283,6 +283,22 @@ class Maken(PaginaTest):
             self.assertGreaterEqual(st['width'] / mm, 76, soort)
             self.assertGreaterEqual(st['height'] / mm, 56, soort)
 
+    def test_kist_opzoeken_op_naam_vult_inhoud(self):
+        """Kist op naam opzoeken (artikel heeft een eigen QR): inhoud van de eerste kist, met de QR van die kist."""
+        p = self.pagina
+        p.evaluate("""async () => { const { openOpslag } = await import('./js/opslag.js'); const o = await openOpslag('dsl');
+          await o.vervangAlle('artikelen', [{ id: '*GE5000', waarde: { id: '*GE5000', naam: '4 x Shure PSM900 [Case]', code: '*GE5000', qr: '1013369',
+            exemplaren: ['1013368'], pad: 'Materialen / Geluid', map: 'Geluid', locatie: '', soort: 'serie', type: 'Combinatie', combinatie: true, aantal: 1,
+            kisten: { '1013368': { nr: 'DSL01', inhoud: '4 Shure IEM PSM900 P9T', gewicht: '12,89' } } } }]); }""")
+        p.reload()
+        p.wait_for_selector('body[data-klaar="1"]')
+        # Soort blijft op Automatisch: een kist met bekende inhoud krijgt vanzelf het materiaalbordje
+        p.locator('#makenZoek').fill('PSM900')
+        p.locator('#makenTreffers li').first.click()
+        expect(p.locator('#makenVelden textarea[name="Inhoud"]')).to_have_value('4 Shure IEM PSM900 P9T')
+        expect(p.locator('#makenVelden input[name="__qr"]')).to_have_value('1013368')
+        expect(p.locator('#makenVoorbeeld .signb.kist .kt')).to_have_text(['Shure IEM PSM900 P9T'])
+
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
         p = self.pagina

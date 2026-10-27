@@ -309,3 +309,22 @@ test('kistbordje_modern_ook_te_kiezen', () => {
   // altijd DSL blauw, ook als er een andere randkleur is ingevuld
   assert.equal(vul(S['kist-modern'], A.GE9402, { Randkleur: 'Rood' }, 'x').rand, '#005abb');
 });
+
+test('kist_met_eigen_artikel_qr_neemt_eerste_kist', () => {
+  // Combinaties hebben in Rentman ook een eigen QR (niet die van een exemplaar): dan de eerste kist.
+  const kist = { ...A.GE9402, naam: '4 x Shure PSM900 [Case]', code: '*GE5000', qr: '1013369', exemplaren: ['1013368'],
+    kisten: { 1013368: { nr: 'DSL01', inhoud: '4 Shure P9T', gewicht: '12,89' } } };
+  const i = vul(S.kist, kist, {}, '1013369');
+  assert.deepEqual(i.lijst, [['4', 'Shure P9T']]);
+  assert.equal(i.onder, 'DSL01');
+  assert.equal(i.waarden.Gewicht, '12,89');
+});
+
+test('automatisch_materiaalbordje_voor_kist_met_inhoud', () => {
+  const kist = { ...A.GE9402, pad: 'Materialen / Geluid / Microfoons', naam: '4 x Shure PSM900 [Case]', kisten: { x: { nr: 'DSL01', inhoud: '4 P9T', gewicht: '' } } };
+  assert.equal(standaardSjabloon(kist, 'bordje'), 'kist');
+  // zonder bekende inhoud: gewoon bordje
+  assert.equal(standaardSjabloon({ ...kist, kisten: { x: { nr: 'DSL01', inhoud: '', gewicht: '33' } } }, 'bordje'), 'bordje-staand');
+  // een regel op categorie gaat voor
+  assert.equal(standaardSjabloon({ ...A.GE9402, kisten: kist.kisten }, 'bordje'), 'gitterbox');
+});
