@@ -57,15 +57,15 @@ const vak = (klasse, max, html, stijl = '', min = 3, regels = 0) =>
 
 function bordje(i, hs) {
   const W = i.formaat.b, H = i.formaat.h;
-  const wand = i.opmaak === 'wand', kist = i.opmaak === 'kist';
+  const wand = i.opmaak === 'wand';
   const staand = i.opmaak === 'staand' || (wand && H > W), strook = i.opmaak === 'strook';
-  const f = wand || kist ? Math.min(W, H) / 74 : staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48);
-  const bw = wand || kist ? Math.min(W, H) * 0.17 : staand ? W * 0.19 : Math.min(W * 0.15, H * 0.3);
+  const f = wand ? Math.min(W, H) / 74 : staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48);
+  const bw = wand ? Math.min(W, H) * 0.17 : staand ? W * 0.19 : Math.min(W * 0.15, H * 0.3);
   const gap = staand ? 4 * f : 3.5 * f, pad = staand ? 4 * f : 3 * f;
   const titel = esc(i.titel), groot = esc(i.groot);
   const rijen = i.eigenschappen.map(([k, v]) => [k, v]);
   // Onderregel (bijv. 'Artikelnummer GE9402') klein linksonder, zoals op de strook.
-  const onder = !strook && !wand && !kist && i.onder ? `<div class="onderregel" style="font-size:${(6 * (staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48))).toFixed(1)}pt">${esc(i.onder)}</div>` : '';
+  const onder = !strook && !wand && i.onder ? `<div class="onderregel" style="font-size:${(6 * (staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48))).toFixed(1)}pt">${esc(i.onder)}</div>` : '';
   const tabel = rijen.length
     ? '<div class="tg">' + rijen.map((r, n) => (n ? '<div class="sep"></div>' : '') + `<div class="tk">${esc(r[0])}</div><div class="tv">${esc(r[1])}</div>`).join('') + '</div>'
     : '';
@@ -81,20 +81,7 @@ function bordje(i, hs) {
   const qrBlok = (qs) => `<div class="qbox">${qrOfMelding(i.qr, qs)}${i.qr ? `<div class="qc" style="font-size:${(5.5 * f).toFixed(1)}pt;max-width:${mm(qs + 4)}">${esc(i.qr)}</div>` : ''}</div>`;
 
   let main;
-  if (kist) {
-    // Materiaalbordje: naam en kistnummer bovenaan; de inhoud staat centraal en luchtig (regels met lijntjes,
-    // aantal vet). Rechts: gewicht en QR, daaronder het vak voor de projectsticker.
-    const kopH = 11 * f / 1.84, st = { b: 76, h: 50 }, qs = 20;
-    const gewicht = String(i.waarden?.Gewicht || '').trim();
-    const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
-    const regels = (i.lijst || []).map(([n, t]) => `<div class="kr"><span class="ka">${n ? esc(n) + '×' : ''}</span><span class="kt">${esc(t)}</span></div>`).join('');
-    main = `<div class="kkop" style="height:${mm(kopH)}">${vak('t titel', kopH * PT * 0.9, titel, 'flex:1 1 0')}${groot ? vak('h groot knr', kopH * PT * 0.9, groot, `flex:0 0 ${mm(30)}`) : ''}</div>`
-      + `<div class="krij" style="gap:${mm(5)};margin-top:${mm(2.5)}">`
-      + `<div class="klinks">${regels ? vak('klijst', 18, `<div class="kgrid">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 5) : '<div class="kleeg">Inhoud</div>'}</div>`
-      + `<div class="krechts" style="width:${mm(st.b)}"><div class="kbot"><div class="kgew">${gw ? `<span>Gewicht</span><b>${esc(gw)}</b>` : ''}</div>${i.qr ? qrBlok(qs) : ''}</div>`
-      + `<div class="ksticker" style="height:${mm(st.h)}">Projectsticker</div></div></div>`
-      + voet;
-  } else if (wand) {
+  if (wand) {
     // Wandbord: de locatie zo groot mogelijk, eronder wat er ligt, QR van de locatie rechtsonder.
     const tH = H * (staand ? 0.34 : 0.4);
     main = vak('t titel wrap wt', tH * PT * 0.95, titel, `height:${mm(tH)};flex:0 0 auto`, 20, 2)
@@ -166,6 +153,38 @@ function bordje(i, hs) {
   return el;
 }
 
+// ---------- materiaalbordje voor op de kist (opbouw van het oude bordje) ----------
+
+function kist(i, hs) {
+  const W = i.formaat.b, H = i.formaat.h, L = 1.2, w = i.waarden || {};
+  const kopH = H * 0.24, rijH = H * 0.075, voetH = hs.voet.length ? H * 0.085 : 0;
+  const veld = (naam, waarde, pt) => `<div class="kv" style="font-size:${pt}pt"><b>${esc(naam)}:</b>${vak('kw', pt, esc(waarde || ''), 'flex:1 1 auto', 5)}</div>`;
+  const gewicht = String(w.Gewicht || '').trim();
+  const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
+  const qs = kopH - 2 * L - 3;
+  const lijst = i.lijst || [];
+  // Veel regels: twee kolommen. De letter wordt zo groot als past (hooguit 12 pt); lange namen lopen door.
+  const regels = lijst.map(([n, t]) => `<div class="kr"><span class="ka">${esc(n)}</span><span class="kt">${esc(t)}</span></div>`).join('');
+  const el = document.createElement('div');
+  el.className = 'signb kist';
+  el.dataset.sjabloon = i.sjabloon;
+  el.style.width = W + 'mm';
+  el.style.height = H + 'mm';
+  el.style.setProperty('--l', mm(L));
+  el.innerHTML =
+    `<div class="krij" style="height:${mm(kopH)};grid-template-columns:${mm(kopH * 1.15)} 1fr ${mm(kopH)}">`
+    + `<div class="kc klogo">${hs.logo ? `<img alt="" src="${esc(hs.logo)}">` : ''}</div>`
+    + `<div class="kc kstickervak"><div class="ksticker">Projectsticker</div></div>`
+    + `<div class="kc kqr">${i.qr ? qrOfMelding(i.qr, qs) : ''}</div></div>`
+    + `<div class="krij" style="height:${mm(rijH)};grid-template-columns:1fr 1fr">`
+    + `<div class="kc">${veld('Locatie', w.Locatie, 11)}</div><div class="kc">${veld('Gewicht', gw, 11)}</div></div>`
+    + `<div class="kc kinhoud"><div class="kkop"><span class="kl">Inhoud:</span>${vak('kn', 15, esc(i.titel), 'flex:1 1 auto', 7)}<span class="kcode">${esc(i.onder)}</span></div>`
+    + (regels ? vak('klijst', 12, `<div class="kgrid${lijst.length > 13 ? ' twee' : ''}">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4.5) : '')
+    + '</div>'
+    + (voetH ? `<div class="kvoet" style="height:${mm(voetH)}">${hs.voet.map(l => '<div>' + l.split('|').map(x => esc(x.trim())).join('&nbsp; ') + '</div>').join('')}</div>` : '');
+  return el;
+}
+
 // ---------- labels voor de Citizen ----------
 
 function labelMaten(b, hVol) {
@@ -232,7 +251,8 @@ export function teken(inhoud, huisstijl = HUISSTIJL_DSL) {
   const hs = huisstijlVan(huisstijl);
   const el = inhoud.opmaak === 'qrlabel' ? qrLabel(inhoud, hs)
     : inhoud.opmaak === 'locatie' ? locatieLabel(inhoud)
-      : bordje(inhoud, hs);
+      : inhoud.opmaak === 'kist' ? kist(inhoud, hs)
+        : bordje(inhoud, hs);
   el.dataset.lettertype = hs.lettertype;
   // Titel die met een J begint: ruimte voor de uitstekende haak (anders afgeknipt).
   if (el.classList.contains('signb')) for (const t of el.querySelectorAll('.t')) if (/^\s*J/.test(t.textContent)) t.classList.add('j');
@@ -273,6 +293,15 @@ function schrijflijn(span) {
   const y = i.getBoundingClientRect().top;
   i.remove();
   return y;
+}
+
+/** Staat alleen Futura Book op deze pc (geen Medium/Heavy)? Dan alles in Futura Book (class futura-boek). */
+export async function kiesFutura(doc = document) {
+  const er = async (bronnen) => { try { await new FontFace('lm-test', bronnen).load(); return true; } catch { return false; } };
+  const boek = await er('local("Futura Bk BT"), local("Futura Book BT"), local("FuturaBT-Book"), local("Futura Book"), local("Futura-Book")');
+  const vet = await er('local("Futura Hv BT"), local("FuturaBT-Heavy"), local("Futura Bold"), local("Futura-Bold"), local("Futura Md BT"), local("FuturaBT-Medium")');
+  doc.documentElement.classList.toggle('futura-boek', boek && !vet);
+  return { boek, vet };
 }
 
 let lettertypes = null;

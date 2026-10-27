@@ -252,8 +252,8 @@ test('wandbord_a4_locatie_groot', () => {
 });
 
 test('kistbordje_met_inhoudslijst', () => {
-  // Modern: geen klant/productie/datum/check meer (daar komt de projectsticker); randkleur standaard DSL blauw.
-  assert.deepEqual(S.kist.velden.map(v => v.naam), ['Naam', 'Code', 'Gewicht', 'Inhoud']);
+  // Zoals het oude bordje, maar zonder klant/productie/datum/check (daar komt de projectsticker); met locatie.
+  assert.deepEqual(S.kist.velden.map(v => v.naam), ['Naam', 'Code', 'Locatie', 'Gewicht', 'Inhoud']);
   const i = vul(S.kist, A.GE9402, { Gewicht: '66,20', Inhoud: '30 DMX 3p 1,25m grijs\n40× DMX 3p 2,5m\n2 x Afsluiter\nlosse regel\n\n' }, 'dsl01');
   assert.equal(i.opmaak, 'kist');
   assert.deepEqual(S.kist.formaat, { b: 194, h: 136 });

@@ -238,14 +238,32 @@ class Maken(PaginaTest):
         p.locator('#makenVelden textarea[name="Inhoud"]').fill('30 DMX 3p 1,25m\n2 DMX 3p Afsluiter')
         k = p.locator('#makenVoorbeeld .signb.kist')
         expect(k.locator('.kt')).to_have_text(['DMX 3p 1,25m', 'DMX 3p Afsluiter'])
-        expect(k.locator('.ka')).to_have_text(['30×', '2×'])
+        expect(k.locator('.ka')).to_have_text(['30', '2'])
         expect(k).to_contain_text('66,20 kg')
-        expect(k.locator('.ksticker')).to_have_count(1)
+        # opbouw zoals het oude bordje: logo, vak voor de projectsticker, QR, zwarte voet
+        for deel in ['.klogo', '.ksticker', '.kqr', '.kvoet']:
+            expect(k.locator(deel)).to_have_count(1)
         p.locator('#makenVelden input[name="__aantal"]').fill('2')
         p.locator('#makenOpVel').click()
         expect(p.locator('#vellen .a4')).to_have_count(1)
         expect(p.locator('#vellen .a4 .signb.kist')).to_have_count(2)
         self.assertEqual(self.fouten, [])
+
+    def test_kist_lange_lijst_past(self):
+        """Veel regels: twee kolommen; lange namen lopen door op een volgende regel. Alles blijft zichtbaar."""
+        p = self.pagina
+        p.locator('#makenSoort').select_option('kist')
+        p.locator('#makenVelden input[name="Naam"]').fill('Grote kabelkist')
+        regels = ['%d Speakon 4p verlengkabel %d meter zwart met extra lange omschrijving erachter' % (n + 1, n + 1) for n in range(26)]
+        p.locator('#makenVelden textarea[name="Inhoud"]').fill('\n'.join(regels))
+        k = p.locator('#makenVoorbeeld .signb.kist')
+        expect(k.locator('.kr')).to_have_count(26)
+        expect(k.locator('.kgrid.twee')).to_have_count(1)
+        p.wait_for_timeout(800)
+        vak = k.locator('.kinhoud').bounding_box()
+        laatste = k.locator('.kr').last.bounding_box()
+        self.assertLessEqual(laatste['y'] + laatste['height'], vak['y'] + vak['height'] + 1, 'laatste regel valt eraf')
+        self.assertEqual(k.locator('.kt').evaluate_all('l => l.filter(e => e.scrollWidth > e.clientWidth + 1).length'), 0, 'tekst afgekapt')
 
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""

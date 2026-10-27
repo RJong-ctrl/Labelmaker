@@ -340,5 +340,14 @@ class Huisstijl(PaginaTest):
         self.assertEqual(self.fouten, [])
 
 
+class FuturaKeuze(PaginaTest):
+    def test_zonder_futura_geen_futura_boek(self):
+        """Zonder Futura op de pc: meegeleverde Jost, geen futura-boek-klasse."""
+        p = self.pagina
+        uit = p.evaluate("async () => (await import('./js/opmaak.js')).kiesFutura()")
+        self.assertEqual(uit, {'boek': False, 'vet': False})
+        self.assertNotIn('futura-boek', p.evaluate('document.documentElement.className'))
+
+
 if __name__ == '__main__':
     unittest.main()

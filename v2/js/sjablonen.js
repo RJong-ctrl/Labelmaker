@@ -65,12 +65,12 @@ export const wandbord = (id, naam, b, h) => ({
   plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Inhoud')], qr: [v('Locatie')] },
 });
 
-/** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes), in de huisstijl: naam en kistnummer,
- *  inhoud (één regel per onderdeel: 'aantal naam'), gewicht, QR en een vak voor de projectsticker.
- *  Twee per A4. Randkleur standaard DSL blauw. */
+/** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes), opgebouwd als het oude bordje: logo, vak voor
+ *  de projectsticker (vroeger klant en productie), QR; locatie en gewicht; inhoud met kistnummer; zwarte voet.
+ *  Inhoud: één regel per onderdeel ('aantal naam'). Twee per A4. */
 export const kistbordje = (id, naam) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'kist', formaat: { b: 194, h: 136 }, gat: false, voet: true,
-  velden: [kolom('Naam', 'naam', true), uitKist('Code', 'nr', 'code'),
+  velden: [kolom('Naam', 'naam', true), uitKist('Code', 'nr', 'code'), kolom('Locatie', 'locatie'),
     uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }), uitKist('Inhoud', 'inhoud', '', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' })],
   lijstVeld: 'Inhoud',
   plekken: { ...leeg, titel: [v('Naam')], groot: [v('Code')], onder: [v('Code')] },

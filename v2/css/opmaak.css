@@ -1,9 +1,13 @@
 /* Labels en bordjes: huisstijl uit versie 25. Alle maten in mm, zwart op wit. */
-/* Bordjes: Futura Bk BT als die op de pc staat, anders het meegeleverde Jost.
+/* Bordjes: Futura (BT) als die op de pc staat, anders het meegeleverde Jost. Staat alleen Futura Book
+   op de pc (geen Medium/Heavy), dan krijgt <html> de klasse futura-boek: alles in Futura Book, vet
+   door de browser aangezet (zoals versie 25), in plaats van een mengsel met Jost. Futura zelf zit er niet in: dat is een
+   betaald lettertype en de repository is openbaar.
    Labels: het meegeleverde Barlow Condensed. Zo werkt het op elke pc en offline. */
-@font-face{font-family:"DSL Futura";font-weight:400;font-display:block;src:local("Futura Bk BT"),local("FuturaBT-Book"),local("Futura Book"),local("Futura-Book"),url("../fonts/jost-400.woff") format("woff")}
+@font-face{font-family:"DSL Futura";font-weight:400;font-display:block;src:local("Futura Bk BT"),local("Futura Book BT"),local("FuturaBT-Book"),local("Futura Book"),local("Futura-Book"),url("../fonts/jost-400.woff") format("woff")}
 @font-face{font-family:"DSL Futura";font-weight:500 600;font-display:block;src:local("Futura Md BT"),local("FuturaBT-Medium"),local("Futura Medium"),local("Futura-Medium"),url("../fonts/jost-500.woff") format("woff")}
-@font-face{font-family:"DSL Futura";font-weight:700 900;font-display:block;src:local("Futura Hv BT"),local("FuturaBT-Heavy"),local("Futura Bold"),local("Futura-Bold"),url("../fonts/jost-700.woff") format("woff")}
+@font-face{font-family:"DSL Futura";font-weight:700 900;font-display:block;src:local("Futura Hv BT"),local("FuturaBT-Heavy"),local("Futura Bold"),local("Futura-Bold"),local("Futura Md BT"),local("FuturaBT-Medium"),url("../fonts/jost-700.woff") format("woff")}
+@font-face{font-family:"DSL Futura Boek";font-weight:400;font-display:block;src:local("Futura Bk BT"),local("Futura Book BT"),local("FuturaBT-Book"),local("Futura Book"),local("Futura-Book")}
 @font-face{font-family:"DSL Label";font-weight:400 600;font-display:block;src:url("../fonts/barlow-condensed-500.woff2") format("woff2")}
 @font-face{font-family:"DSL Label";font-weight:700 900;font-display:block;src:url("../fonts/barlow-condensed-700.woff2") format("woff2")}
 
@@ -57,27 +61,35 @@
 .signb .t.j>span{padding:0 0 .2em .26em}
 .signb .w-inhoud>span{white-space:normal;font-weight:600;line-height:1.1}
 
-/* materiaalbordje kist (huisstijl): inhoud centraal en luchtig; rechts gewicht, QR en projectsticker */
-.signb.kist .kkop{display:flex;align-items:flex-end;gap:3mm;flex:0 0 auto}
-.signb.kist .kkop .fb{height:100%;justify-content:flex-end}
-.signb.kist .knr{justify-content:flex-end}
-.signb.kist .knr>span{text-align:right;color:#005abb}
-.signb.kist .krij{flex:1 1 auto;min-height:0;display:flex;align-items:stretch}
-.signb.kist .klinks{flex:1 1 0;min-width:0;display:flex;flex-direction:column;border-top:.4mm solid #000}
-.signb.kist .kgrid{display:flex;flex-direction:column}
-.signb.kist .kr{display:grid;grid-template-columns:2.4em 1fr;column-gap:.5em;align-items:baseline;padding:.32em 0;border-bottom:.2mm solid #d4d4d4;line-height:1.15}
-.signb.kist .ka{font-weight:700;text-align:right;white-space:nowrap}
+/* materiaalbordje kist: opbouw van het oude bordje, zwarte lijnen (achtergrond) tussen witte vakken */
+.signb.kist{border:0;background:#000;padding:var(--l);display:flex;flex-direction:column;gap:var(--l)}
+.signb.kist .krij{display:grid;gap:var(--l);flex:0 0 auto}
+.signb.kist .kc{background:#fff;min-width:0;min-height:0;overflow:hidden}
+.signb.kist .kv{display:flex;align-items:center;gap:.35em;padding:0 2.5mm;height:100%;line-height:1}
+.signb.kist .kv b{flex:0 0 auto;font-weight:700}
+.signb.kist .kw>span{white-space:nowrap;font-weight:500}
+.signb.kist .klogo{display:flex;align-items:center;justify-content:center;padding:2.5mm}
+.signb.kist .klogo img{max-width:100%;max-height:100%;object-fit:contain}
+.signb.kist .kstickervak{padding:2mm}
+.signb.kist .ksticker{height:100%;border:.3mm dashed #b0b0b0;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;color:#b8b8b8;font-size:8pt;letter-spacing:.08em;text-transform:uppercase}
+.signb.kist .kqr{display:flex;align-items:center;justify-content:center}
+.signb.kist .kinhoud{flex:1 1 auto;display:flex;flex-direction:column;padding:3mm 4.5mm 3mm;gap:2mm}
+.signb.kist .kkop{display:flex;align-items:baseline;gap:.4em;flex:0 0 auto;height:7.5mm}
+.signb.kist .kl{font-size:10pt;flex:0 0 auto}
+.signb.kist .kn{height:100%}
+.signb.kist .kn>span{white-space:nowrap;font-weight:700}
+.signb.kist .kcode{font-size:10pt;flex:0 0 auto;align-self:flex-start}
+.signb.kist .klijst{padding-left:12mm}
+.signb.kist .kgrid.twee{columns:2;column-gap:7mm}
+.signb.kist .kr{display:grid;grid-template-columns:2.2em 1fr;column-gap:1em;break-inside:avoid;line-height:1.2;padding:.12em 0}
+.signb.kist .ka{text-align:left}
 .signb.kist .kt{white-space:normal;overflow-wrap:anywhere}
-.signb.kist .kleeg{flex:1 1 auto;color:#c8c8c8;font-size:8pt;text-transform:uppercase;letter-spacing:.08em;padding-top:2mm}
-.signb.kist .krechts{flex:0 0 auto;display:flex;flex-direction:column;gap:3mm}
-.signb.kist .kbot{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:3mm;border-top:.4mm solid #000;padding-top:2mm}
-.signb.kist .kgew{display:flex;flex-direction:column;gap:.8mm;line-height:1.1}
-.signb.kist .kgew span{font-size:7pt;color:#555;text-transform:uppercase;letter-spacing:.08em}
-.signb.kist .kgew b{font-size:15pt}
-.signb.kist .ksticker{flex:0 0 auto;border:.35mm dashed #a8a8a8;border-radius:2mm;display:flex;align-items:center;justify-content:center;color:#b5b5b5;font-size:8pt;letter-spacing:.08em;text-transform:uppercase}
+.signb.kist .kvoet{flex:0 0 auto;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:7.5pt;font-weight:700;line-height:1.35}
+.signb.kist .kvoet>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 /* Lettertype uit het profiel (data-lettertype): futura is de standaard van de bordjes.
    "DSL Eigen" is een door de app geregistreerd lettertype; ontbreekt het, dan volgt de terugval. */
+.futura-boek .signb:not([data-lettertype=barlow]):not([data-lettertype=arial]):not([data-lettertype=eigen]){font-family:"DSL Futura Boek","DSL Futura","Century Gothic",Arial,sans-serif}
 .signb[data-lettertype=barlow]{font-family:"DSL Label","Arial Narrow",Arial,sans-serif}
 .signb[data-lettertype=arial]{font-family:Arial,Helvetica,sans-serif}
 .signb[data-lettertype=eigen]{font-family:"DSL Eigen","DSL Futura","Century Gothic",Arial,sans-serif}

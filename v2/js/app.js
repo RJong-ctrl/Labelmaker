@@ -79,6 +79,9 @@ document.getElementById('beheer').addEventListener('click', () => { location.has
 window.addEventListener('hashchange', toonScherm);
 if (location.hash === '#beheer') toonScherm();
 
+// Futura van de pc gebruiken als die er (deels) is.
+import('./opmaak.js').then(m => m.kiesFutura()).then(({ boek, vet }) => { if (boek && !vet) scherm.vernieuw(); }).catch(() => {});
+
 // Eigen lettertype van deze pc (uit beheer) ook in het werkscherm.
 (async () => {
   try {
