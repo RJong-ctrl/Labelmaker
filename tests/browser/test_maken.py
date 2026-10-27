@@ -12,13 +12,13 @@ VOORBEELD = os.path.join(FIXTURES, 'voorbeeld.xlsx')
 
 class MakenHulp:
     def kies(self, soort):
-        """Sjabloon kiezen: op het beginscherm met de tegel, in het formulier met de keuzelijst."""
+        """Sjabloon kiezen: in het formulier met de keuzelijst, anders via het venster Sjabloon kiezen."""
         p = self.pagina
-        tegel = p.locator('#makenTegels [data-tegel="%s"]' % soort)
-        if tegel.count():
-            tegel.click()
-        else:
+        if p.locator('#makenSoort').count():
             p.locator('#makenSoort').select_option(soort)
+        else:
+            p.locator('#makenKies').click()
+            p.locator('#sjabloonVenster [data-tegel="%s"]' % soort).click()
 
 
 class Maken(MakenHulp, PaginaTest):
@@ -32,22 +32,27 @@ class Maken(MakenHulp, PaginaTest):
         p.locator('#makenZoek').fill(tekst)
         p.locator('#makenTreffers li', has_text=kies or tekst).first.click()
 
-    def test_maken_begint_met_tegels(self):
-        """Maken begint met tegels per sjabloon (met voorbeeldje); een tegel opent alleen dat formulier."""
+    def test_maken_begint_met_sjabloonkeuze(self):
+        """Maken begint met zoeken/scannen en de knop Sjabloon kiezen; die opent een venster met voorbeelden."""
         p = self.pagina
         expect(p.locator('#tabMaken')).to_have_attribute('aria-selected', 'true')
-        expect(p.locator('#lijstDeel')).to_be_hidden()
-        tegels = p.locator('#makenTegels [data-tegel]')
-        for id in ['leeg-staand', 'kist', 'kist-modern', 'wandbord-staand', 'qrlabel', 'locatie']:
-            expect(p.locator('#makenTegels [data-tegel="%s"]' % id)).to_have_count(1)
-        expect(p.locator('#makenTegels .duim .signb, #makenTegels .duim .lbl')).to_have_count(tegels.count())
         expect(p.locator('#makenVelden')).to_have_count(0)
         expect(p.locator('#makenVak')).to_be_hidden()
-        p.locator('#makenTegels [data-tegel="leeg-staand"]').click()
+        p.locator('#makenKies').click()
+        venster = p.locator('#sjabloonVenster')
+        expect(venster).to_be_visible()
+        for id in ['leeg-staand', 'kist', 'kist-modern', 'wandbord-staand', 'qrlabel', 'locatie']:
+            expect(venster.locator('[data-tegel="%s"]' % id)).to_have_count(1)
+        expect(venster.locator('.duim .signb, .duim .lbl')).to_have_count(venster.locator('[data-tegel]').count())
+        p.keyboard.press('Escape')
+        expect(venster).to_be_hidden()
+        p.locator('#makenKies').click()
+        venster.locator('[data-tegel="leeg-staand"]').click()
+        expect(venster).to_be_hidden()
         expect(p.locator('#makenVelden input[name="Naam"]')).to_be_focused()
         expect(p.locator('#makenSoort')).to_have_value('leeg-staand')
         p.locator('#makenTerug').click()
-        expect(p.locator('#makenTegels')).to_be_visible()
+        expect(venster.locator('[data-tegel="leeg-staand"].gekozen')).to_have_count(1)
         self.assertEqual(self.fouten, [])
 
     def test_leeg_bordje_van_scratch(self):

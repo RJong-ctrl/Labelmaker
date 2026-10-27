@@ -51,22 +51,46 @@ export function startMaken(root, h) {
   const opStart = () => m.kiezen || (!m.artikel && m.sjabloonId === 'auto' && !m.vanRij);
 
   function zoekveld() {
-    return '<div class="zoeken"><label class="veld"><span>Artikel opzoeken of scannen <small>(optioneel)</small></span>'
-      + '<input type="search" id="makenZoek" placeholder="Naam, code of QR — of scan" autocomplete="off"></label>'
+    return '<div class="zoeken"><label class="veld"><span>Artikel zoeken of scannen</span>'
+      + '<input type="search" id="makenZoek" placeholder="Naam, code of QR" autocomplete="off"></label>'
       + '<ul id="makenTreffers" class="treffers" role="listbox" aria-label="Gevonden artikelen"></ul></div>';
   }
   const artikelChip = (a) => (a ? `<div id="makenArtikel" class="gekoppeld"><b>${esc(a.naam)}</b><span class="hint">${esc(a.code || '')}</span><button type="button" class="klein" id="makenLos" aria-label="Artikel loskoppelen">×</button></div>` : '<div id="makenArtikel" hidden></div>');
 
   function tekenTegels() {
+    doel.innerHTML = zoekveld() + artikelChip(m.artikel)
+      + '<div class="kiesblok"><button type="button" id="makenKies" class="primary">Sjabloon kiezen</button>'
+      + '<p class="hint">Bij een gescand artikel wordt het sjabloon automatisch gekozen.</p></div>';
+    tekenVoorbeeld();
+  }
+
+  // Sjabloonkeuze als venster: per printer een raster met voorbeeld en naam.
+  function kiesvenster() {
+    let dlg = root.getElementById('sjabloonVenster');
+    if (!dlg) {
+      dlg = document.createElement('dialog');
+      dlg.id = 'sjabloonVenster';
+      dlg.className = 'sjabloonkeuze';
+      dlg.setAttribute('aria-labelledby', 'sjabloonVensterKop');
+      (root.body || document.body).appendChild(dlg);
+      dlg.addEventListener('click', (e) => {
+        if (e.target === dlg || e.target.closest('[data-sluit]')) { dlg.close(); return; }
+        const tegel = e.target.closest('[data-tegel]');
+        if (!tegel) return;
+        dlg.close();
+        m.sjabloonId = tegel.dataset.tegel; m.kiezen = false;
+        tekenFormulier();
+        root.querySelector('#makenVelden input, #makenVelden textarea, #makenVelden select')?.focus();
+      });
+    }
     const groep = (printer, titel) => {
       const lijst = h.E().sjablonen.filter(s => s.printer === printer);
-      return lijst.length ? `<h3 class="tegelkop">${esc(titel)}</h3><div class="tegels">${lijst.map(s => `<button type="button" class="tegel" data-tegel="${esc(s.id)}"><span class="duim" data-duim="${esc(s.id)}"></span><span class="tnaam">${esc(s.naam)}</span></button>`).join('')}</div>` : '';
+      return lijst.length ? `<h3 class="tegelkop">${esc(titel)}</h3><div class="tegels">${lijst.map(s => `<button type="button" class="tegel${s.id === m.sjabloonId ? ' gekozen' : ''}" data-tegel="${esc(s.id)}"><span class="duim" data-duim="${esc(s.id)}"></span><span class="tnaam">${esc(s.naam)}</span></button>`).join('')}</div>` : '';
     };
-    doel.innerHTML = zoekveld() + artikelChip(m.artikel)
-      + `<div id="makenTegels"><p class="vraag">Wat wil je maken?</p>`
-      + groep('a4', 'Bordjes en stroken (A4)') + groep('label', `Labels (${h.E().printers?.label?.naam || 'labelprinter'})`) + '</div>';
+    dlg.innerHTML = '<div class="kop"><h2 id="sjabloonVensterKop">Sjabloon kiezen</h2><button type="button" class="klein" data-sluit aria-label="Sluiten">×</button></div>'
+      + '<div id="makenTegels">' + groep('a4', 'A4 · bordjes en stroken') + groep('label', `${h.E().printers?.label?.naam || 'Labelprinter'} · labels`) + '</div>';
+    dlg.showModal();
     tekenDuimen();
-    tekenVoorbeeld();
   }
 
   // Kleine voorbeelden op de tegels (één keer per sjabloon, daarna uit het geheugen).
@@ -77,7 +101,7 @@ export function startMaken(root, h) {
       const sj = h.sjabloon(vak.dataset.duim);
       if (!sj) continue;
       const sleutel = JSON.stringify(sj) + JSON.stringify(h.E().huisstijl);
-      const s = Math.min(58 / (sj.formaat.b * PX), 42 / (sj.formaat.h * PX));
+      const s = Math.min(84 / (sj.formaat.b * PX), 58 / (sj.formaat.h * PX));
       const kader = document.createElement('div');
       kader.className = 'vb';
       kader.style.width = (sj.formaat.b * PX * s).toFixed(1) + 'px';
@@ -102,7 +126,7 @@ export function startMaken(root, h) {
     if (opStart()) { tekenTegels(); return; }
     const a = m.artikel;
     doel.innerHTML = zoekveld()
-      + `<div class="makenkop"><button type="button" id="makenTerug" class="klein">← Ander sjabloon</button>`
+      + `<div class="makenkop"><button type="button" id="makenTerug" class="klein">Sjablonen…</button>`
       + `<label class="veld"><span class="bh-sr">Sjabloon</span><select id="makenSoort" aria-label="Sjabloon">${soortOpties()}</select></label></div>`
       + artikelChip(a)
       + '<div id="makenVelden" class="velden"></div>'
@@ -320,14 +344,7 @@ export function startMaken(root, h) {
   doel.addEventListener('click', (e) => {
     const li = e.target.closest('#makenTreffers li');
     if (li) { koppel(h.perId().get(li.dataset.id)); return; }
-    const tegel = e.target.closest('[data-tegel]');
-    if (tegel) {
-      m.sjabloonId = tegel.dataset.tegel; m.kiezen = false;
-      tekenFormulier();
-      root.querySelector('#makenVelden input, #makenVelden textarea, #makenVelden select')?.focus();
-      return;
-    }
-    if (e.target.closest('#makenTerug')) { m.kiezen = true; m.sjabloonId = 'auto'; m.bewerkt.clear(); m.waarden = {}; tekenFormulier(); return; }
+    if (e.target.closest('#makenKies, #makenTerug')) { kiesvenster(); return; }
     if (e.target.closest('#makenLos')) { m.artikel = null; m.bewerkt.clear(); m.waarden = {}; m.onthouden = {}; m.qrBewerkt = false; tekenFormulier(); return; }
     if (e.target.closest('#makenLeeg')) { reset(m.artikel ? 'auto' : m.sjabloonId); return; }
     if (e.target.closest('#makenOpVel')) opVel().catch(err => h.melding('Op het printvel zetten mislukt: ' + err.message, true));

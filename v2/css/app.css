@@ -105,14 +105,20 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 .lijst .bewerk{flex:0 0 auto}
 
 /* ---------- maken ---------- */
-.maken .vraag{margin:4px 0 0;font-weight:700;font-size:15px}
-.maken .tegelkop{margin:6px 0 2px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.maken .tegels{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
-.maken .tegel{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;min-height:78px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink);cursor:pointer;text-align:center;font:inherit;font-size:11.5px;line-height:1.15}
-.maken .tegel:hover,.maken .tegel:focus-visible{border-color:var(--accent)}
-.maken .tegel .duim{height:44px;display:flex;align-items:center;justify-content:center}
-.maken .tegel .duim .vb{box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none}
-.maken .tegel .tnaam{font-weight:600}
+.maken .kiesblok{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:4px}
+.maken .kiesblok .hint{margin:0}
+dialog.sjabloonkeuze{width:min(760px,92vw);max-height:86vh;overflow:auto;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
+dialog.sjabloonkeuze::backdrop{background:rgba(0,0,0,.55)}
+dialog.sjabloonkeuze .kop{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+dialog.sjabloonkeuze h2{margin:0;font-size:18px}
+dialog.sjabloonkeuze .tegel.gekozen{border-color:var(--accent)}
+.sjabloonkeuze .tegelkop{margin:6px 0 2px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.sjabloonkeuze .tegels{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.sjabloonkeuze .tegel{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;min-height:100px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink);cursor:pointer;text-align:center;font:inherit;font-size:11.5px;line-height:1.15}
+.sjabloonkeuze .tegel:hover,.sjabloonkeuze .tegel:focus-visible{border-color:var(--accent)}
+.sjabloonkeuze .tegel .duim{height:60px;display:flex;align-items:center;justify-content:center}
+.sjabloonkeuze .tegel .duim .vb{box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none}
+.sjabloonkeuze .tegel .tnaam{font-weight:600}
 .maken .makenkop{display:flex;align-items:center;gap:8px}
 .maken .makenkop .veld{flex:1 1 auto}
 .maken .makenkop button{flex:0 0 auto;white-space:nowrap}
