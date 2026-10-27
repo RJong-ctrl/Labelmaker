@@ -105,8 +105,9 @@
 .signb.kist-modern .krechts{flex:0 0 auto;display:flex;flex-direction:column;gap:3mm}
 .signb.kist-modern .kbot{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:3mm;border-top:.4mm solid #000;padding-top:2mm}
 .signb.kist-modern .kgew{display:flex;flex-direction:column;gap:.8mm;line-height:1.1}
+.signb.kist-modern .kgew b+span{margin-top:2mm}
 .signb.kist-modern .kgew span{font-size:7pt;color:#555;text-transform:uppercase;letter-spacing:.08em}
-.signb.kist-modern .kgew b{font-size:15pt}
+.signb.kist-modern .kgew b{font-size:13pt}
 .signb.kist-modern .ksticker{flex:0 0 auto;border:.35mm dashed #a8a8a8;border-radius:2mm;display:flex;align-items:center;justify-content:center;color:#b5b5b5;font-size:8pt;letter-spacing:.08em;text-transform:uppercase}
 
 /* Lettertype uit het profiel (data-lettertype): futura is de standaard van de bordjes.

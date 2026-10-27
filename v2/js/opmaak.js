@@ -88,10 +88,11 @@ function bordje(i, hs) {
     const gewicht = String(i.waarden?.Gewicht || '').trim();
     const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
     const regels = (i.lijst || []).map(([n, t]) => `<div class="kr"><span class="ka">${n ? esc(n) + '×' : ''}</span><span class="kt">${esc(t)}</span></div>`).join('');
-    main = `<div class="kkop" style="height:${mm(kopH)}">${vak('t titel', kopH * PT * 0.9, titel, 'flex:1 1 0')}${groot ? vak('h groot knr', kopH * PT * 0.9, groot, `flex:0 0 ${mm(30)}`) : ''}</div>`
+    // De naam krijgt de hele breedte; het kistnummer staat klein rechts bij het gewicht.
+    main = `<div class="kkop" style="height:${mm(kopH)}">${vak('t titel', kopH * PT * 0.9, titel, 'flex:1 1 0')}</div>`
       + `<div class="krij" style="gap:${mm(5)};margin-top:${mm(2.5)}">`
       + `<div class="klinks">${regels ? vak('klijst', 18, `<div class="kgrid">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 5) : '<div class="kleeg">Inhoud</div>'}</div>`
-      + `<div class="krechts" style="width:${mm(st.b)}"><div class="kbot"><div class="kgew">${gw ? `<span>Gewicht</span><b>${esc(gw)}</b>` : ''}</div>${i.qr ? qrBlok(qs) : ''}</div>`
+      + `<div class="krechts" style="width:${mm(st.b)}"><div class="kbot"><div class="kgew">${groot ? `<span>Kist</span><b>${groot}</b>` : ''}${gw ? `<span>Gewicht</span><b>${esc(gw)}</b>` : ''}</div>${i.qr ? qrBlok(qs) : ''}</div>`
       + `<div class="ksticker" style="height:${mm(st.h)}">Projectsticker</div></div></div>`
       + voet;
   } else if (wand) {

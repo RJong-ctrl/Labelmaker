@@ -327,6 +327,19 @@ class Maken(PaginaTest):
         expect(p.locator('#makenVoorbeeld .signb.kist .kt')).to_have_text(['Martin Audio DD6', 'Speakon kabel 10m', 'Regenhoes'])
         self.assertEqual(self.fouten, [])
 
+    def test_modern_kistnummer_bescheiden(self):
+        """Modern: kistnummer niet groot naast de naam, maar klein rechts bij het gewicht; lange naam krijgt de hele breedte."""
+        p = self.pagina
+        p.locator('#makenSoort').select_option('kist-modern')
+        p.locator('#makenVelden input[name="Naam"]').fill('Martin Audio 2x LE1200s L/R Monitor Speaker [Case]')
+        p.locator('#makenVelden input[name="Code"]').fill('DSL01')
+        k = p.locator('#makenVoorbeeld .signb.kist-modern')
+        expect(k.locator('.kkop .knr')).to_have_count(0)
+        expect(k.locator('.krechts')).to_contain_text('DSL01')
+        p.wait_for_timeout(600)
+        kop = k.locator('.kkop').bounding_box()['width']
+        self.assertGreater(k.locator('.kkop .titel').bounding_box()['width'], kop * 0.95)
+
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
         p = self.pagina
