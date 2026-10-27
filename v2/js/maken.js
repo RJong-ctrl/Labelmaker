@@ -74,6 +74,15 @@ export function startMaken(root, h) {
       const w = m.bewerkt.has('Randkleur') ? (m.waarden.Randkleur ?? '') : (artikelAanv().Randkleur || '');
       velden.push(veldInvoer({ naam: 'Randkleur', keuzes: [{ waarde: '', tekst: 'Automatisch' }, ...RANDKLEUREN.map(k => ({ waarde: k, tekst: k }))] }, w, { verplicht: false }));
     }
+    // Maat netjes onder elkaar: staat breedte/lengte rechts, dan ruilt Hoogte met het veld erna,
+    // zodat Hoogte in dezelfde kolom eronder komt (geen breed veld ertussen).
+    const namen = (sj?.velden || []).map(v => v.naam);
+    const hi = namen.indexOf('Hoogte');
+    const maatVeld = hi > 0 && sj.velden[hi - 1].herkomst?.patroon === 'breedte';
+    if (maatVeld && hi + 1 < velden.length && !velden.slice(0, hi + 2).some(x => x.includes('veld breed'))) {
+      // positie in het raster (2 kolommen): lengte/breedte rechts = oneven index
+      if ((hi - 1) % 2 === 1) [velden[hi], velden[hi + 1]] = [velden[hi + 1], velden[hi]];
+    }
     const ex = m.artikel?.exemplaren?.length ? `<label class="vink breed"><input type="checkbox" id="makenPerEx"${m.perExemplaar ? ' checked' : ''}> Eén per exemplaar (${m.artikel.exemplaren.length})</label>` : '';
     root.getElementById('makenVelden').innerHTML = velden.join('')
       + `<label class="veld"><span>QR-code <small>(leeg = geen)</small></span><input type="text" name="__qr" value="${esc(qrWaarde())}" autocomplete="off"></label>`

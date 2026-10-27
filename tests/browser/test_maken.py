@@ -298,6 +298,15 @@ class Maken(PaginaTest):
         expect(k).to_contain_text('27,34 kg')
         self.assertEqual(self.fouten, [])
 
+    def test_lengte_en_hoogte_onder_elkaar(self):
+        p = self.pagina
+        for soort, eerste in [('pipe-drape', 'Lengte'), ('backdrop', 'Breedte')]:
+            p.locator('#makenSoort').select_option(soort)
+            a = p.locator('#makenVelden input[name="%s"]' % eerste).bounding_box()
+            h = p.locator('#makenVelden input[name="Hoogte"]').bounding_box()
+            self.assertAlmostEqual(a['x'], h['x'], delta=1, msg=soort)
+            self.assertGreater(h['y'], a['y'], soort)
+
     def test_pipe_drape_maat_onder_de_naam(self):
         p = self.pagina
         self.inlezen()
