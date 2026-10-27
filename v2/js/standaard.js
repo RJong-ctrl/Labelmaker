@@ -32,6 +32,7 @@ const BASIS_SJABLONEN = [
   wandbord('wandbord-a5-staand', 'Wandbord A5 staand', 136, 194),
   wandbord('wandbord-a5-liggend', 'Wandbord A5 liggend', 194, 136),
   kistbordje('kist', 'Materiaalbordje kist (A5)'),
+  kistbordje('kist-modern', 'Materiaalbordje kist modern (A5)', 'kist-modern'),
 ];
 
 export const HUISSTIJL_DSL_PROFIEL = {

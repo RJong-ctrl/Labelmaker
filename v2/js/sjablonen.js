@@ -68,8 +68,8 @@ export const wandbord = (id, naam, b, h) => ({
 /** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes), opgebouwd als het oude bordje: logo, vak voor
  *  de projectsticker (vroeger klant en productie), QR; locatie en gewicht; inhoud met kistnummer; zwarte voet.
  *  Inhoud: één regel per onderdeel ('aantal naam'). Twee per A4. */
-export const kistbordje = (id, naam) => ({
-  ...basis, id, naam, printer: 'a4', opmaak: 'kist', formaat: { b: 194, h: 136 }, gat: false, voet: true,
+export const kistbordje = (id, naam, opmaak = 'kist') => ({
+  ...basis, id, naam, printer: 'a4', opmaak, formaat: { b: 194, h: 136 }, gat: false, voet: true,
   velden: [kolom('Naam', 'naam', true), uitKist('Code', 'nr', 'code'), kolom('Locatie', 'locatie'),
     uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }), uitKist('Inhoud', 'inhoud', '', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' })],
   lijstVeld: 'Inhoud',
@@ -106,6 +106,7 @@ export const DSL_SJABLONEN = [
   wandbord('wandbord-a5-staand', 'Wandbord A5 staand', 136, 194),
   wandbord('wandbord-a5-liggend', 'Wandbord A5 liggend', 194, 136),
   kistbordje('kist', 'Materiaalbordje kist (A5)'),
+  kistbordje('kist-modern', 'Materiaalbordje kist modern (A5)', 'kist-modern'),
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },
     logoBoven: true,

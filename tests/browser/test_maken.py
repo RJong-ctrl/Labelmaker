@@ -265,6 +265,20 @@ class Maken(PaginaTest):
         self.assertLessEqual(laatste['y'] + laatste['height'], vak['y'] + vak['height'] + 1, 'laatste regel valt eraf')
         self.assertEqual(k.locator('.kt').evaluate_all('l => l.filter(e => e.scrollWidth > e.clientWidth + 1).length'), 0, 'tekst afgekapt')
 
+    def test_projectsticker_past(self):
+        """Projectsticker = Citizen-label 76 × 56 mm: het vak moet minstens zo groot zijn, in beide bordjes."""
+        p = self.pagina
+        for soort in ['kist', 'kist-modern']:
+            p.locator('#makenSoort').select_option(soort)
+            p.locator('#makenVelden input[name="Naam"]').fill('Kist')
+            b = p.locator('#makenVoorbeeld .signb')
+            expect(b.locator('.ksticker')).to_have_count(1)
+            p.wait_for_timeout(300)
+            mm = b.bounding_box()['width'] / 194
+            st = b.locator('.ksticker').bounding_box()
+            self.assertGreaterEqual(st['width'] / mm, 76, soort)
+            self.assertGreaterEqual(st['height'] / mm, 56, soort)
+
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
         p = self.pagina

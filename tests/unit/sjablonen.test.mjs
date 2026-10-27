@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -300,4 +300,11 @@ test('kistbordje_vult_zich_uit_exemplaar', () => {
   assert.deepEqual(j.lijst, []);
   // zelf ingevuld gaat voor
   assert.deepEqual(vul(S.kist, kist, { Inhoud: '1 Iets anders' }, '*GE2162-01').lijst, [['1', 'Iets anders']]);
+});
+
+test('kistbordje_modern_ook_te_kiezen', () => {
+  assert.equal(S['kist-modern'].opmaak, 'kist-modern');
+  assert.deepEqual(S['kist-modern'].formaat, { b: 194, h: 136 });
+  assert.deepEqual(S['kist-modern'].velden.map(v => v.naam), S.kist.velden.map(v => v.naam));
+  assert.equal(vul(S['kist-modern'], A.GE9402, {}, 'x').rand, '#005abb');
 });

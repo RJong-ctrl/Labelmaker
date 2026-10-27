@@ -8,8 +8,8 @@ import { PATRONEN } from './afleiden.js';
 import { TOEGESTANE_VELDEN } from './import.js';
 import { esc } from './html.js';
 
-export const OPMAKEN = { staand: 'Bordje staand', liggend: 'Bordje liggend', strook: 'Strook', wand: 'Wandbord (A4)', kist: 'Materiaalbordje kist', qrlabel: 'QR-label', locatie: 'Locatielabel' };
-export const STANDAARD_FORMAAT = { staand: { b: 74, h: 105 }, liggend: { b: 105, h: 74 }, strook: { b: 180, h: 48 }, wand: { b: 194, h: 281 }, kist: { b: 194, h: 136 }, qrlabel: { b: 76, h: 56 }, locatie: { b: 76, h: 56 } };
+export const OPMAKEN = { staand: 'Bordje staand', liggend: 'Bordje liggend', strook: 'Strook', wand: 'Wandbord (A4)', kist: 'Materiaalbordje kist', 'kist-modern': 'Materiaalbordje kist modern', qrlabel: 'QR-label', locatie: 'Locatielabel' };
+export const STANDAARD_FORMAAT = { staand: { b: 74, h: 105 }, liggend: { b: 105, h: 74 }, strook: { b: 180, h: 48 }, wand: { b: 194, h: 281 }, kist: { b: 194, h: 136 }, 'kist-modern': { b: 194, h: 136 }, qrlabel: { b: 76, h: 56 }, locatie: { b: 76, h: 56 } };
 export const KOLOM_NAMEN = {
   naam: 'Naam', code: 'Artikelnummer', qr: 'QR-code', exemplaren: 'QR-codes exemplaren', pad: 'Pad (categorie)',
   map: 'Map', locatie: 'Locatie', soort: 'Soort (bulk of serie)', type: 'Type materiaal', aantal: 'Aantal',
@@ -24,7 +24,7 @@ const KLEURREGEL = { rand: 'Kleurrand', label: 'Label' };
 const LABELS = new Set(['qrlabel', 'locatie']);
 const MIN_MM = 10, MAX_MM = 297;
 
-const plekkenVoor = (opmaak) => (opmaak === 'qrlabel' || opmaak === 'kist' ? ['titel', 'onder'] : opmaak === 'locatie' || opmaak === 'wand' ? ['titel', 'onder', 'qr'] : ['titel', 'groot', 'label', 'onder']);
+const plekkenVoor = (opmaak) => (opmaak === 'qrlabel' || opmaak === 'kist' || opmaak === 'kist-modern' ? ['titel', 'onder'] : opmaak === 'locatie' || opmaak === 'wand' ? ['titel', 'onder', 'qr'] : ['titel', 'groot', 'label', 'onder']);
 const isBordje = (opmaak) => !LABELS.has(opmaak);
 const opt = (waarde, tekst, gekozen) => `<option value="${esc(waarde)}"${gekozen ? ' selected' : ''}>${esc(tekst)}</option>`;
 const nlSort = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' });
