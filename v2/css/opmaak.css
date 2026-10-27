@@ -57,28 +57,24 @@
 .signb .t.j>span{padding:0 0 .2em .26em}
 .signb .w-inhoud>span{white-space:normal;font-weight:600;line-height:1.1}
 
-/* materiaalbordje kist: zwarte lijnen (achtergrond) tussen witte vakken */
-.signb.kist{border:0;background:#000;padding:var(--l);display:flex;flex-direction:column;gap:var(--l)}
-.signb.kist .krij{display:grid;gap:var(--l);flex:0 0 auto}
-.signb.kist .kc,.signb.kist .kstapel>.kv{background:#fff;min-width:0;min-height:0;overflow:hidden}
-.signb.kist .kstapel{display:grid;grid-template-rows:1fr 1fr;gap:var(--l)}
-.signb.kist .kv{display:flex;align-items:center;gap:.35em;padding:0 2mm;height:100%;line-height:1}
-.signb.kist .kv b{flex:0 0 auto;font-weight:700}
-.signb.kist .kw>span{white-space:nowrap;font-weight:500}
-.signb.kist .klogo{display:flex;align-items:center;justify-content:center;padding:2mm}
-.signb.kist .klogo img{max-width:100%;max-height:100%;object-fit:contain}
-.signb.kist .kqr{display:flex;align-items:center;justify-content:center}
-.signb.kist .kinhoud{flex:1 1 auto;display:flex;flex-direction:column;padding:2.5mm 4mm;gap:1.5mm}
-.signb.kist .kkop{display:flex;align-items:baseline;gap:.4em;flex:0 0 auto;height:7mm}
-.signb.kist .kl{font-size:10pt;flex:0 0 auto}
-.signb.kist .kn{height:100%}
-.signb.kist .kn>span{white-space:nowrap;font-weight:700}
-.signb.kist .kcode{font-size:9pt;flex:0 0 auto;align-self:flex-start}
-.signb.kist .klijst{display:grid;grid-template-columns:auto 1fr;column-gap:1.6em;row-gap:.05em;align-content:start;line-height:1.15;padding-left:15mm;overflow:hidden}
-.signb.kist .ka{text-align:left}
-.signb.kist .kt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.signb.kist .kvoet{flex:0 0 auto;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:7.5pt;font-weight:700;line-height:1.3}
-.signb.kist .kvoet>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+/* materiaalbordje kist (huisstijl): inhoud centraal en luchtig; rechts gewicht, QR en projectsticker */
+.signb.kist .kkop{display:flex;align-items:flex-end;gap:3mm;flex:0 0 auto}
+.signb.kist .kkop .fb{height:100%;justify-content:flex-end}
+.signb.kist .knr{justify-content:flex-end}
+.signb.kist .knr>span{text-align:right;color:#005abb}
+.signb.kist .krij{flex:1 1 auto;min-height:0;display:flex;align-items:stretch}
+.signb.kist .klinks{flex:1 1 0;min-width:0;display:flex;flex-direction:column;border-top:.4mm solid #000}
+.signb.kist .kgrid{display:flex;flex-direction:column}
+.signb.kist .kr{display:grid;grid-template-columns:2.4em 1fr;column-gap:.5em;align-items:baseline;padding:.32em 0;border-bottom:.2mm solid #d4d4d4;line-height:1.15}
+.signb.kist .ka{font-weight:700;text-align:right;white-space:nowrap}
+.signb.kist .kt{white-space:normal;overflow-wrap:anywhere}
+.signb.kist .kleeg{flex:1 1 auto;color:#c8c8c8;font-size:8pt;text-transform:uppercase;letter-spacing:.08em;padding-top:2mm}
+.signb.kist .krechts{flex:0 0 auto;display:flex;flex-direction:column;gap:3mm}
+.signb.kist .kbot{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:3mm;border-top:.4mm solid #000;padding-top:2mm}
+.signb.kist .kgew{display:flex;flex-direction:column;gap:.8mm;line-height:1.1}
+.signb.kist .kgew span{font-size:7pt;color:#555;text-transform:uppercase;letter-spacing:.08em}
+.signb.kist .kgew b{font-size:15pt}
+.signb.kist .ksticker{flex:0 0 auto;border:.35mm dashed #a8a8a8;border-radius:2mm;display:flex;align-items:center;justify-content:center;color:#b5b5b5;font-size:8pt;letter-spacing:.08em;text-transform:uppercase}
 
 /* Lettertype uit het profiel (data-lettertype): futura is de standaard van de bordjes.
    "DSL Eigen" is een door de app geregistreerd lettertype; ontbreekt het, dan volgt de terugval. */

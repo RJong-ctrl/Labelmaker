@@ -35,9 +35,11 @@ class Overstap(PaginaTest):
         tekst = open(os.path.join(ROOT, 'v2', 'data', 'dsl.json'), encoding='utf-8').read()
         basis = json.loads(tekst)
         self.assertEqual(basis['type'], 'labelmaker-basis')
-        mag = {'id', 'combinatie', 'sjabloon', 'naam', 'code', 'qr', 'exemplaren', 'pad', 'map', 'locatie', 'soort', 'type', 'aantal'}
+        mag = {'id', 'combinatie', 'sjabloon', 'naam', 'code', 'qr', 'exemplaren', 'pad', 'map', 'locatie', 'soort', 'type', 'aantal', 'kisten'}
         for a in basis['artikelen']:
             self.assertTrue(set(a) <= mag, set(a) - mag)
+            for kist in a.get('kisten', {}).values():   # per kist alleen nummer, inhoud en gewicht
+                self.assertEqual(set(kist), {'nr', 'inhoud', 'gewicht'})
         for woord in ('prijs', 'Opmerking intern', 'pincode', 'Boekwaarde', 'Nieuwprijs'):
             self.assertNotIn(woord, tekst)
         ok = self.pagina.evaluate("""async (t) => { const { leesBasis } = await import('/v2/js/publiceren.js'); return !leesBasis(t).fout; }""", tekst)

@@ -252,13 +252,16 @@ test('wandbord_a4_locatie_groot', () => {
 });
 
 test('kistbordje_met_inhoudslijst', () => {
-  const i = vul(S.kist, A.GE9402, { Gewicht: '66,20', Klant: '', Inhoud: '30 DMX 3p 1,25m grijs\n40× DMX 3p 2,5m\n2 x Afsluiter\nlosse regel\n\n' }, 'dsl01');
+  // Modern: geen klant/productie/datum/check meer (daar komt de projectsticker); randkleur standaard DSL blauw.
+  assert.deepEqual(S.kist.velden.map(v => v.naam), ['Naam', 'Code', 'Gewicht', 'Inhoud']);
+  const i = vul(S.kist, A.GE9402, { Gewicht: '66,20', Inhoud: '30 DMX 3p 1,25m grijs\n40× DMX 3p 2,5m\n2 x Afsluiter\nlosse regel\n\n' }, 'dsl01');
   assert.equal(i.opmaak, 'kist');
   assert.deepEqual(S.kist.formaat, { b: 194, h: 136 });
   assert.equal(i.titel, 'Speakon 4p Verlengkabel 2,5m');
   assert.equal(i.qr, 'dsl01');
+  assert.equal(i.rand, '#005abb');
+  assert.equal(vul(S.kist, A.GE9402, { Randkleur: 'Rood' }, 'x').rand, '#ff0000');
   assert.equal(i.waarden.Gewicht, '66,20');
-  assert.equal(i.waarden.Klant, '');
   assert.deepEqual(i.lijst, [['30', 'DMX 3p 1,25m grijs'], ['40', 'DMX 3p 2,5m'], ['2', 'Afsluiter'], ['', 'losse regel']]);
 });
 
@@ -282,4 +285,19 @@ test('dsl_blauw_als_kleur', () => {
   assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: 'DSL blauw' }, 'x').rand, '#005abb');
   assert.equal(vul(S['leeg-staand'], A.GE9402, { Randkleur: 'DSL blauw' }, 'x').rand, '#005abb');
   assert.ok(S['leeg-staand'].velden.find(v => v.naam === 'Randkleur').opties.includes('DSL blauw'));
+});
+
+test('kistbordje_vult_zich_uit_exemplaar', () => {
+  const kist = { ...A.GE9402, naam: 'Martin Audio 2x DD6 Speaker [Case]', code: '*GE2162', exemplaren: ['*GE2162-01', '*GE2162-02'],
+    kisten: { '*GE2162-01': { nr: 'DSL01', inhoud: '2 Martin Audio DD6\n1 Flightcase DD6', gewicht: '27,34' } } };
+  const i = vul(S.kist, kist, {}, '*GE2162-01');
+  assert.equal(i.onder, 'DSL01');
+  assert.equal(i.waarden.Gewicht, '27,34');
+  assert.deepEqual(i.lijst, [['2', 'Martin Audio DD6'], ['1', 'Flightcase DD6']]);
+  // ander exemplaar zonder gegevens: code van het artikel, geen inhoud
+  const j = vul(S.kist, kist, {}, '*GE2162-02');
+  assert.equal(j.onder, '*GE2162');
+  assert.deepEqual(j.lijst, []);
+  // zelf ingevuld gaat voor
+  assert.deepEqual(vul(S.kist, kist, { Inhoud: '1 Iets anders' }, '*GE2162-01').lijst, [['1', 'Iets anders']]);
 });

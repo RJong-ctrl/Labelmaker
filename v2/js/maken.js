@@ -8,7 +8,7 @@ import { esc } from './html.js';
 
 const PX = 96 / 25.4;
 const LEEG = { id: '__nieuw', naam: '', code: '', qr: '', exemplaren: [], pad: '', map: '', locatie: '', soort: 'bulk', type: '', combinatie: false, aantal: 0 };
-const BRON = { kolom: 'uit het artikel', naam: 'uit de naam' };
+const BRON = { kolom: 'uit het artikel', naam: 'uit de naam', exemplaar: 'uit de kist' };
 const norm = (s) => String(s ?? '').toLowerCase().replace(/×/g, 'x').replace(/,/g, '.').replace(/\s+/g, ' ').trim();
 
 /**
@@ -60,7 +60,7 @@ export function startMaken(root, h) {
     const sj = huidigSjabloon();
     const art = basisArtikel(), o = overrides();
     const velden = (sj?.velden || []).map(v => {
-      const waarde = m.bewerkt.has(v.naam) ? (m.waarden[v.naam] ?? '') : veldwaarde(v, art, artikelAanv());
+      const waarde = m.bewerkt.has(v.naam) ? (m.waarden[v.naam] ?? '') : veldwaarde(v, art, artikelAanv(), qrWaarde());
       const vorm = {
         ...v, verplicht: false, bron: m.artikel ? (BRON[v.herkomst.type] || '') : '',
         ...(v.herkomst.patroon === 'kabel' ? { keuzes: [{ waarde: 'ja', tekst: 'Ja' }, { waarde: '', tekst: 'Nee' }] } : {}),

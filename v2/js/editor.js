@@ -15,7 +15,8 @@ export const KOLOM_NAMEN = {
   map: 'Map', locatie: 'Locatie', soort: 'Soort (bulk of serie)', type: 'Type materiaal', aantal: 'Aantal',
 };
 const PATROON_NAMEN = { lengte: 'Lengte (12,5)', maat: 'Maat (6 × 3)', breedte: 'Maat: eerste getal (6)', hoogte: 'Maat: tweede getal (3)', polen: 'Polen (NL4)', kwaliteit: 'Kwaliteit (A of B)', kaal: 'Naam zonder maat', kabel: 'Is een kabel (ja)' };
-const HERKOMST = { kolom: 'Kolom uit de export', naam: 'Uit de naam', aanvulling: 'Aanvulling' };
+const HERKOMST = { kolom: 'Kolom uit de export', naam: 'Uit de naam', exemplaar: 'Uit de kist (exemplaren-export)', aanvulling: 'Aanvulling' };
+const KIST_NAMEN = { inhoud: 'Inhoud van de kist', gewicht: 'Gewicht van de kist', nr: 'Kistnummer (DSL01)' };
 const SOORT = { tekst: 'Tekst', getal: 'Getal', keuze: 'Keuzelijst' };
 const PLEK = { titel: 'Titel', groot: 'Groot', label: 'Label', onder: 'Onderregel', qr: 'QR-code' };
 const PLEK_HINT = { groot: 'bijv. {Lengte} m', label: 'gekleurd rondje of pil', qr: 'leeg = QR-code van het artikel' };
@@ -140,7 +141,9 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
       ? `<label class="veld"><span>Kolom</span><select data-pad="veld.${i}.bron">${TOEGESTANE_VELDEN.filter(k => k !== 'exemplaren').map(k => opt(k, KOLOM_NAMEN[k] || k, h.kolom === k)).join('')}</select></label>`
       : h.type === 'naam'
         ? `<label class="veld"><span>Patroon</span><select data-pad="veld.${i}.bron">${Object.keys(PATRONEN).map(k => opt(k, PATROON_NAMEN[k] || k, h.patroon === k)).join('')}</select></label>`
-        : '<span class="veld leeg-veld" aria-hidden="true"></span>';
+        : h.type === 'exemplaar'
+          ? `<label class="veld"><span>Gegeven</span><select data-pad="veld.${i}.bron">${Object.entries(KIST_NAMEN).map(([k, t]) => opt(k, t, h.sleutel === k)).join('')}</select></label>`
+          : '<span class="veld leeg-veld" aria-hidden="true"></span>';
     return `<li class="veldrij" data-i="${i}">`
       + `<label class="veld"><span>Naam</span><input type="text" data-pad="veld.${i}.naam" value="${esc(v.naam)}" autocomplete="off"></label>`
       + `<label class="veld"><span>Soort</span><select data-pad="veld.${i}.soort">${Object.entries(SOORT).map(([k, t]) => opt(k, t, (v.soort || 'tekst') === k)).join('')}</select></label>`
@@ -284,6 +287,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
   function zetHerkomst(v, type) {
     if (type === 'kolom') v.herkomst = { type, kolom: v.herkomst?.kolom || 'naam' };
     else if (type === 'naam') v.herkomst = { type, patroon: v.herkomst?.patroon || 'lengte' };
+    else if (type === 'exemplaar') v.herkomst = { type, sleutel: v.herkomst?.sleutel || 'inhoud' };
     else v.herkomst = { type: 'aanvulling' };
   }
 
@@ -398,7 +402,9 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
       wijzig();
     } else if (wat === 'herkomst') { zetHerkomst(v, el.value); herteken('velden'); wijzig(); }
     else if (wat === 'bron') {
-      if (v.herkomst.type === 'kolom') v.herkomst.kolom = el.value; else v.herkomst.patroon = el.value;
+      if (v.herkomst.type === 'kolom') v.herkomst.kolom = el.value;
+      else if (v.herkomst.type === 'exemplaar') v.herkomst.sleutel = el.value;
+      else v.herkomst.patroon = el.value;
       wijzig();
     } else if (wat === 'alleenAls') {
       if (el.value) v.alleenAls = el.value; else delete v.alleenAls;

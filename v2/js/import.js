@@ -59,5 +59,55 @@ export function importeer(rijen, kolommen = RENTMAN) {
       aantal: Number.isFinite(aantal) ? aantal : 0,
     });
   }
+  const kisten = kistenUit(rijen, index);
+  for (const a of artikelen) if (kisten.has(a.code)) a.kisten = kisten.get(a.code);
   return { artikelen, ontbrekend };
+}
+
+// Exemplaren-export van Rentman: per exemplaar staat in welke kist (combinatie-exemplaar) het zit.
+// Daarmee is per kist de inhoud te tellen, en het gewicht van de kist zelf. Alleen namen, aantallen
+// en gewicht: prijzen en waarden worden nooit gelezen.
+export const EXEMPLAAR = {
+  nr: 'Weergavenaam (Exemplaar)',
+  qr: 'QR-codes / RFID (Exemplaar)',
+  gewicht: 'Huidig totale gewicht (Exemplaar)',
+  in: 'Actuele inhoud van (Exemplaar)',
+  status: 'Status (Exemplaar)',
+  materiaal: 'Materiaal (Exemplaar, Materiaal)',
+};
+const COMBINATIE_STATUS = /^(compleet|incompleet|extra)$/i;
+const naamSleutel = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+const gewichtNl = (s) => { const n = Number(String(s ?? '').replace(',', '.')); return Number.isFinite(n) && n > 0 ? String(n).replace('.', ',') : ''; };
+
+/** Map code → { exemplaar-QR: { nr, inhoud, gewicht } }; leeg als het geen exemplaren-export is. */
+function kistenUit(rijen, index) {
+  const kop = (rijen[0] || []).map(norm);
+  const k = Object.fromEntries(Object.entries(EXEMPLAAR).map(([veld, naam]) => [veld, kop.indexOf(norm(naam))]));
+  const uit = new Map();
+  if (k.nr < 0 || k.in < 0 || k.qr < 0) return uit;
+  const cel = (rij, i) => (i < 0 ? '' : String(rij[i] ?? '').trim());
+  const naamVan = (rij) => cel(rij, k.materiaal) || cel(rij, index.naam ?? -1);
+  // inhoud per kist: kistsleutel → Map(onderdeel → aantal), in volgorde van de export
+  const inhoud = new Map();
+  for (const rij of rijen.slice(1)) {
+    const ouder = naamSleutel(cel(rij, k.in));
+    if (!ouder) continue;
+    if (!inhoud.has(ouder)) inhoud.set(ouder, new Map());
+    const naam = naamVan(rij).replace(/\s+/g, ' ');
+    const tel = inhoud.get(ouder);
+    tel.set(naam, (tel.get(naam) || 0) + 1);
+  }
+  for (const rij of rijen.slice(1)) {
+    const nr = cel(rij, k.nr), qr = cel(rij, k.qr), code = cel(rij, index.code ?? -1);
+    if (!nr || !qr || !code) continue;
+    const tel = inhoud.get(naamSleutel(`${naamVan(rij)} (${nr})`));
+    if (!tel && !COMBINATIE_STATUS.test(cel(rij, k.status))) continue;
+    if (!uit.has(code)) uit.set(code, {});
+    uit.get(code)[qr] = {
+      nr,
+      inhoud: tel ? [...tel].map(([naam, n]) => `${n} ${naam}`).join('\n') : '',
+      gewicht: gewichtNl(cel(rij, k.gewicht)),
+    };
+  }
+  return uit;
 }

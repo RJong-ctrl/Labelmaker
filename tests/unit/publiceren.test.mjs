@@ -212,3 +212,10 @@ test('tijdelijke_losse_items_niet_gepubliceerd', () => {
   assert.deepEqual(b.losseItems.map(x => x.id), ['los-vast']);
   assert.deepEqual(Object.keys(b.aanvullingen), ['los-vast']);
 });
+
+test('basis_houdt_inhoud_van_kisten', () => {
+  const l = leeg();
+  l.artikelen = [art('*GE2162', 'Kist', { kisten: { '*GE2162-01': { nr: 'DSL01', inhoud: '2 DD6', gewicht: '27,34' } } })];
+  const b = maakBasis(samen(STD, null, l), 'dsl', NU);
+  assert.deepEqual(b.artikelen[0].kisten, { '*GE2162-01': { nr: 'DSL01', inhoud: '2 DD6', gewicht: '27,34' } });
+});

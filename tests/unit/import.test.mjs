@@ -79,3 +79,34 @@ test('kopnamen_hoofdletters_en_spaties', () => {
   assert.equal(artikelen[0].aantal, 0);
   assert.ok(ontbrekend.includes('qr'));
 });
+
+// Exemplaren-export: één rij per exemplaar, met de materiaalkolommen erachter.
+const EXKOP = ['Weergavenaam (Exemplaar)', 'QR-codes / RFID (Exemplaar)', 'Huidig totale gewicht (Exemplaar)', 'Actuele inhoud van (Exemplaar)',
+  'Status (Exemplaar)', 'Materiaal (Exemplaar, Materiaal)', 'Aanschafprijs (Exemplaar)', 'Boekwaarde (Exemplaar)',
+  'Naam (in database)', 'Code', 'QR-codes / RFID', 'QR-codes / RFID exemplaren', 'Pad', 'Map (Map)',
+  'Locatie in magazijn per voorraadlocatie [Standaard voorraadlocatie]', 'Methode voorraadberekening', 'Type materiaal', 'Huidig aantal', 'Verhuur-/verkoopprijs'];
+const exRij = (nr, qr, gewicht, in_, status, naam, code, exemplaren, type = 'Fysiek item') =>
+  [nr, qr, gewicht, in_, status, naam, '4711', '8123', naam, code, '', exemplaren, 'Materialen / Geluid', 'Geluid', 'V-1-2', 'Serial number', type, '2', '9377'];
+const EXPORT = [EXKOP,
+  exRij('DSL01', '*GE2162-01', '27.34', '', 'Compleet', 'Martin Audio 2x DD6  Speaker [Case]', '*GE2162', '*GE2162-01,*GE2162-02', 'Combinatie'),
+  exRij('DSL02', '*GE2162-02', '0', '', 'Incompleet', 'Martin Audio 2x DD6  Speaker [Case]', '*GE2162', '*GE2162-01,*GE2162-02', 'Combinatie'),
+  exRij('DSL01', 'dd6-01', '0', 'Martin Audio 2x DD6 Speaker [Case] (DSL01)', 'Geen fysieke combinatie', 'Martin Audio DD6', 'GE2160', 'dd6-01,dd6-02,dd6-03'),
+  exRij('DSL02', 'dd6-02', '0', 'Martin Audio 2x DD6 Speaker [Case] (DSL01)', 'Geen fysieke combinatie', 'Martin Audio DD6', 'GE2160', 'dd6-01,dd6-02,dd6-03'),
+  exRij('DSL03', 'dd6-03', '0', 'Martin Audio 2x DD6 Speaker [Case] (DSL02)', 'Geen fysieke combinatie', 'Martin Audio DD6', 'GE2160', 'dd6-01,dd6-02,dd6-03'),
+  exRij('DSL01', 'fc-01', '0', 'Martin Audio 2x DD6 Speaker [Case] (DSL01)', 'Geen fysieke combinatie', 'Flightcase DD6', 'FC0001', 'fc-01'),
+];
+
+test('exemplaren_export_inhoud_van_kisten', () => {
+  const { artikelen, ontbrekend } = importeer(EXPORT);
+  assert.deepEqual(ontbrekend, []);
+  const a = per(artikelen);
+  assert.deepEqual(Object.keys(a).sort(), ['*GE2162', 'FC0001', 'GE2160']);   // één artikel per code
+  assert.deepEqual(a['*GE2162'].kisten, {
+    '*GE2162-01': { nr: 'DSL01', inhoud: '2 Martin Audio DD6\n1 Flightcase DD6', gewicht: '27,34' },
+    '*GE2162-02': { nr: 'DSL02', inhoud: '1 Martin Audio DD6', gewicht: '' },
+  });
+  assert.equal(a.GE2160.kisten, undefined);
+  // nooit een prijs of waarde, waar dan ook
+  const json = JSON.stringify(artikelen);
+  for (const bedrag of ['4711', '8123', '9377']) assert.ok(!json.includes(bedrag), bedrag);
+});

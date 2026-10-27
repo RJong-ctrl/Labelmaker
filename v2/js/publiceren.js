@@ -8,7 +8,9 @@ const TYPE = 'labelmaker-basis';
 const VERSIE = 1;
 
 // Artikelen en losse items: alleen deze sleutels gaan mee.
-const ARTIKELSLEUTELS = new Set(['id', 'combinatie', 'sjabloon', ...TOEGESTANE_VELDEN]);
+const ARTIKELSLEUTELS = new Set(['id', 'combinatie', 'sjabloon', 'kisten', ...TOEGESTANE_VELDEN]);
+// Inhoud per kist: alleen kistnummer, inhoud (namen en aantallen) en gewicht.
+const KISTSLEUTELS = ['nr', 'inhoud', 'gewicht'];
 // Huisstijl: logo en certificaaticoon (afbeeldingen) mogen mee, een eigen lettertype niet.
 const HUISSTIJLSLEUTELS = ['logo', 'voet', 'certIcoon', 'lettertype'];
 // Sleutels die nergens in een publicatie horen, op welk niveau dan ook.
@@ -31,6 +33,11 @@ function zonderGeheimen(x) {
 function schoonArtikel(a) {
   const uit = {};
   for (const [k, v] of Object.entries(a)) if (ARTIKELSLEUTELS.has(k)) uit[k] = Array.isArray(v) ? [...v] : v;
+  if ('kisten' in uit) {
+    if (!isObject(uit.kisten)) delete uit.kisten;
+    else uit.kisten = Object.fromEntries(Object.entries(uit.kisten).filter(([, x]) => isObject(x))
+      .map(([qr, x]) => [qr, Object.fromEntries(KISTSLEUTELS.map(s => [s, String(x[s] ?? '')]))]));
+  }
   return uit;
 }
 

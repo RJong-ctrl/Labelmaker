@@ -55,6 +55,9 @@ export const leegBordje = (id, naam, opmaak, b, h) => ({
 
 /** Wandbord A4 voor het magazijn: locatie heel groot, wat er ligt eronder, QR van de locatie.
  *  194 × 281 mm (A4 min de printermarge), één per vel. */
+/** Uit de exemplaren-export: gegevens van deze kist (het exemplaar op het bordje); anders de kolom (of leeg). */
+const uitKist = (naam, sleutel, kolomAnders = '', extra = {}) =>
+  ({ naam, soort: 'tekst', herkomst: { type: 'exemplaar', sleutel, ...(kolomAnders ? { kolom: kolomAnders } : {}) }, verplicht: false, ...extra });
 const aanvul = (naam, extra = {}) => ({ naam, soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false, ...extra });
 export const wandbord = (id, naam, b, h) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b, h }, gat: false, voet: true,
@@ -62,14 +65,16 @@ export const wandbord = (id, naam, b, h) => ({
   plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Inhoud')], qr: [v('Locatie')] },
 });
 
-/** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes): klant, productie, datum, check,
- *  gewicht, naam en code van de kist en de inhoud (één regel per onderdeel: 'aantal naam'). Twee per A4. */
+/** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes), in de huisstijl: naam en kistnummer,
+ *  inhoud (één regel per onderdeel: 'aantal naam'), gewicht, QR en een vak voor de projectsticker.
+ *  Twee per A4. Randkleur standaard DSL blauw. */
 export const kistbordje = (id, naam) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'kist', formaat: { b: 194, h: 136 }, gat: false, voet: true,
-  velden: [kolom('Naam', 'naam', true), kolom('Code', 'code'), aanvul('Klant'), aanvul('Productie'), aanvul('Datum'), aanvul('Check'),
-    aanvul('Gewicht', { eenheid: 'kg' }), aanvul('Inhoud', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' })],
+  velden: [kolom('Naam', 'naam', true), uitKist('Code', 'nr', 'code'),
+    uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }), uitKist('Inhoud', 'inhoud', '', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' })],
   lijstVeld: 'Inhoud',
-  plekken: { ...leeg, titel: [v('Naam')], onder: [v('Code')] },
+  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Code')], onder: [v('Code')] },
+  kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb' } },
 });
 
 export const DSL_SJABLONEN = [
@@ -115,15 +120,20 @@ export const DSL_SJABLONEN = [
 ];
 
 /** Waarde van één veld voor dit artikel. */
-export function veldwaarde(veld, artikel, aanvullingen = {}) {
+export function veldwaarde(veld, artikel, aanvullingen = {}, qr = '') {
   // Een aanvulling met de naam van het veld gaat altijd voor, ook leeg (= niet op het bordje).
   if (aanvullingen && Object.hasOwn(aanvullingen, veld.naam)) return String(aanvullingen[veld.naam] ?? '').trim();
-  return natuurlijkeWaarde(veld, artikel);
+  return natuurlijkeWaarde(veld, artikel, qr);
 }
 
 /** Waarde zonder aanvulling: uit de export of uit de naam. */
-export function natuurlijkeWaarde(veld, artikel) {
+export function natuurlijkeWaarde(veld, artikel, qr = '') {
   const h = veld.herkomst;
+  if (h.type === 'exemplaar') {
+    const kist = artikel.kisten?.[qr];
+    const w = String(kist?.[h.sleutel] ?? '').trim();
+    return w || (h.kolom ? String(artikel[h.kolom] ?? '').trim() : '');
+  }
   if (h.type === 'kolom') return String(artikel[h.kolom] ?? '').trim();
   if (h.type === 'naam') return (PATRONEN[h.patroon] || (() => ''))(artikel.naam || '');
   return '';
@@ -131,9 +141,9 @@ export function natuurlijkeWaarde(veld, artikel) {
 
 // Een veld met alleenAls telt alleen mee als dat andere veld een waarde heeft
 // (Doorsnede alleen bij kabels).
-function waarden(sjabloon, artikel, aanvullingen) {
+function waarden(sjabloon, artikel, aanvullingen, qr = '') {
   const w = {};
-  for (const veld of sjabloon.velden) w[veld.naam] = veldwaarde(veld, artikel, aanvullingen);
+  for (const veld of sjabloon.velden) w[veld.naam] = veldwaarde(veld, artikel, aanvullingen, qr);
   for (const veld of sjabloon.velden) if (veld.alleenAls && !w[veld.alleenAls]) w[veld.naam] = '';
   return w;
 }
@@ -154,7 +164,7 @@ export function geldigeKleur(hex) {
 function kleur(regel, w) {
   if (!regel) return ONBEKEND;
   const tokens = regel.sleutel || [{ veld: regel.veld }];
-  return geldigeKleur(regel.waarden?.[sleutel(plek(tokens, w))]) || ONBEKEND;
+  return geldigeKleur(regel.waarden?.[sleutel(plek(tokens, w))]) || geldigeKleur(regel.anders) || ONBEKEND;
 }
 
 // Vrije regels 'Kop: waarde' (één per regel) als eigenschappen.
@@ -182,7 +192,7 @@ function lijstUit(tekst) {
 }
 
 export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
-  const w = waarden(sjabloon, artikel, aanvullingen);
+  const w = waarden(sjabloon, artikel, aanvullingen, qr);
   const p = sjabloon.plekken;
   const labelTekst = plek(p.label, w);
   return {

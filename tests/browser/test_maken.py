@@ -232,16 +232,38 @@ class Maken(PaginaTest):
     def test_kistbordje_twee_per_a4(self):
         p = self.pagina
         p.locator('#makenSoort').select_option('kist')
+        expect(p.locator('#makenVelden input[name="Klant"]')).to_have_count(0)    # daar komt de projectsticker
         p.locator('#makenVelden input[name="Naam"]').fill('DMX kit groot [Case]')
         p.locator('#makenVelden input[name="Gewicht"]').fill('66,20')
         p.locator('#makenVelden textarea[name="Inhoud"]').fill('30 DMX 3p 1,25m\n2 DMX 3p Afsluiter')
         k = p.locator('#makenVoorbeeld .signb.kist')
         expect(k.locator('.kt')).to_have_text(['DMX 3p 1,25m', 'DMX 3p Afsluiter'])
+        expect(k.locator('.ka')).to_have_text(['30×', '2×'])
         expect(k).to_contain_text('66,20 kg')
+        expect(k.locator('.ksticker')).to_have_count(1)
         p.locator('#makenVelden input[name="__aantal"]').fill('2')
         p.locator('#makenOpVel').click()
         expect(p.locator('#vellen .a4')).to_have_count(1)
         expect(p.locator('#vellen .a4 .signb.kist')).to_have_count(2)
+        self.assertEqual(self.fouten, [])
+
+    def test_kist_scannen_vult_inhoud(self):
+        """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
+        p = self.pagina
+        p.evaluate("""async () => { const { openOpslag } = await import('./js/opslag.js'); const o = await openOpslag('dsl');
+          await o.vervangAlle('artikelen', [{ id: '*GE2162', waarde: { id: '*GE2162', naam: 'Martin Audio 2x DD6 Speaker [Case]', code: '*GE2162', qr: '',
+            exemplaren: ['*GE2162-01', '*GE2162-02'], pad: 'Materialen / Geluid', map: 'Geluid', locatie: '', soort: 'serie', type: 'Combinatie', combinatie: true, aantal: 2,
+            kisten: { '*GE2162-01': { nr: 'DSL01', inhoud: '2 Martin Audio DD6\\n1 Flightcase DD6', gewicht: '27,34' } } } }]); }""")
+        p.reload()
+        p.wait_for_selector('body[data-klaar="1"]')
+        p.locator('#makenSoort').select_option('kist')
+        p.locator('#makenZoek').fill('*GE2162-01')
+        p.locator('#makenZoek').press('Enter')
+        expect(p.locator('#makenVelden textarea[name="Inhoud"]')).to_have_value('2 Martin Audio DD6\n1 Flightcase DD6')
+        expect(p.locator('#makenVelden input[name="Code"]')).to_have_value('DSL01')
+        k = p.locator('#makenVoorbeeld .signb.kist')
+        expect(k.locator('.kt')).to_have_text(['Martin Audio DD6', 'Flightcase DD6'])
+        expect(k).to_contain_text('27,34 kg')
         self.assertEqual(self.fouten, [])
 
     def test_pipe_drape_maat_onder_de_naam(self):
