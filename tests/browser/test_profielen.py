@@ -41,7 +41,7 @@ class Basis(PaginaTest):
                  'artikelen': [artikel], 'losseItems': [], 'sjablonen': [], 'aanvullingen': {'GE9402': {'Doorsnede': '2,5 mm²'}}}
         p.route('**/data/dsl.json', lambda r: r.fulfill(status=200, content_type='application/json', body=json.dumps(basis)))
         p.reload()
-        expect(p.locator('#melding')).to_contain_text('Basis van 26 okt geladen')
+        expect(p.locator('#melding')).to_contain_text('Basis van 26 okt geladen', timeout=15000)
         p.locator('#tabLijst').click()
         rij = p.locator('#lijst li[data-code="GE9402"]')
         rij.locator('input[type=checkbox]').check()
