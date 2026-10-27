@@ -203,6 +203,16 @@ class MakenPast(PaginaTest):
         self.assertLessEqual(maat[0], maat[1] + 1, 'Maken-formulier moet scrollen: %r' % maat)
         expect(p.locator('#makenOpVel')).to_be_in_viewport()
 
+    def test_focusrand_valt_niet_weg(self):
+        """De oranje focusrand (2px + 2px afstand) mag niet door de rand van het formulier worden afgesneden."""
+        p = self.pagina
+        for veld in ['#makenSoort', '#makenZoek', '#makenVelden input[name="Groot"]', '#makenVelden input[name="Naam"]']:
+            p.locator(veld).focus()
+            ruimte = p.evaluate("""(sel) => { const m = document.getElementById('maken'), e = document.querySelector(sel);
+              const a = m.getBoundingClientRect(), b = e.getBoundingClientRect();
+              return Math.min(b.left - a.left - m.clientLeft, (a.left + m.clientLeft + m.clientWidth) - b.right, b.top - a.top + m.scrollTop); }""", veld)
+            self.assertGreaterEqual(ruimte, 4, veld)
+
     def test_voorbeeld_staat_in_voorbeeldkolom(self):
         p = self.pagina
         expect(p.locator('#voorbeeld #makenVoorbeeld .signb')).to_have_count(1)

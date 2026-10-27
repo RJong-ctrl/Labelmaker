@@ -105,7 +105,8 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 .lijst .bewerk{flex:0 0 auto}
 
 /* ---------- maken ---------- */
-.maken{overflow:auto;gap:8px;padding-right:2px}
+/* ruimte rondom zodat de focusrand (2px + 2px) niet wordt afgesneden */
+.maken{overflow:auto;gap:8px;padding:5px;margin:-5px}
 .maken>*{flex-shrink:0}
 .maken .rij2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .maken label.veld{display:grid;gap:3px;font-weight:600;font-size:13px;min-width:0}
