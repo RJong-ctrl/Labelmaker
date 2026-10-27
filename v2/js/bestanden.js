@@ -136,9 +136,18 @@ export function leesCsv(tekst) {
     const ch = tekst[i];
     if (inQuote) {
       if (ch === '"') {
-        if (tekst[i + 1] === '"') { veld += '"'; i++; } else inQuote = false;
+        // Rentman escapet " binnen een veld niet altijd ("12"/1" 400W", "19"";). Daarom sluit een "
+        // alleen af als er een scheidingsteken, regeleinde of het einde van het bestand op volgt.
+        // Een regeleinde sluit alleen af als de rij dan compleet is (opmerkingen kunnen over meer regels gaan).
+        const kolommen = rijen[0]?.length || 0;
+        const einde = (c) => c === sep || c === undefined
+          || ((c === '\n' || c === '\r') && (!kolommen || rij.length + 1 >= kolommen));
+        if (tekst[i + 1] === '"' && einde(tekst[i + 2])) { veld += '"'; i++; inQuote = false; }
+        else if (tekst[i + 1] === '"') { veld += '"'; i++; }
+        else if (einde(tekst[i + 1])) inQuote = false;
+        else veld += '"';
       } else veld += ch;
-    } else if (ch === '"') inQuote = true;
+    } else if (ch === '"' && veld === '') inQuote = true;
     else if (ch === sep) { rij.push(veld); veld = ''; }
     else if (ch === '\n' || ch === '\r') {
       if (ch === '\r' && tekst[i + 1] === '\n') i++;

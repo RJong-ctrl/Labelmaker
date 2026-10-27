@@ -45,3 +45,25 @@ test('csv_komma_en_tab', () => {
   assert.deepEqual(leesCsv('a,b\r\n1,2\r\n'), [['a', 'b'], ['1', '2']]);
   assert.deepEqual(leesCsv('a\tb\n1\t2'), [['a', 'b'], ['1', '2']]);
 });
+
+test('csv_rentman_inch_teken', () => {
+  // Rentman zet een " aan het eind van een naam als "" vlak voor het afsluitende teken: "Flightcase 19"";
+  assert.deepEqual(leesCsv('a;b;c\n"Flightcase touchscreen 19"";"KL1964";1\n"x";"y";2'),
+    [['a', 'b', 'c'], ['Flightcase touchscreen 19"', 'KL1964', '1'], ['x', 'y', '2']]);
+  // netjes ge-escaped blijft werken, ook aan het eind
+  assert.deepEqual(leesCsv('a;b\n"19""";"z"'), [['a', 'b'], ['19"', 'z']]);
+  // een " midden in een veld zonder aanhalingstekens is gewoon een teken
+  assert.deepEqual(leesCsv('a;b\nKast 19" breed;2'), [['a', 'b'], ['Kast 19" breed', '2']]);
+});
+
+test('csv_rentman_aanhalingstekens_zonder_escape', () => {
+  // Rentman verdubbelt " binnen een veld niet: "Wedge 12"/1" 400W";
+  assert.deepEqual(leesCsv('a;b\n"Wedge rechts 12"/1" 400W";"GE2174R"'), [['a', 'b'], ['Wedge rechts 12"/1" 400W', 'GE2174R']]);
+  assert.deepEqual(leesCsv('a;b\n"x ""y"" z";2'), [['a', 'b'], ['x "y" z', '2']]);
+});
+
+test('csv_rentman_aanhalingsteken_voor_regeleinde_in_veld', () => {
+  // Opmerking over meerdere regels met een " aan het eind van een regel: "2 x 10" / 1 x 1"\n\n500 Watt"
+  assert.deepEqual(leesCsv('a;b;c\n"Hartke";"2 x 10" / 1 x 1"\n\n500 Watt";"VB"\n"x";"y";"z"'),
+    [['a', 'b', 'c'], ['Hartke', '2 x 10" / 1 x 1"\n\n500 Watt', 'VB'], ['x', 'y', 'z']]);
+});
