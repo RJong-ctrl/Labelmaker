@@ -74,7 +74,7 @@ main{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(340px,
 .vel li{display:flex;align-items:center;gap:10px;padding:7px 10px}
 .stip{flex:0 0 auto;width:14px;height:14px;border-radius:50%;border:1px solid var(--line)}
 .vel .aantal{width:64px;padding:5px 6px}
-.vellen{flex:1 1 auto;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.vellen{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
 .vb{flex:0 0 auto;overflow:hidden;position:relative;border-radius:3px;box-shadow:0 1px 0 var(--line),0 6px 18px rgba(0,0,0,.14);background:#fff}
 .vb>*{position:absolute;left:0;top:0}
 .menu{position:absolute;right:0;top:calc(100% + 6px);z-index:40;display:flex;flex-direction:column;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.18);min-width:240px}
@@ -127,7 +127,7 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 .maken .velden .breed{grid-column:1/-1}
 /* voorbeeld van wat je nu maakt: bovenin de kolom Voorbeeld */
 .maken-vak{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.maken-vak[hidden]{display:none!important}
+.maken-vak[hidden],.maken-vak[data-leeg="1"]{display:none!important}
 .maken-vak h3{margin:0;font-size:13px;font-weight:600;color:var(--muted)}
 .voorbeeld-maken{display:flex;justify-content:center;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:120px;overflow:hidden}
 .maken-vak .op-vel{margin-top:6px}

@@ -348,8 +348,25 @@ class MakenPast(PaginaTest):
               return Math.min(b.left - a.left - m.clientLeft, (a.left + m.clientLeft + m.clientWidth) - b.right, b.top - a.top + m.scrollTop); }""", veld)
             self.assertGreaterEqual(ruimte, 4, veld)
 
+    def test_printvel_krijgt_de_ruimte(self):
+        """Is het formulier leeg (bijv. na Op printvel), dan krijgt het printvel de hele kolom; nooit zijwaarts scrollen."""
+        p = self.pagina
+        p.locator('#makenSoort').select_option('pipe-drape')
+        p.locator('#makenVelden input[name="Naam"]').fill('Pipe & drape doek')
+        p.locator('#makenVelden input[name="Lengte"]').fill('4')
+        p.locator('#makenVelden input[name="Hoogte"]').fill('3')
+        expect(p.locator('#makenVak')).to_be_visible()
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        expect(p.locator('#makenVak')).to_be_hidden()
+        p.wait_for_timeout(600)
+        kolom = p.locator('#voorbeeld').bounding_box()['height']
+        self.assertGreater(p.locator('#vellen').bounding_box()['height'], kolom * 0.75)
+        self.assertLessEqual(p.evaluate("(() => { const v = document.getElementById('vellen'); return v.scrollWidth - v.clientWidth; })()"), 1)
+
     def test_voorbeeld_staat_in_voorbeeldkolom(self):
         p = self.pagina
+        p.locator('#makenVelden input[name="Naam"]').fill('Kist')
         expect(p.locator('#voorbeeld #makenVoorbeeld .signb')).to_have_count(1)
         p.locator('#tabLijst').click()
         expect(p.locator('#makenVoorbeeld')).to_be_hidden()

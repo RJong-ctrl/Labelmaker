@@ -193,7 +193,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     const vellen = tekenVellen(st.tab, st.vel[st.tab], context());
     const toon = vellen.slice(0, 6);
     const formaat = st.tab === 'label' ? (E().printers?.label || { b: 76, h: 56 }) : A4;
-    const breedte = Math.max(200, doel.clientWidth - 4);
+    const breedte = Math.max(200, doel.clientWidth - 18);   // ruimte voor de schuifbalk: nooit zijwaarts scrollen
     const s = Math.min(st.tab === 'label' ? 1.6 : 1, breedte / (formaat.b * PX));
     doel.replaceChildren(...toon.map(v => {
       const d = document.createElement('div');

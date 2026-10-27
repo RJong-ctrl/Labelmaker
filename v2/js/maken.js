@@ -87,6 +87,10 @@ export function startMaken(root, h) {
     const sj = huidigSjabloon();
     const vak = root.getElementById('makenVoorbeeld');
     if (!sj || !vak) return;
+    // Leeg formulier: geen voorbeeld, dan krijgt het printvel de hele kolom.
+    const leeg = !m.artikel && m.sjabloonId === 'auto' && ![...m.bewerkt].some(k => String(m.waarden[k] ?? '').trim()) && !(m.qrBewerkt && m.qr);
+    const kader = root.getElementById('makenVak');
+    if (kader) kader.dataset.leeg = leeg ? '1' : '';
     const inhoud = vul(sj, basisArtikel(), overrides(), qrWaarde());
     const el = teken(inhoud, h.E().huisstijl);
     // Het voorbeeld staat bovenin de kolom Voorbeeld en neemt hooguit de halve kolomhoogte.
