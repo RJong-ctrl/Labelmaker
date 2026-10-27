@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'wandbord-liggend', 'wandbord-staand']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -269,4 +269,10 @@ test('lengte_en_hoogte_zelf_invullen', () => {
   // Pipe & Drape: lengte en hoogte.
   assert.deepEqual(S['pipe-drape'].velden.map(v => v.naam), ['Naam', 'Lengte', 'Hoogte']);
   assert.equal(vul(S['pipe-drape'], A.PD5143, { Lengte: '5' }, 'x').groot, '5 × 3m');
+});
+
+test('wandbord_a5', () => {
+  assert.deepEqual(S['wandbord-a5-liggend'].formaat, { b: 194, h: 136 });
+  assert.deepEqual(S['wandbord-a5-staand'].formaat, { b: 136, h: 194 });
+  assert.equal(vul(S['wandbord-a5-staand'], { ...A.GE9402, locatie: 'J-2-1' }, {}, 'x').titel, 'J-2-1');
 });

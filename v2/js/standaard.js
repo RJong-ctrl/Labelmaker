@@ -29,6 +29,8 @@ const BASIS_SJABLONEN = [
   bordje('strook', 'Strook', 'strook', 180, 48, { logoBoven: true, plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], onder: ['Code ', v('Code')] } }),
   wandbord('wandbord-staand', 'Wandbord A4 staand', 194, 281),
   wandbord('wandbord-liggend', 'Wandbord A4 liggend', 281, 194),
+  wandbord('wandbord-a5-staand', 'Wandbord A5 staand', 136, 194),
+  wandbord('wandbord-a5-liggend', 'Wandbord A5 liggend', 194, 136),
   kistbordje('kist', 'Materiaalbordje kist (A5)'),
 ];
 

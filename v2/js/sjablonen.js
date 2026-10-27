@@ -98,6 +98,8 @@ export const DSL_SJABLONEN = [
   vrijBordje('bordje-liggend', 'Bordje liggend', 'liggend', 105, 74),
   wandbord('wandbord-staand', 'Wandbord A4 staand', 194, 281),
   wandbord('wandbord-liggend', 'Wandbord A4 liggend', 281, 194),
+  wandbord('wandbord-a5-staand', 'Wandbord A5 staand', 136, 194),
+  wandbord('wandbord-a5-liggend', 'Wandbord A5 liggend', 194, 136),
   kistbordje('kist', 'Materiaalbordje kist (A5)'),
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },

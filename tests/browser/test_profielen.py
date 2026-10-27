@@ -24,7 +24,7 @@ class Profielen(PaginaTest):
         p.locator('#tabLijst').click()
         expect(p.locator('#leegArtikelen')).to_be_visible()
         opties = p.locator('#sjabloonKeuze option:not([value=""])').all_inner_texts()
-        self.assertEqual(opties, ['QR-label', 'Locatielabel', 'Leeg bordje staand', 'Leeg bordje liggend', 'Bordje staand', 'Bordje liggend', 'Strook', 'Wandbord A4 staand', 'Wandbord A4 liggend', 'Materiaalbordje kist (A5)'])
+        self.assertEqual(opties, ['QR-label', 'Locatielabel', 'Leeg bordje staand', 'Leeg bordje liggend', 'Bordje staand', 'Bordje liggend', 'Strook', 'Wandbord A4 staand', 'Wandbord A4 liggend', 'Wandbord A5 staand', 'Wandbord A5 liggend', 'Materiaalbordje kist (A5)'])
         p.locator('#profiel').select_option('dsl')
         expect(p.locator('#profiel')).to_have_value('dsl')
         expect(p.locator('#lijst li')).to_have_count(8)

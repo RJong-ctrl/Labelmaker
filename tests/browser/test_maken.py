@@ -217,6 +217,18 @@ class Maken(PaginaTest):
         expect(p.locator('#vellen .a4').first.locator('.signb')).to_have_count(1)
         self.assertEqual(self.fouten, [])
 
+    def test_wandbord_a5_twee_per_a4(self):
+        p = self.pagina
+        for n, soort in enumerate(['wandbord-a5-staand', 'wandbord-a5-liggend']):
+            p.locator('#makenSoort').select_option(soort)
+            p.locator('#makenVelden input[name="Locatie"]').fill('J-2-1')
+            p.locator('#makenVelden input[name="__aantal"]').fill('2')
+            p.locator('#makenOpVel').click()
+            expect(p.locator('#printA4')).to_have_text('Print %d op A4' % (2 * n + 2))
+        expect(p.locator('#vellen .a4')).to_have_count(2)
+        expect(p.locator('#vellen .a4').first.locator('.signb')).to_have_count(2)
+        self.assertEqual(self.fouten, [])
+
     def test_kistbordje_twee_per_a4(self):
         p = self.pagina
         p.locator('#makenSoort').select_option('kist')
