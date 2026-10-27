@@ -333,8 +333,9 @@ class Maken(PaginaTest):
 
     def test_geen_randkleur_bij_qr_label(self):
         p = self.pagina
-        p.locator('#makenSoort').select_option('qrlabel')
-        expect(p.locator('#makenVelden select[name="Randkleur"]')).to_have_count(0)
+        for soort in ['qrlabel', 'kist', 'kist-modern']:   # materiaalbordje modern is altijd DSL blauw
+            p.locator('#makenSoort').select_option(soort)
+            expect(p.locator('#makenVelden select[name="Randkleur"]')).to_have_count(0)
 
 
 class MakenPast(PaginaTest):

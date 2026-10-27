@@ -70,7 +70,7 @@ export function startMaken(root, h) {
     });
     void o;
     // Randkleur zelf kiezen kan op elk A4-bordje en elke strook (leeg = wat het sjabloon zegt).
-    if (sj?.printer === 'a4' && !sj.velden.some(v => v.naam === 'Randkleur')) {
+    if (sj?.printer === 'a4' && !sj.kleuren?.rand?.vast && !sj.velden.some(v => v.naam === 'Randkleur')) {
       const w = m.bewerkt.has('Randkleur') ? (m.waarden.Randkleur ?? '') : (artikelAanv().Randkleur || '');
       velden.push(veldInvoer({ naam: 'Randkleur', keuzes: [{ waarde: '', tekst: 'Automatisch' }, ...RANDKLEUREN.map(k => ({ waarde: k, tekst: k }))] }, w, { verplicht: false }));
     }

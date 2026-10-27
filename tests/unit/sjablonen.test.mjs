@@ -260,7 +260,6 @@ test('kistbordje_met_inhoudslijst', () => {
   assert.equal(i.titel, 'Speakon 4p Verlengkabel 2,5m');
   assert.equal(i.qr, 'dsl01');
   assert.equal(i.rand, '#005abb');
-  assert.equal(vul(S.kist, A.GE9402, { Randkleur: 'Rood' }, 'x').rand, '#ff0000');
   assert.equal(i.waarden.Gewicht, '66,20');
   assert.deepEqual(i.lijst, [['30', 'DMX 3p 1,25m grijs'], ['40', 'DMX 3p 2,5m'], ['2', 'Afsluiter'], ['', 'losse regel']]);
 });
@@ -307,4 +306,6 @@ test('kistbordje_modern_ook_te_kiezen', () => {
   assert.deepEqual(S['kist-modern'].formaat, { b: 194, h: 136 });
   assert.deepEqual(S['kist-modern'].velden.map(v => v.naam), S.kist.velden.map(v => v.naam));
   assert.equal(vul(S['kist-modern'], A.GE9402, {}, 'x').rand, '#005abb');
+  // altijd DSL blauw, ook als er een andere randkleur is ingevuld
+  assert.equal(vul(S['kist-modern'], A.GE9402, { Randkleur: 'Rood' }, 'x').rand, '#005abb');
 });

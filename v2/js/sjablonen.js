@@ -74,7 +74,8 @@ export const kistbordje = (id, naam, opmaak = 'kist') => ({
     uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }), uitKist('Inhoud', 'inhoud', '', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' })],
   lijstVeld: 'Inhoud',
   plekken: { ...leeg, titel: [v('Naam')], groot: [v('Code')], onder: [v('Code')] },
-  kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb' } },
+  // Vaste kleur: altijd DSL blauw (een gekozen randkleur telt hier niet).
+  kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb', vast: true } },
 });
 
 export const DSL_SJABLONEN = [
@@ -206,7 +207,7 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     eigenschappen: [...(p.eigenschappen || []).map(e => [e.kop, plek(e.waarde, w)]), ...(sjabloon.regelsVeld ? regelsUit(w[sjabloon.regelsVeld]) : [])].filter(e => e[1]),
     onder: plek(p.onder, w),
     qr: p.qr ? plek(p.qr, w) : String(qr || ''),
-    rand: eigenRand(aanvullingen) || kleur(sjabloon.kleuren.rand, w),
+    rand: (!sjabloon.kleuren.rand?.vast && eigenRand(aanvullingen)) || kleur(sjabloon.kleuren.rand, w),
     cert: sjabloon.cert || '',
     gat: !!sjabloon.gat,
     voet: !!sjabloon.voet,
