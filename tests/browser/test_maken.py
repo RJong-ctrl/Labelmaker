@@ -10,7 +10,18 @@ from basis import FIXTURES, PaginaTest
 VOORBEELD = os.path.join(FIXTURES, 'voorbeeld.xlsx')
 
 
-class Maken(PaginaTest):
+class MakenHulp:
+    def kies(self, soort):
+        """Sjabloon kiezen: op het beginscherm met de tegel, in het formulier met de keuzelijst."""
+        p = self.pagina
+        tegel = p.locator('#makenTegels [data-tegel="%s"]' % soort)
+        if tegel.count():
+            tegel.click()
+        else:
+            p.locator('#makenSoort').select_option(soort)
+
+
+class Maken(MakenHulp, PaginaTest):
     def inlezen(self):
         p = self.pagina
         p.locator('#bestand').set_input_files(VOORBEELD)
@@ -21,18 +32,27 @@ class Maken(PaginaTest):
         p.locator('#makenZoek').fill(tekst)
         p.locator('#makenTreffers li', has_text=kies or tekst).first.click()
 
-    def test_maken_is_standaard_en_leeg(self):
+    def test_maken_begint_met_tegels(self):
+        """Maken begint met tegels per sjabloon (met voorbeeldje); een tegel opent alleen dat formulier."""
         p = self.pagina
         expect(p.locator('#tabMaken')).to_have_attribute('aria-selected', 'true')
-        expect(p.locator('#maken')).to_be_visible()
         expect(p.locator('#lijstDeel')).to_be_hidden()
-        expect(p.locator('#makenSoort')).to_have_value('auto')
-        expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('')
-        expect(p.locator('#makenVoorbeeld .signb')).to_have_count(1)
+        tegels = p.locator('#makenTegels [data-tegel]')
+        for id in ['leeg-staand', 'kist', 'kist-modern', 'wandbord-staand', 'qrlabel', 'locatie']:
+            expect(p.locator('#makenTegels [data-tegel="%s"]' % id)).to_have_count(1)
+        expect(p.locator('#makenTegels .duim .signb, #makenTegels .duim .lbl')).to_have_count(tegels.count())
+        expect(p.locator('#makenVelden')).to_have_count(0)
+        expect(p.locator('#makenVak')).to_be_hidden()
+        p.locator('#makenTegels [data-tegel="leeg-staand"]').click()
+        expect(p.locator('#makenVelden input[name="Naam"]')).to_be_focused()
+        expect(p.locator('#makenSoort')).to_have_value('leeg-staand')
+        p.locator('#makenTerug').click()
+        expect(p.locator('#makenTegels')).to_be_visible()
         self.assertEqual(self.fouten, [])
 
     def test_leeg_bordje_van_scratch(self):
         p = self.pagina
+        self.kies('leeg-staand')
         p.locator('#makenVelden input[name="Naam"]').fill('Nooduitgang')
         p.locator('#makenVelden select[name="Randkleur"]').select_option('Groen')
         expect(p.locator('#makenVoorbeeld .signb .titel')).to_have_text('Nooduitgang')
@@ -120,6 +140,7 @@ class Maken(PaginaTest):
 
     def test_bijwerken_houdt_aantal(self):
         p = self.pagina
+        self.kies('leeg-staand')
         p.locator('#makenVelden input[name="Naam"]').fill('Statafel')
         p.locator('#makenOpVel').click()
         rij = p.locator('#velLijst li').first
@@ -134,6 +155,7 @@ class Maken(PaginaTest):
 
     def test_tijdelijk_item_weg_met_regel(self):
         p = self.pagina
+        self.kies('leeg-staand')
         p.locator('#makenVelden input[name="Naam"]').fill('Eenmalig')
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
@@ -147,13 +169,14 @@ class Maken(PaginaTest):
         p = self.pagina
         self.inlezen()
         self.opzoeken('CO1120')
-        p.locator('#makenSoort').select_option('qrlabel-half')
+        self.kies('qrlabel-half')
         expect(p.locator('#makenVoorbeeld .lbl')).to_have_count(1)
         p.locator('#makenOpVel').click()
         expect(p.locator('#printLabel')).to_have_text('Print 1 op Citizen')
 
     def test_bewaren_als_los_item(self):
         p = self.pagina
+        self.kies('leeg-staand')
         p.locator('#makenVelden input[name="Naam"]').fill('Statafel')
         p.locator('#makenBewaar').check()
         p.locator('#makenOpVel').click()
@@ -163,6 +186,7 @@ class Maken(PaginaTest):
 
     def test_aanpassen_opent_in_maken(self):
         p = self.pagina
+        self.kies('leeg-staand')
         p.locator('#makenVelden input[name="Naam"]').fill('Statafel')
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
@@ -176,6 +200,7 @@ class Maken(PaginaTest):
 
     def test_qr_leesbaar_in_voorbeeld_maken(self):
         p = self.pagina
+        self.kies('leeg-staand')
         p.locator('#makenVelden input[name="Naam"]').fill('Kist 1')
         p.locator('#makenVelden input[name="__qr"]').fill('kist-1')
         b = p.locator('#makenVoorbeeld .signb')
@@ -186,7 +211,7 @@ class Maken(PaginaTest):
         """De haak van de J steekt links en onder uit: geen inkt mag tegen de rand van het titelvak komen."""
         p = self.pagina
         for soort, veld in [('wandbord-liggend', 'Locatie'), ('wandbord-staand', 'Locatie'), ('bordje-staand', 'Naam'), ('leeg-liggend', 'Naam')]:
-            p.locator('#makenSoort').select_option(soort)
+            self.kies(soort)
             p.locator('#makenVelden input[name="%s"]' % veld).fill('J-2')
             vak = p.locator('#makenVoorbeeld .signb .titel')
             expect(vak).to_have_text('J-2')
@@ -206,7 +231,7 @@ class Maken(PaginaTest):
 
     def test_wandbord_a4(self):
         p = self.pagina
-        p.locator('#makenSoort').select_option('wandbord-liggend')
+        self.kies('wandbord-liggend')
         p.locator('#makenVelden input[name="Locatie"]').fill('J-2')
         p.locator('#makenVelden input[name="Inhoud"]').fill('Speakon kabels')
         expect(p.locator('#makenVoorbeeld .signb .titel')).to_have_text('J-2')
@@ -220,7 +245,7 @@ class Maken(PaginaTest):
     def test_wandbord_a5_twee_per_a4(self):
         p = self.pagina
         for n, soort in enumerate(['wandbord-a5-staand', 'wandbord-a5-liggend']):
-            p.locator('#makenSoort').select_option(soort)
+            self.kies(soort)
             p.locator('#makenVelden input[name="Locatie"]').fill('J-2-1')
             p.locator('#makenVelden input[name="__aantal"]').fill('2')
             p.locator('#makenOpVel').click()
@@ -231,7 +256,7 @@ class Maken(PaginaTest):
 
     def test_kistbordje_twee_per_a4(self):
         p = self.pagina
-        p.locator('#makenSoort').select_option('kist')
+        self.kies('kist')
         expect(p.locator('#makenVelden input[name="Klant"]')).to_have_count(0)    # daar komt de projectsticker
         p.locator('#makenVelden input[name="Naam"]').fill('DMX kit groot [Case]')
         p.locator('#makenVelden input[name="Gewicht"]').fill('66,20')
@@ -256,7 +281,7 @@ class Maken(PaginaTest):
     def test_kist_lange_lijst_past(self):
         """Veel regels: twee kolommen; lange namen lopen door op een volgende regel. Alles blijft zichtbaar."""
         p = self.pagina
-        p.locator('#makenSoort').select_option('kist')
+        self.kies('kist')
         p.locator('#makenVelden input[name="Naam"]').fill('Grote kabelkist')
         regels = ['%d Speakon 4p verlengkabel %d meter zwart met extra lange omschrijving erachter' % (n + 1, n + 1) for n in range(26)]
         p.locator('#makenVelden textarea[name="Inhoud"]').fill('\n'.join(regels))
@@ -273,7 +298,7 @@ class Maken(PaginaTest):
         """Projectsticker = Citizen-label 76 × 56 mm: het vak moet minstens zo groot zijn, in beide bordjes."""
         p = self.pagina
         for soort in ['kist', 'kist-modern']:
-            p.locator('#makenSoort').select_option(soort)
+            self.kies(soort)
             p.locator('#makenVelden input[name="Naam"]').fill('Kist')
             b = p.locator('#makenVoorbeeld .signb')
             expect(b.locator('.ksticker')).to_have_count(1)
@@ -330,7 +355,7 @@ class Maken(PaginaTest):
     def test_modern_kistnummer_bescheiden(self):
         """Modern: kistnummer niet groot naast de naam, maar klein rechts bij het gewicht; lange naam krijgt de hele breedte."""
         p = self.pagina
-        p.locator('#makenSoort').select_option('kist-modern')
+        self.kies('kist-modern')
         p.locator('#makenVelden input[name="Naam"]').fill('Martin Audio 2x LE1200s L/R Monitor Speaker [Case]')
         p.locator('#makenVelden input[name="Code"]').fill('DSL01')
         k = p.locator('#makenVoorbeeld .signb.kist-modern')
@@ -349,7 +374,7 @@ class Maken(PaginaTest):
             kisten: { '*GE2162-01': { nr: 'DSL01', inhoud: '2 Martin Audio DD6\\n1 Flightcase DD6', gewicht: '27,34' } } } }]); }""")
         p.reload()
         p.wait_for_selector('body[data-klaar="1"]')
-        p.locator('#makenSoort').select_option('kist')
+        self.kies('kist')
         p.locator('#makenZoek').fill('*GE2162-01')
         p.locator('#makenZoek').press('Enter')
         expect(p.locator('#makenVelden textarea[name="Inhoud"]')).to_have_value('2 Martin Audio DD6\n1 Flightcase DD6')
@@ -362,7 +387,7 @@ class Maken(PaginaTest):
     def test_lengte_en_hoogte_onder_elkaar(self):
         p = self.pagina
         for soort, eerste in [('pipe-drape', 'Lengte'), ('backdrop', 'Breedte')]:
-            p.locator('#makenSoort').select_option(soort)
+            self.kies(soort)
             a = p.locator('#makenVelden input[name="%s"]' % eerste).bounding_box()
             h = p.locator('#makenVelden input[name="Hoogte"]').bounding_box()
             self.assertAlmostEqual(a['x'], h['x'], delta=1, msg=soort)
@@ -395,16 +420,17 @@ class Maken(PaginaTest):
     def test_geen_randkleur_bij_qr_label(self):
         p = self.pagina
         for soort in ['qrlabel', 'kist', 'kist-modern']:   # materiaalbordje modern is altijd DSL blauw
-            p.locator('#makenSoort').select_option(soort)
+            self.kies(soort)
             expect(p.locator('#makenVelden select[name="Randkleur"]')).to_have_count(0)
 
 
-class MakenPast(PaginaTest):
+class MakenPast(MakenHulp, PaginaTest):
     """Laptop met 125% schaal (1536×740 zichtbaar): het formulier past zonder scrollen."""
     viewport = {'width': 1536, 'height': 740}
 
     def test_formulier_past_zonder_scrollen(self):
         p = self.pagina
+        self.kies('leeg-staand')
         maat = p.evaluate("""() => { const m = document.getElementById('maken'); return [m.scrollHeight, m.clientHeight]; }""")
         self.assertLessEqual(maat[0], maat[1] + 1, 'Maken-formulier moet scrollen: %r' % maat)
         expect(p.locator('#makenOpVel')).to_be_in_viewport()
@@ -412,6 +438,7 @@ class MakenPast(PaginaTest):
     def test_focusrand_valt_niet_weg(self):
         """De oranje focusrand (2px + 2px afstand) mag niet door de rand van het formulier worden afgesneden."""
         p = self.pagina
+        self.kies('leeg-staand')
         for veld in ['#makenSoort', '#makenZoek', '#makenVelden input[name="Groot"]', '#makenVelden input[name="Naam"]']:
             p.locator(veld).focus()
             ruimte = p.evaluate("""(sel) => { const m = document.getElementById('maken'), e = document.querySelector(sel);
@@ -422,7 +449,7 @@ class MakenPast(PaginaTest):
     def test_printvel_krijgt_de_ruimte(self):
         """Is het formulier leeg (bijv. na Op printvel), dan krijgt het printvel de hele kolom; nooit zijwaarts scrollen."""
         p = self.pagina
-        p.locator('#makenSoort').select_option('pipe-drape')
+        self.kies('pipe-drape')
         p.locator('#makenVelden input[name="Naam"]').fill('Pipe & drape doek')
         p.locator('#makenVelden input[name="Lengte"]').fill('4')
         p.locator('#makenVelden input[name="Hoogte"]').fill('3')
@@ -437,6 +464,7 @@ class MakenPast(PaginaTest):
 
     def test_voorbeeld_staat_in_voorbeeldkolom(self):
         p = self.pagina
+        self.kies('leeg-staand')
         p.locator('#makenVelden input[name="Naam"]').fill('Kist')
         expect(p.locator('#voorbeeld #makenVoorbeeld .signb')).to_have_count(1)
         p.locator('#tabLijst').click()

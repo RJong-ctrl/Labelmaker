@@ -17,7 +17,7 @@ const norm = (s) => String(s ?? '').toLowerCase().replace(/×/g, 'x').replace(/,
  */
 export function startMaken(root, h) {
   const doel = root.getElementById('maken');
-  const m = { onthouden: {}, artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 };
+  const m = { kiezen: false, onthouden: {}, artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 };
 
   const sjabloonId = () => (m.sjabloonId !== 'auto' ? m.sjabloonId
     : m.artikel ? standaardSjabloon(m.artikel, 'bordje', h.E().regels) : (h.sjabloon('leeg-staand') ? 'leeg-staand' : h.E().sjablonen[0]?.id));
@@ -43,18 +43,68 @@ export function startMaken(root, h) {
       const lijst = h.E().sjablonen.filter(s => s.printer === printer);
       return lijst.length ? `<optgroup label="${esc(titel)}">${lijst.map(s => `<option value="${esc(s.id)}"${s.id === m.sjabloonId ? ' selected' : ''}>${esc(s.naam)}</option>`).join('')}</optgroup>` : '';
     };
-    return `<option value="auto"${m.sjabloonId === 'auto' ? ' selected' : ''}>Automatisch (volgt het artikel)</option>`
+    return (m.artikel ? `<option value="auto"${m.sjabloonId === 'auto' ? ' selected' : ''}>Automatisch (volgt het artikel)</option>` : '')
       + groep('a4', 'A4') + groep('label', h.E().printers?.label?.naam || 'Labelprinter');
   }
 
-  function tekenFormulier() {
-    const a = m.artikel;
-    doel.innerHTML = '<div class="rij2">'
-      + '<div class="zoeken"><label class="veld"><span>Artikel opzoeken <small>(optioneel)</small></span>'
+  // Beginscherm: tegels met de sjablonen (en bovenaan zoeken/scannen). Een tegel of een artikel opent het formulier.
+  const opStart = () => m.kiezen || (!m.artikel && m.sjabloonId === 'auto' && !m.vanRij);
+
+  function zoekveld() {
+    return '<div class="zoeken"><label class="veld"><span>Artikel opzoeken of scannen <small>(optioneel)</small></span>'
       + '<input type="search" id="makenZoek" placeholder="Naam, code of QR — of scan" autocomplete="off"></label>'
-      + '<ul id="makenTreffers" class="treffers" role="listbox" aria-label="Gevonden artikelen"></ul></div>'
-      + `<label class="veld"><span>Soort</span><select id="makenSoort">${soortOpties()}</select></label></div>`
-      + (a ? `<div id="makenArtikel" class="gekoppeld"><b>${esc(a.naam)}</b><span class="hint">${esc(a.code || '')}</span><button type="button" class="klein" id="makenLos" aria-label="Artikel loskoppelen">×</button></div>` : '<div id="makenArtikel" hidden></div>')
+      + '<ul id="makenTreffers" class="treffers" role="listbox" aria-label="Gevonden artikelen"></ul></div>';
+  }
+  const artikelChip = (a) => (a ? `<div id="makenArtikel" class="gekoppeld"><b>${esc(a.naam)}</b><span class="hint">${esc(a.code || '')}</span><button type="button" class="klein" id="makenLos" aria-label="Artikel loskoppelen">×</button></div>` : '<div id="makenArtikel" hidden></div>');
+
+  function tekenTegels() {
+    const groep = (printer, titel) => {
+      const lijst = h.E().sjablonen.filter(s => s.printer === printer);
+      return lijst.length ? `<h3 class="tegelkop">${esc(titel)}</h3><div class="tegels">${lijst.map(s => `<button type="button" class="tegel" data-tegel="${esc(s.id)}"><span class="duim" data-duim="${esc(s.id)}"></span><span class="tnaam">${esc(s.naam)}</span></button>`).join('')}</div>` : '';
+    };
+    doel.innerHTML = zoekveld() + artikelChip(m.artikel)
+      + `<div id="makenTegels"><p class="vraag">Wat wil je maken?</p>`
+      + groep('a4', 'Bordjes en stroken (A4)') + groep('label', `Labels (${h.E().printers?.label?.naam || 'labelprinter'})`) + '</div>';
+    tekenDuimen();
+    tekenVoorbeeld();
+  }
+
+  // Kleine voorbeelden op de tegels (één keer per sjabloon, daarna uit het geheugen).
+  const duimen = new Map();
+  async function tekenDuimen() {
+    const voorbeeld = { ...LEEG, naam: 'Voorbeeld', code: 'AB1234', locatie: 'J-2-1', qr: 'voorbeeld' };
+    for (const vak of root.querySelectorAll('#makenTegels [data-duim]')) {
+      const sj = h.sjabloon(vak.dataset.duim);
+      if (!sj) continue;
+      const sleutel = JSON.stringify(sj) + JSON.stringify(h.E().huisstijl);
+      const s = Math.min(58 / (sj.formaat.b * PX), 42 / (sj.formaat.h * PX));
+      const kader = document.createElement('div');
+      kader.className = 'vb';
+      kader.style.width = (sj.formaat.b * PX * s).toFixed(1) + 'px';
+      kader.style.height = (sj.formaat.h * PX * s).toFixed(1) + 'px';
+      let el;
+      if (duimen.get(sj.id)?.sleutel === sleutel) { kader.innerHTML = duimen.get(sj.id).html; el = kader.firstElementChild; }
+      else {
+        el = teken(vul(sj, voorbeeld, {}, 'voorbeeld'), h.E().huisstijl);
+        el.style.transform = `scale(${s})`;
+        el.style.transformOrigin = '0 0';
+        kader.appendChild(el);
+      }
+      vak.replaceChildren(kader);
+      if (duimen.get(sj.id)?.sleutel !== sleutel) {
+        await pasAan(el);
+        duimen.set(sj.id, { sleutel, html: kader.innerHTML });
+      }
+    }
+  }
+
+  function tekenFormulier() {
+    if (opStart()) { tekenTegels(); return; }
+    const a = m.artikel;
+    doel.innerHTML = zoekveld()
+      + `<div class="makenkop"><button type="button" id="makenTerug" class="klein">← Ander sjabloon</button>`
+      + `<label class="veld"><span class="bh-sr">Sjabloon</span><select id="makenSoort" aria-label="Sjabloon">${soortOpties()}</select></label></div>`
+      + artikelChip(a)
       + '<div id="makenVelden" class="velden"></div>'
       + '<div class="knoppenrij"><label class="vink"><input type="checkbox" id="makenBewaar"> Bewaren onder Losse items</label>'
       + `<button type="button" id="makenLeeg">Leegmaken</button><button type="button" id="makenOpVel" class="primary">${m.vanRij ? 'Bijwerken' : 'Op printvel'}</button></div>`;
@@ -103,7 +153,7 @@ export function startMaken(root, h) {
     const vak = root.getElementById('makenVoorbeeld');
     if (!sj || !vak) return;
     // Leeg formulier: geen voorbeeld, dan krijgt het printvel de hele kolom.
-    const leeg = !m.artikel && m.sjabloonId === 'auto' && ![...m.bewerkt].some(k => String(m.waarden[k] ?? '').trim()) && !(m.qrBewerkt && m.qr);
+    const leeg = opStart() || (!m.artikel && ![...m.bewerkt].some(k => String(m.waarden[k] ?? '').trim()) && !(m.qrBewerkt && m.qr));
     const kader = root.getElementById('makenVak');
     if (kader) kader.dataset.leeg = leeg ? '1' : '';
     const inhoud = vul(sj, basisArtikel(), overrides(), qrWaarde());
@@ -145,8 +195,9 @@ export function startMaken(root, h) {
     m.bewerkt.clear(); m.waarden = {}; m.onthouden = {};
     m.qrBewerkt = !!exemplaar; m.qr = exemplaar || '';
     m.perExemplaar = false;
+    m.kiezen = false;
     tekenFormulier();
-    root.getElementById('makenOpVel').focus();
+    root.getElementById('makenOpVel')?.focus();
   }
   /** Scan of exacte QR/code: artikel koppelen. Geeft true als het lukte. */
   function scan(tekst) {
@@ -157,8 +208,9 @@ export function startMaken(root, h) {
     return true;
   }
 
-  function reset() {
-    Object.assign(m, { onthouden: {}, artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 });
+  /** Leeg formulier. behoud = id van het sjabloon dat open blijft (na Op printvel: verder met hetzelfde soort). */
+  function reset(behoud = 'auto') {
+    Object.assign(m, { kiezen: false, onthouden: {}, artikel: null, sjabloonId: behoud, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 });
     tekenFormulier();
     root.getElementById('makenZoek')?.focus();
   }
@@ -213,13 +265,14 @@ export function startMaken(root, h) {
     h.naarPrinter(sj.printer);
     h.tekenAlles();
     h.melding(m.vanRij ? 'Bijgewerkt op het printvel.' : `Op het printvel gezet${bewaar ? ' en bewaard onder Losse items' : ''}.`);
-    reset();
+    // Zelf gekozen sjabloon blijft open voor het volgende; na een artikel of Bijwerken terug naar de tegels.
+    reset(!m.vanRij && !m.artikel && m.sjabloonId !== 'auto' ? m.sjabloonId : 'auto');
   }
 
   /** Een regel van het printvel openen om aan te passen. */
   function laad(item, printer, index) {
     const a = h.perId().get(item.artikel);
-    Object.assign(m, { onthouden: {}, artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, perExemplaar: false, vanRij: { printer, index }, aantal: item.aantal || 1 });
+    Object.assign(m, { kiezen: false, onthouden: {}, artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, perExemplaar: false, vanRij: { printer, index }, aantal: item.aantal || 1 });
     if (a?.los) {
       // los item: bronartikel (als dat er nog is) met de opgeslagen wijzigingen
       const bron = a.bron ? h.perId().get(a.bron) : null;
@@ -267,8 +320,16 @@ export function startMaken(root, h) {
   doel.addEventListener('click', (e) => {
     const li = e.target.closest('#makenTreffers li');
     if (li) { koppel(h.perId().get(li.dataset.id)); return; }
+    const tegel = e.target.closest('[data-tegel]');
+    if (tegel) {
+      m.sjabloonId = tegel.dataset.tegel; m.kiezen = false;
+      tekenFormulier();
+      root.querySelector('#makenVelden input, #makenVelden textarea, #makenVelden select')?.focus();
+      return;
+    }
+    if (e.target.closest('#makenTerug')) { m.kiezen = true; m.sjabloonId = 'auto'; m.bewerkt.clear(); m.waarden = {}; tekenFormulier(); return; }
     if (e.target.closest('#makenLos')) { m.artikel = null; m.bewerkt.clear(); m.waarden = {}; m.onthouden = {}; m.qrBewerkt = false; tekenFormulier(); return; }
-    if (e.target.closest('#makenLeeg')) { reset(); return; }
+    if (e.target.closest('#makenLeeg')) { reset(m.artikel ? 'auto' : m.sjabloonId); return; }
     if (e.target.closest('#makenOpVel')) opVel().catch(err => h.melding('Op het printvel zetten mislukt: ' + err.message, true));
   });
 

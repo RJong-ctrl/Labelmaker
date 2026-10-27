@@ -105,6 +105,17 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 .lijst .bewerk{flex:0 0 auto}
 
 /* ---------- maken ---------- */
+.maken .vraag{margin:4px 0 0;font-weight:700;font-size:15px}
+.maken .tegelkop{margin:6px 0 2px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.maken .tegels{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.maken .tegel{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;min-height:78px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink);cursor:pointer;text-align:center;font:inherit;font-size:11.5px;line-height:1.15}
+.maken .tegel:hover,.maken .tegel:focus-visible{border-color:var(--accent)}
+.maken .tegel .duim{height:44px;display:flex;align-items:center;justify-content:center}
+.maken .tegel .duim .vb{box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none}
+.maken .tegel .tnaam{font-weight:600}
+.maken .makenkop{display:flex;align-items:center;gap:8px}
+.maken .makenkop .veld{flex:1 1 auto}
+.maken .makenkop button{flex:0 0 auto;white-space:nowrap}
 /* ruimte rondom zodat de focusrand (2px + 2px) niet wordt afgesneden */
 .maken{overflow:auto;gap:8px;padding:5px;margin:-5px}
 .maken>*{flex-shrink:0}
