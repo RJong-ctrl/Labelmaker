@@ -299,6 +299,34 @@ class Maken(PaginaTest):
         expect(p.locator('#makenVelden input[name="__qr"]')).to_have_value('1013368')
         expect(p.locator('#makenVoorbeeld .signb.kist .kt')).to_have_text(['Shure IEM PSM900 P9T'])
 
+    def test_extra_inhoud_onthouden_per_kisttype(self):
+        """Wat niet in de export staat (bulk) vul je één keer aan; het wordt onthouden voor dat type kist."""
+        p = self.pagina
+        zet = """async () => { const { openOpslag } = await import('./js/opslag.js'); const o = await openOpslag('dsl');
+          await o.vervangAlle('artikelen', [{ id: '*GE2162', waarde: { id: '*GE2162', naam: 'Martin Audio 2x DD6 Speaker [Case]', code: '*GE2162', qr: '1016954',
+            exemplaren: ['*GE2162-01', '*GE2162-02'], pad: 'Materialen / Geluid', map: 'Geluid', locatie: '', soort: 'serie', type: 'Combinatie', combinatie: true, aantal: 2,
+            kisten: { '*GE2162-01': { nr: 'DSL01', inhoud: '2 Martin Audio DD6', gewicht: '27,34' }, '*GE2162-02': { nr: 'DSL02', inhoud: '2 Martin Audio DD6', gewicht: '' } } } }]); }"""
+        p.evaluate(zet)
+        p.reload()
+        p.wait_for_selector('body[data-klaar="1"]')
+        p.locator('#makenZoek').fill('DD6')
+        p.locator('#makenTreffers li').first.click()
+        extra = p.locator('#makenVelden textarea[name="Extra inhoud"]')
+        extra.fill('2 Speakon kabel 10m\n1 Regenhoes')
+        extra.blur()
+        expect(p.locator('#makenVoorbeeld .signb.kist .kt')).to_have_text(['Martin Audio DD6', 'Speakon kabel 10m', 'Regenhoes'])
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        self.assertEqual(self.losse([]), [])                 # gewone artikelregel, geen eigen versie
+        # later, ander exemplaar: de aanvulling staat er al
+        p.reload()
+        p.wait_for_selector('body[data-klaar="1"]')
+        p.locator('#makenZoek').fill('*GE2162-02')
+        p.locator('#makenZoek').press('Enter')
+        expect(p.locator('#makenVelden textarea[name="Extra inhoud"]')).to_have_value('2 Speakon kabel 10m\n1 Regenhoes')
+        expect(p.locator('#makenVoorbeeld .signb.kist .kt')).to_have_text(['Martin Audio DD6', 'Speakon kabel 10m', 'Regenhoes'])
+        self.assertEqual(self.fouten, [])
+
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
         p = self.pagina

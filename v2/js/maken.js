@@ -17,7 +17,7 @@ const norm = (s) => String(s ?? '').toLowerCase().replace(/×/g, 'x').replace(/,
  */
 export function startMaken(root, h) {
   const doel = root.getElementById('maken');
-  const m = { artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 };
+  const m = { onthouden: {}, artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 };
 
   const sjabloonId = () => (m.sjabloonId !== 'auto' ? m.sjabloonId
     : m.artikel ? standaardSjabloon(m.artikel, 'bordje', h.E().regels) : (h.sjabloon('leeg-staand') ? 'leeg-staand' : h.E().sjablonen[0]?.id));
@@ -25,10 +25,13 @@ export function startMaken(root, h) {
   const basisArtikel = () => m.artikel || LEEG;
   const artikelAanv = () => (m.artikel ? h.E().aanvullingen[m.artikel.id] || {} : {});
   const overrides = () => {
-    const o = { ...artikelAanv() };
+    const o = { ...artikelAanv(), ...m.onthouden };
     for (const k of m.bewerkt) o[k] = m.waarden[k] ?? '';
     return o;
   };
+  // Velden die per artikel onthouden worden (bijv. extra inhoud van een kist): geen eigen versie,
+  // maar een aanvulling op het artikel zelf.
+  const onthoudVeld = (naam) => !!m.artikel && !m.artikel.los && !!huidigSjabloon()?.velden?.some(v => v.naam === naam && v.onthouden);
   // Materiaalbordje met bekende kisten: standaard de QR van de eerste kist (die past bij de inhoud).
   const kistQr = () => (huidigSjabloon()?.velden?.some(v => v.herkomst?.type === 'exemplaar') ? Object.keys(m.artikel?.kisten || {})[0] : '');
   const qrWaarde = () => (m.qrBewerkt ? m.qr : (kistQr() || m.artikel?.qr || m.artikel?.exemplaren?.[0] || ''));
@@ -62,9 +65,10 @@ export function startMaken(root, h) {
     const sj = huidigSjabloon();
     const art = basisArtikel(), o = overrides();
     const velden = (sj?.velden || []).map(v => {
-      const waarde = m.bewerkt.has(v.naam) ? (m.waarden[v.naam] ?? '') : veldwaarde(v, art, artikelAanv(), qrWaarde());
+      const waarde = m.bewerkt.has(v.naam) ? (m.waarden[v.naam] ?? '')
+        : Object.hasOwn(m.onthouden, v.naam) ? m.onthouden[v.naam] : veldwaarde(v, art, artikelAanv(), qrWaarde());
       const vorm = {
-        ...v, verplicht: false, bron: m.artikel ? (BRON[v.herkomst.type] || '') : '',
+        ...v, verplicht: false, bron: m.artikel ? (v.onthouden && !m.artikel.los ? 'onthouden voor dit artikel' : (BRON[v.herkomst.type] || '')) : '',
         ...(v.herkomst.patroon === 'kabel' ? { keuzes: [{ waarde: 'ja', tekst: 'Ja' }, { waarde: '', tekst: 'Nee' }] } : {}),
       };
       const html = veldInvoer(vorm, waarde, { verplicht: false });
@@ -138,7 +142,7 @@ export function startMaken(root, h) {
   }
   function koppel(a, exemplaar = null) {
     m.artikel = a;
-    m.bewerkt.clear(); m.waarden = {};
+    m.bewerkt.clear(); m.waarden = {}; m.onthouden = {};
     m.qrBewerkt = !!exemplaar; m.qr = exemplaar || '';
     m.perExemplaar = false;
     tekenFormulier();
@@ -154,13 +158,24 @@ export function startMaken(root, h) {
   }
 
   function reset() {
-    Object.assign(m, { artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 });
+    Object.assign(m, { onthouden: {}, artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 });
     tekenFormulier();
     root.getElementById('makenZoek')?.focus();
   }
 
+  async function bewaarOnthouden(naam) {
+    if (!m.artikel || !Object.hasOwn(m.onthouden, naam)) return;
+    const waarde = String(m.onthouden[naam] ?? '').trim();
+    const huidig = { ...artikelAanv() };
+    if (waarde) huidig[naam] = waarde; else delete huidig[naam];
+    await h.model.vervangAanvulling(m.artikel.id, huidig);
+    delete m.onthouden[naam];
+    tekenVoorbeeld();
+  }
+
   // ---------- op printvel ----------
   async function opVel() {
+    for (const naam of Object.keys(m.onthouden)) await bewaarOnthouden(naam);
     const sj = huidigSjabloon();
     if (!sj) return;
     const art = basisArtikel(), o = overrides();
@@ -204,7 +219,7 @@ export function startMaken(root, h) {
   /** Een regel van het printvel openen om aan te passen. */
   function laad(item, printer, index) {
     const a = h.perId().get(item.artikel);
-    Object.assign(m, { artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, perExemplaar: false, vanRij: { printer, index }, aantal: item.aantal || 1 });
+    Object.assign(m, { onthouden: {}, artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, perExemplaar: false, vanRij: { printer, index }, aantal: item.aantal || 1 });
     if (a?.los) {
       // los item: bronartikel (als dat er nog is) met de opgeslagen wijzigingen
       const bron = a.bron ? h.perId().get(a.bron) : null;
@@ -229,6 +244,7 @@ export function startMaken(root, h) {
     if (t.name === '__aantal') { m.aantal = Math.max(1, parseInt(t.value, 10) || 1); return; }
     if (!t.name) return;
     if (t.name === '__qr') { m.qr = t.value.trim(); m.qrBewerkt = true; }
+    else if (onthoudVeld(t.name)) m.onthouden[t.name] = t.value;
     else { m.waarden[t.name] = t.value; m.bewerkt.add(t.name); }
     clearTimeout(voorbeeldTimer);
     voorbeeldTimer = setTimeout(tekenVoorbeeld, 150);
@@ -237,6 +253,7 @@ export function startMaken(root, h) {
     const t = e.target;
     if (t.id === 'makenSoort') { m.sjabloonId = t.value; tekenVelden(); return; }
     if (t.id === 'makenPerEx') { m.perExemplaar = t.checked; return; }
+    if (t.name && onthoudVeld(t.name)) { bewaarOnthouden(t.name); return; }
     if (t.tagName === 'SELECT' && t.name) { m.waarden[t.name] = t.value; m.bewerkt.add(t.name); tekenVoorbeeld(); }
   });
   doel.addEventListener('keydown', (e) => {
@@ -250,7 +267,7 @@ export function startMaken(root, h) {
   doel.addEventListener('click', (e) => {
     const li = e.target.closest('#makenTreffers li');
     if (li) { koppel(h.perId().get(li.dataset.id)); return; }
-    if (e.target.closest('#makenLos')) { m.artikel = null; m.bewerkt.clear(); m.waarden = {}; m.qrBewerkt = false; tekenFormulier(); return; }
+    if (e.target.closest('#makenLos')) { m.artikel = null; m.bewerkt.clear(); m.waarden = {}; m.onthouden = {}; m.qrBewerkt = false; tekenFormulier(); return; }
     if (e.target.closest('#makenLeeg')) { reset(); return; }
     if (e.target.closest('#makenOpVel')) opVel().catch(err => h.melding('Op het printvel zetten mislukt: ' + err.message, true));
   });

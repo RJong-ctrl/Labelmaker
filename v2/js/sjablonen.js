@@ -71,8 +71,10 @@ export const wandbord = (id, naam, b, h) => ({
 export const kistbordje = (id, naam, opmaak = 'kist') => ({
   ...basis, id, naam, printer: 'a4', opmaak, formaat: { b: 194, h: 136 }, gat: false, voet: true,
   velden: [kolom('Naam', 'naam', true), uitKist('Code', 'nr', 'code'),
-    uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }), uitKist('Inhoud', 'inhoud', '', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' })],
-  lijstVeld: 'Inhoud',
+    uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }), uitKist('Inhoud', 'inhoud', '', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' }),
+    // Wat niet in de export staat (bulk: kabels, flightcase-inleg): één keer aanvullen, onthouden per type kist.
+    aanvul('Extra inhoud', { meerregelig: true, onthouden: true, plaatshouder: 'Wat er verder in zit, één per regel (2 Speakon kabel 10m)' })],
+  lijstVeld: ['Inhoud', 'Extra inhoud'],
   plekken: { ...leeg, titel: [v('Naam')], groot: [v('Code')], onder: [v('Code')] },
   // Vaste kleur: altijd DSL blauw (een gekozen randkleur telt hier niet).
   kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb', vast: true } },
@@ -215,7 +217,7 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     voet: !!sjabloon.voet,
     logoBoven: !!sjabloon.logoBoven,
     waarden: w,
-    lijst: sjabloon.lijstVeld ? lijstUit(w[sjabloon.lijstVeld]) : [],
+    lijst: [].concat(sjabloon.lijstVeld || []).flatMap(naam => lijstUit(w[naam])),
   };
 }
 

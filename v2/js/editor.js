@@ -275,7 +275,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     for (const k of ['rand', 'label']) if (s.kleuren[k]) s.kleuren[k].sleutel = vervang(s.kleuren[k].sleutel);
     for (const v of s.velden) if (v.alleenAls === oud) v.alleenAls = nieuw;
     if (s.regelsVeld === oud) s.regelsVeld = nieuw;
-    if (s.lijstVeld === oud) s.lijstVeld = nieuw;
+    if (s.lijstVeld) s.lijstVeld = Array.isArray(s.lijstVeld) ? s.lijstVeld.map(n => (n === oud ? nieuw : n)) : (s.lijstVeld === oud ? nieuw : s.lijstVeld);
   }
 
   function zetVeldExtra(v, tekst) {
@@ -434,7 +434,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
       s.velden.splice(i, 1);
       for (const v of s.velden) if (v.alleenAls === weg) delete v.alleenAls;
       if (s.regelsVeld === weg) delete s.regelsVeld;
-      if (s.lijstVeld === weg) delete s.lijstVeld;
+      if (Array.isArray(s.lijstVeld)) s.lijstVeld = s.lijstVeld.filter(n => n !== weg); else if (s.lijstVeld === weg) delete s.lijstVeld;
       herteken('velden', 'plekken', 'kleuren');
       $('[data-actie="veld-erbij"]').focus();
     } else if (a === 'eig-erbij') {
