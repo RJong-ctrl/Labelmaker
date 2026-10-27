@@ -84,7 +84,7 @@ function bordje(i, hs) {
   if (wand) {
     // Wandbord: de locatie zo groot mogelijk, eronder wat er ligt, QR van de locatie rechtsonder.
     const tH = H * (staand ? 0.34 : 0.4);
-    main = vak('t titel wrap', tH * PT * 0.95, titel, `height:${mm(tH)};flex:0 0 auto`, 20, 2)
+    main = vak('t titel wrap wt', tH * PT * 0.95, titel, `height:${mm(tH)};flex:0 0 auto`, 20, 2)
       + `<div style="height:${mm(3 * f)};flex:0 0 auto"></div>`;
     const inhoud = i.onder ? vak('w-inhoud wrap', H * (staand ? 0.06 : 0.08) * PT, esc(i.onder), 'flex:1 1 0;min-height:0;justify-content:flex-start', 8, 3) : '<div style="flex:1 1 0"></div>';
     // Staand: inhoud en daaronder de QR; liggend: inhoud links, QR rechts ernaast.
@@ -254,6 +254,8 @@ export function teken(inhoud, huisstijl = HUISSTIJL_DSL) {
       : inhoud.opmaak === 'kist' ? kist(inhoud, hs)
         : bordje(inhoud, hs);
   el.dataset.lettertype = hs.lettertype;
+  // Titel die met een J begint: ruimte voor de uitstekende haak (anders afgeknipt).
+  if (el.classList.contains('signb')) for (const t of el.querySelectorAll('.t')) if (/^\s*J/.test(t.textContent)) t.classList.add('j');
   return el;
 }
 

@@ -53,6 +53,8 @@
 .signb .fsep{display:inline-block;width:.2mm;height:.85em;background:#9a9a9a;margin:0 .6em;vertical-align:-.08em}
 
 /* wandbord */
+/* De J in Futura/Jost steekt met zijn haak ver links en onder uit: titel die met J begint krijgt ruimte. */
+.signb .t.j>span{padding:0 0 .2em .26em}
 .signb .w-inhoud>span{white-space:normal;font-weight:600;line-height:1.1}
 
 /* materiaalbordje kist: zwarte lijnen (achtergrond) tussen witte vakken */

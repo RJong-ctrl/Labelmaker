@@ -182,6 +182,28 @@ class Maken(PaginaTest):
         expect(b.locator('.qc')).to_have_text('kist-1')
 
 
+    def test_wandbord_letters_niet_afgekapt(self):
+        """De haak van de J steekt links en onder uit: geen inkt mag tegen de rand van het titelvak komen."""
+        p = self.pagina
+        for soort, veld in [('wandbord-liggend', 'Locatie'), ('wandbord-staand', 'Locatie'), ('bordje-staand', 'Naam'), ('leeg-liggend', 'Naam')]:
+            p.locator('#makenSoort').select_option(soort)
+            p.locator('#makenVelden input[name="%s"]' % veld).fill('J-2')
+            vak = p.locator('#makenVoorbeeld .signb .titel')
+            expect(vak).to_have_text('J-2')
+            p.wait_for_timeout(500)
+            # Vergelijk met dezelfde titel zonder enige afknipping: er mag niets verschillen.
+            r = vak.bounding_box()
+            bm = p.locator('#makenVoorbeeld .signb .bm').bounding_box()   # tekstgebied, rechts van de kleurband
+            m = 40
+            sb = p.locator('#makenVoorbeeld .signb').bounding_box()
+            gebied = {'x': bm['x'], 'y': r['y'], 'width': min(r['x'] + r['width'] + m, sb['x'] + sb['width'] - 3) - bm['x'], 'height': r['height'] + m}
+            nu = p.screenshot(clip=gebied)
+            vak.evaluate("e => { for (let x = e; x && !x.classList.contains('voorbeeld-maken'); x = x.parentElement) x.style.setProperty('overflow', 'visible', 'important'); }")
+            vrij = p.screenshot(clip=gebied)
+            a1 = cv2.imdecode(np.frombuffer(nu, np.uint8), cv2.IMREAD_GRAYSCALE)
+            a2 = cv2.imdecode(np.frombuffer(vrij, np.uint8), cv2.IMREAD_GRAYSCALE)
+            self.assertLess(int(cv2.absdiff(a1, a2).max()), 60, soort + ': letters afgeknipt')
+
     def test_wandbord_a4(self):
         p = self.pagina
         p.locator('#makenSoort').select_option('wandbord-liggend')
