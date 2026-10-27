@@ -243,6 +243,10 @@ class Maken(PaginaTest):
         # opbouw zoals het oude bordje: logo, vak voor de projectsticker, QR, zwarte voet
         for deel in ['.klogo', '.ksticker', '.kqr', '.kvoet']:
             expect(k.locator(deel)).to_have_count(1)
+        # naam bovenaan op de plek van de locatie; geen locatie meer
+        expect(k.locator('.kstapel')).to_contain_text('Naam:')
+        expect(k.locator('.kstapel')).to_contain_text('DMX kit groot [Case]')
+        expect(k).not_to_contain_text('Locatie')
         p.locator('#makenVelden input[name="__aantal"]').fill('2')
         p.locator('#makenOpVel').click()
         expect(p.locator('#vellen .a4')).to_have_count(1)

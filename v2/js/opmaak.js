@@ -184,15 +184,15 @@ function kist(i, hs) {
   el.style.width = W + 'mm';
   el.style.height = H + 'mm';
   el.style.setProperty('--l', mm(L));
-  // Kop zoals het oude bordje: logo, twee regels (vroeger klant en productie, nu locatie en gewicht), QR.
+  // Kop zoals het oude bordje: logo, twee regels (vroeger klant en productie, nu naam en gewicht), QR.
   // Rechts naast de inhoud het vak voor de projectsticker (Citizen-label 76 × 56 mm).
   el.innerHTML =
     `<div class="krij" style="height:${mm(kopH)};grid-template-columns:${mm(kopH * 1.25)} 1fr ${mm(kopH)}">`
     + `<div class="kc klogo">${hs.logo ? `<img alt="" src="${esc(hs.logo)}">` : ''}</div>`
-    + `<div class="kstapel"><div class="kc">${veld('Locatie', w.Locatie, 13)}</div><div class="kc">${veld('Gewicht', gw, 13)}</div></div>`
+    + `<div class="kstapel"><div class="kc">${veld('Naam', i.titel, 13)}</div><div class="kc">${veld('Gewicht', gw, 13)}</div></div>`
     + `<div class="kc kqr">${i.qr ? qrOfMelding(i.qr, qs) : ''}</div></div>`
     + `<div class="krij kmidden" style="grid-template-columns:1fr ${mm(st.b + 4)}">`
-    + `<div class="kc kinhoud"><div class="kkop"><span class="kl">Inhoud:</span>${vak('kn', 15, esc(i.titel), 'flex:1 1 auto', 7)}<span class="kcode">${esc(i.onder)}</span></div>`
+    + `<div class="kc kinhoud"><div class="kkop"><span class="kl">Inhoud:</span><span style="flex:1 1 auto"></span><span class="kcode">${esc(i.onder)}</span></div>`
     + (regels ? vak('klijst', 12, `<div class="kgrid${lijst.length > 13 ? ' twee' : ''}">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4.5) : '')
     + '</div>'
     + `<div class="kc kstickervak"><div class="ksticker" style="width:${mm(st.b)};height:${mm(st.h)}">Projectsticker</div></div></div>`
