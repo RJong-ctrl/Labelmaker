@@ -190,7 +190,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     return `<tr class="kleurrij" data-i="${i}">`
       + `<td><input type="text" data-pad="kleur.${k}.${i}.waarde" value="${esc(r.waarde)}" list="ed${uid}-w-${k}" aria-label="Waarde" autocomplete="off"></td>`
       + `<td class="kleurcel"><select data-pad="kleur.${k}.${i}.naam" aria-label="Kleur">${opt('', 'Kies…', !keuze)}${Object.keys(KLEURNAMEN).map(n => opt(n, n, keuze === n)).join('')}${opt('eigen', 'Eigen kleur', keuze === 'eigen')}</select>`
-      + `<input type="color" data-pad="kleur.${k}.${i}.kiezer" value="${esc(r.kleur || '#7f7f7f')}" aria-label="Kleur kiezen">`
+      + `<input type="color" data-pad="kleur.${k}.${i}.kiezer" value="${esc(r.kleur || '#7f7f7f')}" list="ed${uid}-kleuren" aria-label="Kleur kiezen">`
       + `<input type="text" class="hex" data-pad="kleur.${k}.${i}.hex" value="${esc(r.invoer ?? r.kleur)}" aria-label="Kleurcode" placeholder="#rrggbb" autocomplete="off" spellcheck="false"></td>`
       + `<td><button type="button" class="klein weg" data-actie="kleur-weg" data-regel="${k}" data-i="${i}" aria-label="Waarde ${esc(r.waarde)} verwijderen" title="Verwijderen">×</button></td></tr>`;
   }
@@ -202,6 +202,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
       + `<table class="kleurtabel"><thead><tr><th scope="col">Waarde</th><th scope="col">Kleur</th><th scope="col"><span class="bh-sr">Verwijderen</span></th></tr></thead>`
       + `<tbody>${rijen[k].map((r, i) => htmlKleurRij(k, r, i)).join('')}</tbody></table>`
       + `<datalist id="ed${uid}-w-${k}"></datalist>`
+      + (k === 'rand' ? `<datalist id="ed${uid}-kleuren">${Object.values(KLEURNAMEN).map(h => `<option value="${esc(h)}"></option>`).join('')}</datalist>` : '')
       + `<div class="acties"><button type="button" data-actie="kleur-erbij" data-regel="${k}">Waarde toevoegen</button></div>`
       + `<p class="hint" data-zonder="${k}"></p><p class="fout" data-melding="kleur.${k}" role="alert"></p></div>`;
   }

@@ -344,6 +344,18 @@ class Editor(Hulp):
         expect(dubbel).to_have_value('Doorsnede')
         self.assertEqual(self.fouten, [])
 
+    def test_dsl_blauw_in_kleurkeuze(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:gitterbox')
+        rij = self.kleurrand().locator('tr.kleurrij').first
+        rij.locator('select[data-pad$=".naam"]').select_option('DSL blauw')
+        expect(rij.locator('input[type=color]')).to_have_value('#005abb')
+        # ook als voorkeuze in de kleurkiezer zelf
+        lijst = rij.locator('input[type=color]').get_attribute('list')
+        self.assertIn('#005abb', p.locator('#' + lijst + ' option').evaluate_all('l => l.map(o => o.value)'))
+
     def test_kleur_alleen_hex(self):
         p = self.pagina
         self.maak_model()

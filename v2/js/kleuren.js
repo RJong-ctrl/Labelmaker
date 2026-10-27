@@ -3,7 +3,15 @@
 export const KLEURNAMEN = {
   geel: '#ffff00', groen: '#00b050', blauw: '#0050ff', lichtblauw: '#00b0f0', rood: '#ff0000',
   paars: '#7030a0', wit: '#ffffff', oranje: '#ff8c00', magenta: '#c000c0', grijs: '#7f7f7f',
+  'DSL blauw': '#005abb',
 };
+
+/** Kleur bij een naam, ongeacht hoofdletters en spaties ('dsl blauw' = 'DSL blauw'). */
+export function kleurBijNaam(naam) {
+  const k = sleutel(naam);
+  const gevonden = Object.keys(KLEURNAMEN).find(n => sleutel(n) === k);
+  return gevonden ? KLEURNAMEN[gevonden] : null;
+}
 export const ONBEKEND = '#7f7f7f';
 
 const rgb = (hex) => {

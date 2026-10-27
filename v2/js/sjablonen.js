@@ -2,7 +2,7 @@
 // vul() maakt van sjabloon + artikel + aanvullingen een Inhoud die opmaak.js tekent.
 
 import { PATRONEN } from './afleiden.js';
-import { sleutel, ONBEKEND, KLEURNAMEN } from './kleuren.js';
+import { sleutel, ONBEKEND, kleurBijNaam } from './kleuren.js';
 
 const kolom = (naam, k, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'kolom', kolom: k }, verplicht });
 const uitNaam = (naam, patroon, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'naam', patroon }, verplicht });
@@ -38,7 +38,7 @@ export const vrijBordje = (id, naam, opmaak, b, h, extra = {}) => ({
 });
 
 /** Leeg bordje: alles zelf invullen (titel, groot, vrije regels, onderregel, randkleur, QR). */
-export const RANDKLEUREN = ['Geen', 'Geel', 'Groen', 'Blauw', 'Lichtblauw', 'Rood', 'Paars', 'Oranje', 'Magenta', 'Wit'];
+export const RANDKLEUREN = ['Geen', 'DSL blauw', 'Geel', 'Groen', 'Blauw', 'Lichtblauw', 'Rood', 'Paars', 'Oranje', 'Magenta', 'Wit'];
 export const leegBordje = (id, naam, opmaak, b, h) => ({
   ...basis, id, naam, printer: 'a4', opmaak, formaat: { b, h }, gat: true, voet: true,
   velden: [kolom('Naam', 'naam', true),
@@ -50,7 +50,7 @@ export const leegBordje = (id, naam, opmaak, b, h) => ({
   plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], onder: [v('Onderregel')] },
   kleuren: { rand: { sleutel: [v('Randkleur')], waarden: {
     geel: '#ffff00', groen: '#00b050', blauw: '#0050ff', lichtblauw: '#00b0f0', rood: '#ff0000',
-    paars: '#7030a0', oranje: '#ff8c00', magenta: '#c000c0', wit: '#ffffff' } } },
+    paars: '#7030a0', oranje: '#ff8c00', magenta: '#c000c0', wit: '#ffffff', dslblauw: '#005abb' } } },
 });
 
 /** Wandbord A4 voor het magazijn: locatie heel groot, wat er ligt eronder, QR van de locatie.
@@ -170,7 +170,7 @@ function eigenRand(aanvullingen) {
   const k = String(aanvullingen?.Randkleur ?? '').trim();
   if (!k) return null;
   if (sleutel(k) === 'geen') return ONBEKEND;
-  return KLEURNAMEN[sleutel(k)] || geldigeKleur(k);
+  return kleurBijNaam(k) || geldigeKleur(k);
 }
 
 /** Inhoudslijst: 'aantal naam' per regel ('30 kabel', '40× kabel', '2 x kabel'); zonder getal: ['', regel]. */

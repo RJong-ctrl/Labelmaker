@@ -276,3 +276,10 @@ test('wandbord_a5', () => {
   assert.deepEqual(S['wandbord-a5-staand'].formaat, { b: 136, h: 194 });
   assert.equal(vul(S['wandbord-a5-staand'], { ...A.GE9402, locatie: 'J-2-1' }, {}, 'x').titel, 'J-2-1');
 });
+
+test('dsl_blauw_als_kleur', () => {
+  assert.equal(KLEURNAMEN['DSL blauw'], '#005abb');
+  assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: 'DSL blauw' }, 'x').rand, '#005abb');
+  assert.equal(vul(S['leeg-staand'], A.GE9402, { Randkleur: 'DSL blauw' }, 'x').rand, '#005abb');
+  assert.ok(S['leeg-staand'].velden.find(v => v.naam === 'Randkleur').opties.includes('DSL blauw'));
+});
