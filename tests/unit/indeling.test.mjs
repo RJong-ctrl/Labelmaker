@@ -36,3 +36,11 @@ test('verdeel', () => {
   assert.deepEqual(verdeel([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
   assert.deepEqual(verdeel([], 4), []);
 });
+
+test('a4_wandbord_en_kist', () => {
+  assert.equal(a4Indeling(194, 281).posities.length, 1);
+  const l = a4Indeling(281, 194);
+  assert.equal(l.posities.length, 1);
+  assert.equal(l.gedraaid, true);
+  assert.equal(a4Indeling(194, 136).posities.length, 2);   // twee kistbordjes (A5-hoes) per A4
+});

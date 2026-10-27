@@ -66,7 +66,7 @@ test('printvel_en_printlog_via_model', async () => {
 
 test('ander_profiel_andere_standaard', async () => {
   const m = await laadModel(new GeheugenOpslag(), 'thuis', 'basis');
-  assert.deepEqual(m.effectief().sjablonen.map(s => s.id), ['qrlabel', 'locatie', 'leeg-staand', 'leeg-liggend', 'bordje-staand', 'bordje-liggend', 'strook']);
+  assert.deepEqual(m.effectief().sjablonen.map(s => s.id), ['qrlabel', 'locatie', 'leeg-staand', 'leeg-liggend', 'bordje-staand', 'bordje-liggend', 'strook', 'wandbord-staand', 'wandbord-liggend', 'kist']);
 });
 
 test('los_item_weg_ook_aanvulling_weg', async () => {

@@ -35,10 +35,10 @@ test('lokaal_wint_per_veld', () => {
 
 test('sjabloon_lokaal_verwijderd_en_nieuw', () => {
   const l = leeg();
-  l.sjablonen = [{ id: 'pipe-drape', verwijderd: true }, { ...STD.sjablonen[0], id: 'kist', naam: 'Kist' }];
+  l.sjablonen = [{ id: 'pipe-drape', verwijderd: true }, { ...STD.sjablonen[0], id: 'eigen-kist', naam: 'Kist' }];
   const ids = samen(STD, null, l).sjablonen.map(s => s.id);
   assert.ok(!ids.includes('pipe-drape'));
-  assert.equal(ids[ids.length - 1], 'kist');
+  assert.equal(ids[ids.length - 1], 'eigen-kist');
 });
 
 test('nieuwste_artikellijst_wint', () => {

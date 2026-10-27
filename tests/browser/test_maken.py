@@ -87,8 +87,15 @@ class Maken(PaginaTest):
         expect(p.locator('#makenSoort')).to_have_value('auto')
         expect(p.locator('#makenVoorbeeld .signb.staand')).to_have_count(1)
 
-    def losse(self):
-        return self.pagina.evaluate("async () => { const { openOpslag } = await import('./js/opslag.js'); return (await (await openOpslag('dsl')).alle('losse')).map(x => x.id); }")
+    def losse(self, verwacht=None, wacht=5):
+        """Ids van de losse items in de opslag; met verwacht: even wachten tot het opruimen klaar is."""
+        import time
+        eind = time.time() + wacht
+        while True:
+            ids = self.pagina.evaluate("async () => { const { openOpslag } = await import('./js/opslag.js'); return (await (await openOpslag('dsl')).alle('losse')).map(x => x.id); }")
+            if verwacht is None or ids == verwacht or time.time() > eind:
+                return ids
+            self.pagina.wait_for_timeout(100)
 
     def test_gescand_exemplaar_is_gewone_regel(self):
         p = self.pagina
@@ -101,7 +108,7 @@ class Maken(PaginaTest):
         # Kleur ingevuld = eigen versie; zonder wijziging (kleur al bekend) wordt het een gewone regel
         p.locator('#velLeeg').click()
         expect(p.locator('#printA4')).to_have_text('Print 0 op A4')
-        self.assertEqual(self.losse(), [])
+        self.assertEqual(self.losse([]), [])
         p.evaluate("async () => { const { openOpslag } = await import('./js/opslag.js'); await (await openOpslag('dsl')).schrijf('aanvullingen', 'LI8163-B', { Kleur: 'Zwart' }); }")
         p.reload()
         p.locator('#makenZoek').fill('bd6x3b-02')
@@ -109,7 +116,7 @@ class Maken(PaginaTest):
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
         expect(p.locator('#velLijst li').first).to_contain_text('bd6x3b-02')
-        self.assertEqual(self.losse(), [])
+        self.assertEqual(self.losse([]), [])
 
     def test_bijwerken_houdt_aantal(self):
         p = self.pagina
@@ -134,7 +141,7 @@ class Maken(PaginaTest):
         p.locator('#velLijst li').first.get_by_role('button', name='Verwijderen').click()
         expect(p.locator('#printA4')).to_have_text('Print 0 op A4')
         p.wait_for_timeout(300)
-        self.assertEqual(self.losse(), [])
+        self.assertEqual(self.losse([]), [])
 
     def test_soort_kiezen(self):
         p = self.pagina
@@ -174,6 +181,46 @@ class Maken(PaginaTest):
         b = p.locator('#makenVoorbeeld .signb')
         expect(b.locator('.qc')).to_have_text('kist-1')
 
+
+    def test_wandbord_a4(self):
+        p = self.pagina
+        p.locator('#makenSoort').select_option('wandbord-liggend')
+        p.locator('#makenVelden input[name="Locatie"]').fill('J-2')
+        p.locator('#makenVelden input[name="Inhoud"]').fill('Speakon kabels')
+        expect(p.locator('#makenVoorbeeld .signb .titel')).to_have_text('J-2')
+        expect(p.locator('#makenVoorbeeld .signb .qc')).to_have_text('J-2')
+        p.locator('#makenVelden input[name="__aantal"]').fill('2')
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#vellen .a4')).to_have_count(2)           # één wandbord per A4
+        expect(p.locator('#vellen .a4').first.locator('.signb')).to_have_count(1)
+        self.assertEqual(self.fouten, [])
+
+    def test_kistbordje_twee_per_a4(self):
+        p = self.pagina
+        p.locator('#makenSoort').select_option('kist')
+        p.locator('#makenVelden input[name="Naam"]').fill('DMX kit groot [Case]')
+        p.locator('#makenVelden input[name="Gewicht"]').fill('66,20')
+        p.locator('#makenVelden textarea[name="Inhoud"]').fill('30 DMX 3p 1,25m\n2 DMX 3p Afsluiter')
+        k = p.locator('#makenVoorbeeld .signb.kist')
+        expect(k.locator('.kt')).to_have_text(['DMX 3p 1,25m', 'DMX 3p Afsluiter'])
+        expect(k).to_contain_text('66,20 kg')
+        p.locator('#makenVelden input[name="__aantal"]').fill('2')
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#vellen .a4')).to_have_count(1)
+        expect(p.locator('#vellen .a4 .signb.kist')).to_have_count(2)
+        self.assertEqual(self.fouten, [])
+
+    def test_pipe_drape_maat_onder_de_naam(self):
+        p = self.pagina
+        self.inlezen()
+        self.opzoeken('PD5143')
+        expect(p.locator('#makenVelden input[name="Lengte"]')).to_have_value('4')
+        expect(p.locator('#makenVelden input[name="Hoogte"]')).to_have_value('3')
+        p.locator('#makenVelden input[name="Hoogte"]').fill('3,5')
+        b = p.locator('#makenVoorbeeld .signb')
+        expect(b.locator('.groot')).to_have_text('4 × 3,5m')
+        t, g = b.locator('.titel').bounding_box(), b.locator('.groot').bounding_box()
+        self.assertGreaterEqual(g['y'], t['y'] + t['height'] - 1, 'maat staat onder de naam')
 
     def test_randkleur_kiezen_bij_artikel(self):
         p = self.pagina

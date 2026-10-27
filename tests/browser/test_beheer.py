@@ -403,17 +403,17 @@ class Editor(Hulp):
         p.evaluate("""async () => {
             const { DSL_REGELS } = await import('./js/sjablonen.js');
             const s = structuredClone(model.effectief().sjablonen.find(s => s.id === 'bordje-staand'));
-            await model.zetSjabloon({ ...s, id: 'kist', naam: 'Kist' });
+            await model.zetSjabloon({ ...s, id: 'eigenkist', naam: 'Kist' });
             await model.zetPrintvel('a4', [
-                { sjabloon: 'kist', artikel: 'CO1120', qr: 'kenporto-00', aantal: 2 },
+                { sjabloon: 'eigenkist', artikel: 'CO1120', qr: 'kenporto-00', aantal: 2 },
                 { sjabloon: 'gitterbox', artikel: 'GE9402', qr: 'nl4-2.50m', aantal: 1 },
-                { sjabloon: 'kist', artikel: 'GE9391', qr: 'nl8-koppel', aantal: 1 }]);
+                { sjabloon: 'eigenkist', artikel: 'GE9391', qr: 'nl8-koppel', aantal: 1 }]);
             await model.zetPrintvel('label', [{ sjabloon: 'qrlabel', artikel: 'CO1120', qr: 'kenporto-00', aantal: 1 }]);
-            await model.zetInstelling('regels', { bordje: [{ pad: 'Portofoon', sjabloon: 'kist' }, ...DSL_REGELS.bordje],
-                                                  standaard: { ...DSL_REGELS.standaard, bordje: 'kist' } });
+            await model.zetInstelling('regels', { bordje: [{ pad: 'Portofoon', sjabloon: 'eigenkist' }, ...DSL_REGELS.bordje],
+                                                  standaard: { ...DSL_REGELS.standaard, bordje: 'eigenkist' } });
         }""")
         self.start()
-        self.open('sjabloon:kist')
+        self.open('sjabloon:eigenkist')
         f = p.locator('#beheerForm')
         vraag = p.locator('#beheerVraag')
         f.get_by_role('button', name='Verwijderen', exact=True).click()
@@ -422,29 +422,29 @@ class Editor(Hulp):
         expect(vraag).to_contain_text('1 categorie-regel')
         vraag.get_by_role('button', name='Annuleren').click()
         expect(vraag).to_be_hidden()
-        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:kist"]')).to_have_count(1)
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:eigenkist"]')).to_have_count(1)
         f.get_by_role('button', name='Verwijderen', exact=True).click()
         vraag.get_by_role('button', name='Verwijderen', exact=True).click()
         melding = p.locator('#beheerMelding')
         expect(melding).to_contain_text('Sjabloon "Kist" verwijderd')
         expect(melding).to_contain_text('2 regels van het printvel')
         expect(melding).to_contain_text('1 categorie-regel')
-        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:kist"]')).to_have_count(0)
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:eigenkist"]')).to_have_count(0)
         uit = p.evaluate("""async () => {
             const { standaardSjabloon } = await import('./js/sjablonen.js');
             const e = model.effectief();
             return { a4: (await model.printvel('a4')).map(i => i.sjabloon), label: (await model.printvel('label')).length,
                      regels: e.regels.bordje.map(r => r.sjabloon), standaard: e.regels.standaard.bordje,
-                     co: standaardSjabloon(T.A['CO1120'], 'bordje', e.regels), kist: e.sjablonen.some(s => s.id === 'kist'),
+                     co: standaardSjabloon(T.A['CO1120'], 'bordje', e.regels), eigenkist: e.sjablonen.some(s => s.id === 'eigenkist'),
                      wijz: model.wijzigingen().map(w => w.id) };
         }""")
         self.assertEqual(uit['a4'], ['gitterbox'])
         self.assertEqual(uit['label'], 1)
-        self.assertNotIn('kist', uit['regels'])
+        self.assertNotIn('eigenkist', uit['regels'])
         self.assertEqual(uit['standaard'], 'bordje-staand')
         self.assertEqual(uit['co'], 'bordje-staand')
-        self.assertFalse(uit['kist'])
-        self.assertNotIn('kist', uit['wijz'], 'alleen-lokaal sjabloon laat geen "verwijderd" achter')
+        self.assertFalse(uit['eigenkist'])
+        self.assertNotIn('eigenkist', uit['wijz'], 'alleen-lokaal sjabloon laat geen "verwijderd" achter')
         self.assertEqual(self.fouten, [])
 
     def test_dsl_sjabloon_niet_weg_wel_terugzetten(self):
@@ -524,9 +524,9 @@ class Wijzigingen(Hulp):
         self.maak_model()
         p.evaluate("""async () => {
             const e = model.effectief();
-            await model.zetSjabloon({ ...structuredClone(e.sjablonen.find(s => s.id === 'bordje-staand')), id: 'kist', naam: 'Kist' });
+            await model.zetSjabloon({ ...structuredClone(e.sjablonen.find(s => s.id === 'bordje-staand')), id: 'eigenkist', naam: 'Kist' });
             await model.zetSjabloon({ ...structuredClone(e.sjablonen.find(s => s.id === 'gitterbox')), naam: 'Strook anders' });
-            await model.zetPrintvel('a4', [{ sjabloon: 'kist', artikel: 'CO1120', qr: 'kenporto-00', aantal: 1 }]);
+            await model.zetPrintvel('a4', [{ sjabloon: 'eigenkist', artikel: 'CO1120', qr: 'kenporto-00', aantal: 1 }]);
         }""")
         self.start()
         self.open('wijzigingen')
@@ -543,7 +543,7 @@ class Wijzigingen(Hulp):
         vraag.get_by_role('button', name='Weggooien').click()
         expect(rijen).to_have_count(2)
         expect(p.locator('#beheerMelding')).to_contain_text('1 regel van het printvel')
-        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:kist"]')).to_have_count(0)
+        expect(p.locator('#beheerMenu [data-onderdeel="sjabloon:eigenkist"]')).to_have_count(0)
         self.assertEqual(p.evaluate("async () => (await model.printvel('a4')).length"), 0)
         rijen.filter(has_text='Strook anders').get_by_role('button', name='Weggooien').click()
         vraag.get_by_role('button', name='Weggooien').click()

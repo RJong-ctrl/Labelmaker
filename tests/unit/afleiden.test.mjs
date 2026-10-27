@@ -76,6 +76,13 @@ test('kabel', () => tabel(kabel, [
 ]));
 
 test('patronen', () => {
-  assert.deepEqual(Object.keys(PATRONEN).sort(), ['kaal', 'kabel', 'kwaliteit', 'lengte', 'maat', 'polen']);
+  assert.deepEqual(Object.keys(PATRONEN).sort(), ['breedte', 'hoogte', 'kaal', 'kabel', 'kwaliteit', 'lengte', 'maat', 'polen']);
   assert.equal(PATRONEN.lengte('Speakon 4p Verlengkabel 7,5m'), '7,5');
+});
+
+test('maat_breedte_en_hoogte_apart', async () => {
+  const { PATRONEN } = await import('../../v2/js/afleiden.js');
+  assert.equal(PATRONEN.breedte('Backdrop 6 x 3,5m B kwaliteit'), '6');
+  assert.equal(PATRONEN.hoogte('Backdrop 6 x 3,5m B kwaliteit'), '3,5');
+  assert.equal(PATRONEN.breedte('Speakon kabel 10m'), '');
 });

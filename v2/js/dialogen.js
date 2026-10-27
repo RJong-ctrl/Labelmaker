@@ -31,7 +31,7 @@ export function veldInvoer(v, waarde = '', { verplicht = v.verplicht } = {}) {
     invoer = `<select name="${naam}"${req}><option value="">${verplicht ? 'Kies…' : '—'}</option>`
       + v.opties.map(o => `<option${o === waarde ? ' selected' : ''}>${esc(o)}</option>`).join('') + '</select>';
   } else if (v.meerregelig) {
-    invoer = `<textarea name="${naam}" rows="4" placeholder="Kop: waarde (één per regel)"${req}>${w}</textarea>`;
+    invoer = `<textarea name="${naam}" rows="4" placeholder="${esc(v.plaatshouder || 'Kop: waarde (één per regel)')}"${req}>${w}</textarea>`;
   } else {
     invoer = `<input type="text" name="${naam}" value="${w}"${req}>`;
   }

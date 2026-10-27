@@ -53,6 +53,25 @@ export const leegBordje = (id, naam, opmaak, b, h) => ({
     paars: '#7030a0', oranje: '#ff8c00', magenta: '#c000c0', wit: '#ffffff' } } },
 });
 
+/** Wandbord A4 voor het magazijn: locatie heel groot, wat er ligt eronder, QR van de locatie.
+ *  194 × 281 mm (A4 min de printermarge), één per vel. */
+const aanvul = (naam, extra = {}) => ({ naam, soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false, ...extra });
+export const wandbord = (id, naam, b, h) => ({
+  ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b, h }, gat: false, voet: true,
+  velden: [kolom('Locatie', 'locatie', true), aanvul('Inhoud')],
+  plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Inhoud')], qr: [v('Locatie')] },
+});
+
+/** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes): klant, productie, datum, check,
+ *  gewicht, naam en code van de kist en de inhoud (één regel per onderdeel: 'aantal naam'). Twee per A4. */
+export const kistbordje = (id, naam) => ({
+  ...basis, id, naam, printer: 'a4', opmaak: 'kist', formaat: { b: 194, h: 136 }, gat: false, voet: true,
+  velden: [kolom('Naam', 'naam', true), kolom('Code', 'code'), aanvul('Klant'), aanvul('Productie'), aanvul('Datum'), aanvul('Check'),
+    aanvul('Gewicht', { eenheid: 'kg' }), aanvul('Inhoud', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' })],
+  lijstVeld: 'Inhoud',
+  plekken: { ...leeg, titel: [v('Naam')], onder: [v('Code')] },
+});
+
 export const DSL_SJABLONEN = [
   qrlabel('qrlabel', 'QR-label', 56),
   qrlabel('qrlabel-half', 'QR-label half', 28),
@@ -61,22 +80,25 @@ export const DSL_SJABLONEN = [
   {
     ...basis, id: 'backdrop', naam: 'Backdrop', printer: 'a4', opmaak: 'staand', formaat: { b: 74, h: 105 },
     gat: true, voet: true,
-    velden: [uitNaam('Naam', 'kaal', true), uitNaam('Maat', 'maat', true), uitNaam('Kwaliteit', 'kwaliteit'), keuze('Kleur', ['Zwart', 'Wit', 'Rood'])],
-    plekken: { ...leeg, titel: [v('Naam')], groot: [v('Maat'), ' m'], eigenschappen: [{ kop: 'Kwaliteit', waarde: [v('Kwaliteit')] }, { kop: 'Kleur', waarde: [v('Kleur')] }] },
-    kleuren: { rand: { veld: 'Maat', waarden: {} } },
+    velden: [uitNaam('Naam', 'kaal', true), uitNaam('Breedte', 'breedte', true), uitNaam('Hoogte', 'hoogte', true), uitNaam('Kwaliteit', 'kwaliteit'), keuze('Kleur', ['Zwart', 'Wit', 'Rood'])],
+    plekken: { ...leeg, titel: [v('Naam')], groot: [v('Breedte'), ' × ', v('Hoogte'), 'm'], eigenschappen: [{ kop: 'Kwaliteit', waarde: [v('Kwaliteit')] }, { kop: 'Kleur', waarde: [v('Kleur')] }] },
+    kleuren: { rand: { sleutel: [v('Breedte'), ' × ', v('Hoogte')], waarden: {} } },
     cert: 'Gecertificeerd volgens DIN 4102 B1',
   },
   {
     ...basis, id: 'pipe-drape', naam: 'Pipe & Drape', printer: 'a4', opmaak: 'liggend', formaat: { b: 105, h: 74 },
     gat: true, voet: true,
-    velden: [uitNaam('Naam', 'kaal', true), uitNaam('Maat', 'maat', true)],
-    plekken: { ...leeg, titel: ['Pipe & Drape'], groot: [v('Maat'), ' m'], eigenschappen: [{ kop: 'Inhoud', waarde: [v('Naam')] }] },
-    kleuren: { rand: { veld: 'Maat', waarden: {} } },
+    velden: [uitNaam('Naam', 'kaal', true), uitNaam('Lengte', 'breedte', true), uitNaam('Hoogte', 'hoogte', true)],
+    plekken: { ...leeg, titel: ['Pipe & Drape'], groot: [v('Lengte'), ' × ', v('Hoogte'), 'm'], eigenschappen: [{ kop: 'Inhoud', waarde: [v('Naam')] }] },
+    kleuren: { rand: { sleutel: [v('Lengte'), ' × ', v('Hoogte')], waarden: {} } },
   },
   leegBordje('leeg-staand', 'Leeg bordje staand', 'staand', 74, 105),
   leegBordje('leeg-liggend', 'Leeg bordje liggend', 'liggend', 105, 74),
   vrijBordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),
   vrijBordje('bordje-liggend', 'Bordje liggend', 'liggend', 105, 74),
+  wandbord('wandbord-staand', 'Wandbord A4 staand', 194, 281),
+  wandbord('wandbord-liggend', 'Wandbord A4 liggend', 281, 194),
+  kistbordje('kist', 'Materiaalbordje kist (A5)'),
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },
     logoBoven: true,
@@ -149,6 +171,14 @@ function eigenRand(aanvullingen) {
   return KLEURNAMEN[sleutel(k)] || geldigeKleur(k);
 }
 
+/** Inhoudslijst: 'aantal naam' per regel ('30 kabel', '40× kabel', '2 x kabel'); zonder getal: ['', regel]. */
+function lijstUit(tekst) {
+  return String(tekst || '').split(/\r?\n/).map(r => r.trim()).filter(Boolean).map(r => {
+    const m = /^(\d+(?:[.,]\d+)?)\s*(?:[x×]\s+|×\s*)?(.+)$/i.exec(r);
+    return m ? [m[1], m[2].trim()] : ['', r];
+  });
+}
+
 export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
   const w = waarden(sjabloon, artikel, aanvullingen);
   const p = sjabloon.plekken;
@@ -168,6 +198,8 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     gat: !!sjabloon.gat,
     voet: !!sjabloon.voet,
     logoBoven: !!sjabloon.logoBoven,
+    waarden: w,
+    lijst: sjabloon.lijstVeld ? lijstUit(w[sjabloon.lijstVeld]) : [],
   };
 }
 

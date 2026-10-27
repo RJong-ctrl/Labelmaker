@@ -49,4 +49,14 @@ export function kabel(naam) {
   return lengte(naam) || /kabel|snake/i.test(naam || '') ? 'ja' : '';
 }
 
-export const PATRONEN = { lengte, maat, polen, kwaliteit, kaal, kabel };
+/** Eerste en tweede getal van de maat ('6 x 3,5m' → '6' en '3,5'). */
+export function breedte(naam) {
+  const m = MAAT.exec(naam || '');
+  return m ? nl(m[1]) : '';
+}
+export function hoogte(naam) {
+  const m = MAAT.exec(naam || '');
+  return m ? nl(m[2]) : '';
+}
+
+export const PATRONEN = { lengte, maat, breedte, hoogte, polen, kwaliteit, kaal, kabel };

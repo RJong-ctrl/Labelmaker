@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -74,7 +74,7 @@ test('backdrop_per_exemplaar', () => {
   assert.deepEqual(qrsVoor(A['LI8163-B']), ['bd6x3b-01', 'bd6x3b-02']);
   const i = vul(S.backdrop, A['LI8163-B'], { Kleur: 'Zwart' }, 'bd6x3b-01');
   assert.equal(i.titel, 'Backdrop');
-  assert.equal(i.groot, '6 × 3 m');
+  assert.equal(i.groot, '6 × 3m');
   assert.deepEqual(i.eigenschappen, [['Kwaliteit', 'B'], ['Kleur', 'Zwart']]);
   assert.equal(i.qr, 'bd6x3b-01');
   assert.equal(i.cert, 'Gecertificeerd volgens DIN 4102 B1');
@@ -91,7 +91,7 @@ test('lege_eigenschap_valt_weg', () => {
 test('pipe_drape', () => {
   const i = vul(S['pipe-drape'], A.PD5143, {}, '1004421');
   assert.equal(i.titel, 'Pipe & Drape');
-  assert.equal(i.groot, '4 × 3 m');
+  assert.equal(i.groot, '4 × 3m');
   assert.deepEqual(i.eigenschappen, [['Inhoud', 'Pipe & drape doek zw satijn geplooid']]);
   assert.equal(i.opmaak, 'liggend');
 });
@@ -235,4 +235,38 @@ test('randkleur_zelf_kiezen_op_elk_bordje', () => {
   assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: '' }, 'x').rand, vul(S.gitterbox, A.GE9402, {}, 'x').rand);
   assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: 'Geen' }, 'x').rand, '#7f7f7f');
   assert.equal(vul(S.gitterbox, A.GE9402, { Randkleur: 'red;x' }, 'x').rand, vul(S.gitterbox, A.GE9402, {}, 'x').rand);
+});
+
+test('wandbord_a4_locatie_groot', () => {
+  const art = { ...A.GE9402, locatie: 'J-2' };
+  const i = vul(S['wandbord-liggend'], art, { Inhoud: 'Speakon kabels' }, 'x');
+  assert.equal(i.opmaak, 'wand');
+  assert.equal(i.titel, 'J-2');
+  assert.equal(i.onder, 'Speakon kabels');
+  assert.equal(i.qr, 'J-2');                       // QR = de locatie
+  assert.deepEqual(S['wandbord-liggend'].formaat, { b: 281, h: 194 });
+  assert.deepEqual(S['wandbord-staand'].formaat, { b: 194, h: 281 });
+  assert.equal(S['wandbord-staand'].printer, 'a4');
+  assert.equal(vul(S['wandbord-staand'], art, { Randkleur: 'Blauw' }, 'x').rand, '#0050ff');
+  assert.deepEqual(ontbrekend(S['wandbord-staand'], { ...art, locatie: '' }, {}).map(v => v.naam), []);
+});
+
+test('kistbordje_met_inhoudslijst', () => {
+  const i = vul(S.kist, A.GE9402, { Gewicht: '66,20', Klant: '', Inhoud: '30 DMX 3p 1,25m grijs\n40× DMX 3p 2,5m\n2 x Afsluiter\nlosse regel\n\n' }, 'dsl01');
+  assert.equal(i.opmaak, 'kist');
+  assert.deepEqual(S.kist.formaat, { b: 194, h: 136 });
+  assert.equal(i.titel, 'Speakon 4p Verlengkabel 2,5m');
+  assert.equal(i.qr, 'dsl01');
+  assert.equal(i.waarden.Gewicht, '66,20');
+  assert.equal(i.waarden.Klant, '');
+  assert.deepEqual(i.lijst, [['30', 'DMX 3p 1,25m grijs'], ['40', 'DMX 3p 2,5m'], ['2', 'Afsluiter'], ['', 'losse regel']]);
+});
+
+test('lengte_en_hoogte_zelf_invullen', () => {
+  // Backdrop: breedte en hoogte uit de naam, elk apart aan te passen.
+  assert.deepEqual(S.backdrop.velden.filter(v => v.herkomst.type === 'naam').map(v => v.naam), ['Naam', 'Breedte', 'Hoogte', 'Kwaliteit']);
+  assert.equal(vul(S.backdrop, A['LI8163-B'], { Kleur: 'Zwart', Hoogte: '4' }, 'x').groot, '6 × 4m');
+  // Pipe & Drape: lengte en hoogte.
+  assert.deepEqual(S['pipe-drape'].velden.map(v => v.naam), ['Naam', 'Lengte', 'Hoogte']);
+  assert.equal(vul(S['pipe-drape'], A.PD5143, { Lengte: '5' }, 'x').groot, '5 × 3m');
 });

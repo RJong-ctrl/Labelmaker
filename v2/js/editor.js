@@ -8,13 +8,13 @@ import { PATRONEN } from './afleiden.js';
 import { TOEGESTANE_VELDEN } from './import.js';
 import { esc } from './html.js';
 
-export const OPMAKEN = { staand: 'Bordje staand', liggend: 'Bordje liggend', strook: 'Strook', qrlabel: 'QR-label', locatie: 'Locatielabel' };
-export const STANDAARD_FORMAAT = { staand: { b: 74, h: 105 }, liggend: { b: 105, h: 74 }, strook: { b: 180, h: 48 }, qrlabel: { b: 76, h: 56 }, locatie: { b: 76, h: 56 } };
+export const OPMAKEN = { staand: 'Bordje staand', liggend: 'Bordje liggend', strook: 'Strook', wand: 'Wandbord (A4)', kist: 'Materiaalbordje kist', qrlabel: 'QR-label', locatie: 'Locatielabel' };
+export const STANDAARD_FORMAAT = { staand: { b: 74, h: 105 }, liggend: { b: 105, h: 74 }, strook: { b: 180, h: 48 }, wand: { b: 194, h: 281 }, kist: { b: 194, h: 136 }, qrlabel: { b: 76, h: 56 }, locatie: { b: 76, h: 56 } };
 export const KOLOM_NAMEN = {
   naam: 'Naam', code: 'Artikelnummer', qr: 'QR-code', exemplaren: 'QR-codes exemplaren', pad: 'Pad (categorie)',
   map: 'Map', locatie: 'Locatie', soort: 'Soort (bulk of serie)', type: 'Type materiaal', aantal: 'Aantal',
 };
-const PATROON_NAMEN = { lengte: 'Lengte (12,5)', maat: 'Maat (6 × 3)', polen: 'Polen (NL4)', kwaliteit: 'Kwaliteit (A of B)', kaal: 'Naam zonder maat', kabel: 'Is een kabel (ja)' };
+const PATROON_NAMEN = { lengte: 'Lengte (12,5)', maat: 'Maat (6 × 3)', breedte: 'Maat: eerste getal (6)', hoogte: 'Maat: tweede getal (3)', polen: 'Polen (NL4)', kwaliteit: 'Kwaliteit (A of B)', kaal: 'Naam zonder maat', kabel: 'Is een kabel (ja)' };
 const HERKOMST = { kolom: 'Kolom uit de export', naam: 'Uit de naam', aanvulling: 'Aanvulling' };
 const SOORT = { tekst: 'Tekst', getal: 'Getal', keuze: 'Keuzelijst' };
 const PLEK = { titel: 'Titel', groot: 'Groot', label: 'Label', onder: 'Onderregel', qr: 'QR-code' };
@@ -23,7 +23,7 @@ const KLEURREGEL = { rand: 'Kleurrand', label: 'Label' };
 const LABELS = new Set(['qrlabel', 'locatie']);
 const MIN_MM = 10, MAX_MM = 297;
 
-const plekkenVoor = (opmaak) => (opmaak === 'qrlabel' ? ['titel', 'onder'] : opmaak === 'locatie' ? ['titel', 'onder', 'qr'] : ['titel', 'groot', 'label', 'onder']);
+const plekkenVoor = (opmaak) => (opmaak === 'qrlabel' || opmaak === 'kist' ? ['titel', 'onder'] : opmaak === 'locatie' || opmaak === 'wand' ? ['titel', 'onder', 'qr'] : ['titel', 'groot', 'label', 'onder']);
 const isBordje = (opmaak) => !LABELS.has(opmaak);
 const opt = (waarde, tekst, gekozen) => `<option value="${esc(waarde)}"${gekozen ? ' selected' : ''}>${esc(tekst)}</option>`;
 const nlSort = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' });
@@ -271,6 +271,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     for (const k of ['rand', 'label']) if (s.kleuren[k]) s.kleuren[k].sleutel = vervang(s.kleuren[k].sleutel);
     for (const v of s.velden) if (v.alleenAls === oud) v.alleenAls = nieuw;
     if (s.regelsVeld === oud) s.regelsVeld = nieuw;
+    if (s.lijstVeld === oud) s.lijstVeld = nieuw;
   }
 
   function zetVeldExtra(v, tekst) {
@@ -426,6 +427,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
       s.velden.splice(i, 1);
       for (const v of s.velden) if (v.alleenAls === weg) delete v.alleenAls;
       if (s.regelsVeld === weg) delete s.regelsVeld;
+      if (s.lijstVeld === weg) delete s.lijstVeld;
       herteken('velden', 'plekken', 'kleuren');
       $('[data-actie="veld-erbij"]').focus();
     } else if (a === 'eig-erbij') {
