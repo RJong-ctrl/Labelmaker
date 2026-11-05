@@ -3,7 +3,8 @@
 
 import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
-import { veldInvoer } from './dialogen.js';
+import { veldInvoer, vraagReeks } from './dialogen.js';
+import { leesReeks, zoneKleur } from './reeks.js';
 import { esc } from './html.js';
 
 const PX = 96 / 25.4;
@@ -131,6 +132,7 @@ export function startMaken(root, h) {
       + artikelChip(a)
       + '<div id="makenVelden" class="velden"></div>'
       + '<div class="knoppenrij"><label class="vink"><input type="checkbox" id="makenBewaar"> Bewaren onder Losse items</label>'
+      + (huidigSjabloon()?.opmaak === 'wand' && !a && !m.vanRij ? '<button type="button" id="makenReeks">Uit lijst…</button>' : '')
       + `<button type="button" id="makenLeeg">Leegmaken</button><button type="button" id="makenOpVel" class="primary">${m.vanRij ? 'Bijwerken' : 'Op printvel'}</button></div>`;
     tekenVelden();
   }
@@ -293,6 +295,32 @@ export function startMaken(root, h) {
     reset(!m.vanRij && !m.artikel && m.sjabloonId !== 'auto' ? m.sjabloonId : 'auto');
   }
 
+  /** Bordjes uit een geplakte lijst (bijv. de magazijnindeling): per code een los item op het printvel. */
+  async function reeksOpVel() {
+    const sj = huidigSjabloon();
+    const antwoord = await vraagReeks(root.getElementById('aanvulling'), sj.naam);
+    if (!antwoord) return;
+    const lijst = leesReeks(antwoord.tekst);
+    if (!lijst.length) { h.melding('Geen regels gevonden in de lijst.', true); return; }
+    const veld = (naam) => sj.velden.some(v => v.naam === naam);
+    for (const { code, wat } of lijst) {
+      // vaste id per sjabloon en code: opnieuw plakken werkt het bordje bij in plaats van een tweede te maken
+      const id = `los-${sj.id}-${code.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+      await h.model.zetLosItem({
+        id, naam: wat ? `${code} · ${wat}` : code, code, qr: code, exemplaren: [], pad: '', map: 'Magazijnindeling', locatie: code,
+        soort: 'bulk', type: 'Los item', combinatie: false, aantal: 0, sjabloon: sj.id, ...(antwoord.bewaar ? {} : { tijdelijk: true }),
+      });
+      const kleur = antwoord.kleur ? zoneKleur(code) : '';
+      await h.model.vervangAanvulling(id, { ...(veld('Inhoud') ? { Inhoud: wat } : {}), ...(kleur ? { Randkleur: kleur } : {}) });
+      h.voegToe(sj.printer, { sjabloon: sj.id, artikel: id, qr: code, aantal: 1 });
+    }
+    h.indexeer();
+    await h.bewaarVel();
+    h.naarPrinter(sj.printer);
+    h.tekenAlles();
+    h.melding(`${lijst.length} ${lijst.length === 1 ? 'bordje' : 'bordjes'} op het printvel gezet${antwoord.bewaar ? ' en bewaard onder Losse items' : ''}.`);
+  }
+
   /** Een regel van het printvel openen om aan te passen. */
   function laad(item, printer, index) {
     const a = h.perId().get(item.artikel);
@@ -346,6 +374,7 @@ export function startMaken(root, h) {
     if (li) { koppel(h.perId().get(li.dataset.id)); return; }
     if (e.target.closest('#makenKies, #makenTerug')) { kiesvenster(); return; }
     if (e.target.closest('#makenLos')) { m.artikel = null; m.bewerkt.clear(); m.waarden = {}; m.onthouden = {}; m.qrBewerkt = false; tekenFormulier(); return; }
+    if (e.target.closest('#makenReeks')) { reeksOpVel().catch(err => h.melding('Lijst verwerken mislukt: ' + err.message, true)); return; }
     if (e.target.closest('#makenLeeg')) { reset(m.artikel ? 'auto' : m.sjabloonId); return; }
     if (e.target.closest('#makenOpVel')) opVel().catch(err => h.melding('Op het printvel zetten mislukt: ' + err.message, true));
   });

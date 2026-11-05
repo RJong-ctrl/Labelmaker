@@ -370,6 +370,30 @@ class Maken(MakenHulp, PaginaTest):
         kop = k.locator('.kkop').bounding_box()['width']
         self.assertGreater(k.locator('.kkop .titel').bounding_box()['width'], kop * 0.95)
 
+    def test_wandborden_uit_lijst(self):
+        """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""
+        p = self.pagina
+        self.kies('wandbord-staand')
+        p.locator('#makenReeks').click()
+        d = p.locator('#aanvulling')
+        d.locator('textarea[name="tekst"]').fill('Code\tWat\tWaar\nA1\tVersterkers, rackcases\tLinker pand\nG3\tTorens, takels\tRechter pand\nZ1\tRetour, nog uitpakken\tBij de roldeur')
+        d.get_by_role('button', name='Op printvel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 3 op A4')
+        expect(p.locator('#vellen .signb .titel')).to_have_text(['A1', 'G3', 'Z1'])
+        expect(p.locator('#vellen .signb').first).to_contain_text('Versterkers, rackcases')
+        expect(p.locator('#vellen .signb .streep').first).to_have_css('background-color', 'rgb(0, 90, 187)')
+        expect(p.locator('#vellen .signb .qc').first).to_have_text('A1')
+        self.assertEqual(sorted(self.losse()), ['los-wandbord-staand-a1', 'los-wandbord-staand-g3', 'los-wandbord-staand-z1'])
+        # nog eens plakken: bijwerken, geen dubbele items
+        p.locator('#velLeeg').click()
+        self.kies('wandbord-staand') if p.locator('#makenReeks').count() == 0 else None
+        p.locator('#makenReeks').click()
+        d.locator('textarea[name="tekst"]').fill('A1\tVersterkers')
+        d.get_by_role('button', name='Op printvel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        self.assertEqual(len(self.losse()), 3)
+        self.assertEqual(self.fouten, [])
+
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
         p = self.pagina
