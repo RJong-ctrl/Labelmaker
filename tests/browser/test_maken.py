@@ -407,6 +407,7 @@ class Maken(MakenHulp, PaginaTest):
         expect(p.locator('#printA4')).to_have_text('Print 2 op A4')
         expect(p.locator('#vellen .signb .titel')).to_have_text(['A1', 'H2'])
         expect(p.locator('#vellen .signb .streep').nth(1)).to_have_css('background-color', 'rgb(0, 176, 80)')
+        expect(p.locator('#vellen .signb .qbox')).to_have_count(0)        # stellingbord standaard zonder QR
         p.locator('#velLijst li').nth(1).get_by_role('button', name='Aanpassen').click()
         expect(p.locator('#makenVelden input[name="Wat"]')).to_have_value('Kabels in gitterboxen')
         self.assertEqual(self.fouten, [])
@@ -443,6 +444,27 @@ class Maken(MakenHulp, PaginaTest):
             expect(b.locator('.blg')).to_have_count(1)
             maat[soort] = b.locator('.blg').bounding_box()['width'] / b.bounding_box()['height']
         self.assertAlmostEqual(maat['bakbord'], maat['gitterbox'], delta=0.01)
+
+    def test_wandbord_zonder_qr(self):
+        p = self.pagina
+        for soort in ['wandbord-staand', 'wandbord-liggend']:
+            self.kies(soort)
+            p.locator('#makenVelden input[name="Locatie"]').fill('A1')
+            b = p.locator('#makenVoorbeeld .signb')
+            expect(b.locator('.qbox')).to_have_count(1)
+            p.locator('#makenVelden select[name="QR-code"]').select_option('nee')
+            expect(b.locator('.qbox')).to_have_count(0)
+            expect(b).not_to_contain_text('Geen QR-code')
+            p.locator('#makenVelden select[name="QR-code"]').select_option('')
+        # stellingbord: standaard zonder QR, aan te zetten
+        self.kies('stellingbord')
+        p.locator('#makenVelden input[name="Code"]').fill('A1')
+        b = p.locator('#makenVoorbeeld .signb')
+        expect(b.locator('.qbox')).to_have_count(0)
+        expect(b).not_to_contain_text('Geen QR-code')
+        p.locator('#makenVelden select[name="QR-code"]').select_option('ja')
+        expect(b.locator('.qbox')).to_have_count(1)
+        self.assertEqual(self.fouten, [])
 
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""

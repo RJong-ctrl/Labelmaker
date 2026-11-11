@@ -6,6 +6,14 @@ import { sleutel, ONBEKEND, kleurBijNaam } from './kleuren.js';
 
 const kolom = (naam, k, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'kolom', kolom: k }, verplicht });
 const uitNaam = (naam, patroon, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'naam', patroon }, verplicht });
+/** Keuze met of zonder QR-code op het bordje (leeg = met). */
+const qrKeuze = (standaardZonder = false) => ({ naam: 'QR-code', soort: 'keuze', herkomst: { type: 'aanvulling' }, verplicht: false, qrSchakelaar: true,
+  ...(standaardZonder ? { standaardZonder: true } : {}),
+  keuzes: standaardZonder
+    ? [{ waarde: '', tekst: 'Zonder QR-code' }, { waarde: 'ja', tekst: 'Met QR-code' }]
+    : [{ waarde: '', tekst: 'Met QR-code' }, { waarde: 'nee', tekst: 'Zonder QR-code' }] });
+/** Geen QR op het bordje volgens de QR-keuze (leeg = de standaard van het veld). */
+const zonderQr = (sjabloon, w) => sjabloon.velden.some(v => v.qrSchakelaar && (w[v.naam] === 'nee' || (v.standaardZonder && w[v.naam] !== 'ja')));
 const keuze = (naam, opties, alleenAls) => ({ naam, soort: 'keuze', opties, herkomst: { type: 'aanvulling' }, verplicht: true, ...(alleenAls ? { alleenAls } : {}) });
 const v = (veld) => ({ veld });
 
@@ -61,7 +69,7 @@ const uitKist = (naam, sleutel, kolomAnders = '', extra = {}) =>
 const aanvul = (naam, extra = {}) => ({ naam, soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false, ...extra });
 export const wandbord = (id, naam, b, h) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b, h }, gat: false, voet: true,
-  velden: [kolom('Locatie', 'locatie', true), aanvul('Inhoud')],
+  velden: [kolom('Locatie', 'locatie', true), aanvul('Inhoud'), qrKeuze()],
   plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Inhoud')], qr: [v('Locatie')] },
   kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb' } },   // standaard DSL blauw, Randkleur te kiezen
 });
@@ -73,7 +81,8 @@ const zoneKleuren = () => ({ rand: { sleutel: [v('Code')], begin: true, waarden:
 /** Stellingbord voor de kopse kant: code van de rij heel groot, wat erin hoort, QR van de code. */
 export const stellingbord = (id, naam, b, h) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b, h }, gat: false, voet: true,
-  velden: [aanvul('Code', { verplicht: true }), aanvul('Wat')],
+  // In Rentman heb je weinig aan de QR van een stellingbord: standaard zonder (Robin, 11 nov).
+  velden: [aanvul('Code', { verplicht: true }), aanvul('Wat'), qrKeuze(true)],
   plekken: { ...leeg, titel: [v('Code')], onder: [v('Wat')], qr: [v('Code')] },
   kleuren: zoneKleuren(),
 });
@@ -238,7 +247,7 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     label: labelTekst ? { tekst: labelTekst, kleur: kleur(sjabloon.kleuren.label, w) } : null,
     eigenschappen: [...(p.eigenschappen || []).map(e => [e.kop, plek(e.waarde, w)]), ...(sjabloon.regelsVeld ? regelsUit(w[sjabloon.regelsVeld]) : [])].filter(e => e[1]),
     onder: plek(p.onder, w),
-    qr: p.qr ? plek(p.qr, w) : String(qr || ''),
+    qr: zonderQr(sjabloon, w) ? '' : p.qr ? plek(p.qr, w) : String(qr || ''),
     rand: (!sjabloon.kleuren.rand?.vast && eigenRand(aanvullingen)) || kleur(sjabloon.kleuren.rand, w),
     cert: sjabloon.cert || '',
     gat: !!sjabloon.gat,

@@ -113,7 +113,9 @@ function bordje(i, hs) {
       + `<div style="height:${mm(3 * f)};flex:0 0 auto"></div>`;
     const inhoud = i.onder ? vak('w-inhoud wrap', H * (staand ? 0.06 : 0.08) * PT, esc(i.onder), 'flex:1 1 0;min-height:0;justify-content:flex-start', 8, 3) : '<div style="flex:1 1 0"></div>';
     // Staand: inhoud en daaronder de QR; liggend: inhoud links, QR rechts ernaast.
-    main += staand
+    // Zonder QR-code (keuze op het bordje): geen QR-vak, de inhoud krijgt de ruimte.
+    main += !i.qr ? inhoud
+      : staand
       ? inhoud + `<div class="bot" style="margin-top:${mm(2 * f)}"><span></span>${qrBlok(Math.min(W, H) * 0.25)}</div>`
       : `<div style="flex:1 1 0;min-height:0;display:flex;align-items:stretch;gap:${mm(6 * f)}"><div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column">${inhoud}</div><div style="display:flex;align-items:flex-end">${qrBlok(Math.min(W, H) * 0.25)}</div></div>`;
     main += voet;

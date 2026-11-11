@@ -344,12 +344,12 @@ test('stellingbord_als_sjabloon_met_kleur_per_zone', () => {
   const sj = S.stellingbord;
   assert.equal(sj.opmaak, 'wand');
   assert.deepEqual(sj.formaat, { b: 194, h: 281 });
-  assert.deepEqual(sj.velden.map(v => v.naam), ['Code', 'Wat']);
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Code', 'Wat', 'QR-code']);
   const leeg = { ...A.GE9402, naam: '', code: '', locatie: '' };
   const i = vul(sj, leeg, { Code: 'G3', Wat: 'Torens, takels' }, '');
   assert.equal(i.titel, 'G3');
   assert.equal(i.onder, 'Torens, takels');
-  assert.equal(i.qr, 'G3');
+  assert.equal(vul(sj, leeg, { Code: 'G3', 'QR-code': 'ja' }, '').qr, 'G3');
   assert.equal(i.rand, '#ff0000');                                       // zone G = rood
   assert.equal(vul(sj, leeg, { Code: 'A4-2-1' }, '').rand, '#005abb');   // begint met A
   assert.equal(vul(sj, leeg, { Code: 'Q1' }, '').rand, '#005abb');       // onbekende zone: DSL blauw
@@ -378,4 +378,26 @@ test('wandborden_standaard_dsl_blauw', () => {
     assert.equal(vul(S[id], art, {}, 'x').rand, '#005abb', id);
     assert.equal(vul(S[id], art, { Randkleur: 'Geel' }, 'x').rand, '#ffff00', id);   // zelf te kiezen
   }
+});
+
+test('wandborden_met_of_zonder_qr', () => {
+  for (const id of ['wandbord-staand', 'wandbord-liggend', 'wandbord-a5-staand', 'wandbord-a5-liggend']) {
+    const sj = S[id];
+    const veld = sj.velden.find(v => v.naam === 'QR-code');
+    assert.ok(veld, id);
+    assert.deepEqual(veld.keuzes.map(k => k.tekst), ['Met QR-code', 'Zonder QR-code']);
+    const art = { ...A.GE9402, locatie: 'A1' };
+    const aanv = { Code: 'A1' };
+    assert.equal(vul(sj, art, aanv, 'x').qr, 'A1', id);
+    assert.equal(vul(sj, art, { ...aanv, 'QR-code': 'nee' }, 'x').qr, '', id);
+  }
+});
+
+test('stellingbord_standaard_zonder_qr', () => {
+  // In Rentman heb je weinig aan de QR van een stellingbord: standaard zonder, aan te zetten.
+  const sj = S.stellingbord;
+  const veld = sj.velden.find(v => v.naam === 'QR-code');
+  assert.deepEqual(veld.keuzes.map(k => k.tekst), ['Zonder QR-code', 'Met QR-code']);
+  assert.equal(vul(sj, A.GE9402, { Code: 'A1' }, 'x').qr, '');
+  assert.equal(vul(sj, A.GE9402, { Code: 'A1', 'QR-code': 'ja' }, 'x').qr, 'A1');
 });
