@@ -83,6 +83,8 @@ export const bakbord = (id, naam) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b: 160, h: 48 }, gat: false, voet: false,
   velden: [kolom('Naam', 'naam', true), kolom('Code', 'code')],
   plekken: { ...leeg, titel: [v('Naam')], onder: [v('Code')] },
+  // Standaard DSL blauw, zoals de wandbordjes voorin het magazijn; Randkleur kiezen kan nog steeds.
+  kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb' } },
 });
 
 /** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes), opgebouwd als het oude bordje: logo, vak voor

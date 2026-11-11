@@ -368,4 +368,6 @@ test('bakbord_16_cm_breed', () => {
   assert.equal(i.titel, 'Speakon 4p Verlengkabel 2,5m');
   assert.equal(i.onder, 'GE9402');
   assert.equal(i.qr, 'GE9402-QR');
+  assert.equal(i.rand, '#005abb');                                              // standaard DSL blauw
+  assert.equal(vul(sj, A.GE9402, { Randkleur: 'Rood' }, 'x').rand, '#ff0000'); // zelf te kiezen
 });
