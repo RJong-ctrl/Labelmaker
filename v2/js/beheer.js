@@ -18,6 +18,18 @@ const VOORBEELD_ARTIKEL = {
   id: 'voorbeeld', naam: 'Voorbeeldartikel 10m', code: 'VB-0001', qr: 'voorbeeld-qr', exemplaren: [], pad: '', map: '',
   locatie: 'A-1-1', soort: 'bulk', type: '', combinatie: false, aantal: 1,
 };
+// Proefwaarden voor lege aanvulvelden in het voorbeeld (alleen zonder passend artikel), zodat je ziet
+// wat er verandert als je het sjabloon bewerkt.
+const PROEF = { Code: 'A1', Wat: 'Voorbeeld inhoud', Inhoud: '2 Voorbeeld onderdeel\n1 Flightcase', Omschrijving: 'Voorbeeld omschrijving', Gewicht: '12,5', Locatie: 'A1' };
+function proefwaarden(sj) {
+  const uit = {};
+  for (const v of sj.velden || []) {
+    if (v.herkomst?.type !== 'aanvulling' || v.keuzes?.length || v.opties?.length) continue;
+    uit[v.naam] = PROEF[v.naam] ?? (v.meerregelig ? '' : v.naam);
+  }
+  return uit;
+}
+
 const ONDERDELEN = [
   { id: 'regels', titel: 'Categorie → sjabloon' },
   { id: 'huisstijl', titel: 'Huisstijl' },
@@ -874,7 +886,8 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     $('beheerVoorbeeldSjabloon').textContent = `${sj.naam || sj.id} · ${sj.formaat.b} × ${sj.formaat.h} mm`;
     info.textContent = hoe === 'nep' ? 'Voorbeeldartikel: er past geen artikel bij dit sjabloon.' : `${a.naam}${a.code ? ' · ' + a.code : ''}`;
     let el;
-    try { el = teken(vul(sj, a, e.aanvullingen[sleutelVan(a)] || {}, qrsVoor(a)[0] || ''), st.werkHuisstijl || e.huisstijl); }
+    const aanv = { ...(hoe === 'nep' ? proefwaarden(sj) : {}), ...(e.aanvullingen[sleutelVan(a)] || {}) };
+    try { el = teken(vul(sj, a, aanv, qrsVoor(a)[0] || ''), st.werkHuisstijl || e.huisstijl); }
     catch (err) { doel.innerHTML = `<p class="fout">Voorbeeld lukt niet: ${esc(err?.message || err)}</p>`; return; }
     const b = sj.formaat.b * PX, h = sj.formaat.h * PX;
     const s = Math.min(2.5, Math.max(80, doel.clientWidth - 8) / b, Math.max(160, doel.clientHeight - 8) / h);

@@ -253,6 +253,21 @@ class Editor(Hulp):
         rij.locator('select[data-pad$=".naam"]').select_option('groen')
         self.wacht_model("e.sjablonen.find(s => s.id === 'stellingbord').kleuren.rand.waarden.g === '#00b050' && e.sjablonen.find(s => s.id === 'stellingbord').kleuren.rand.begin === true")
 
+    def test_stellingbord_voorbeeld_toont_wijzigingen(self):
+        """Zonder passend artikel toont het voorbeeld proefwaarden (A1, Voorbeeld) en volgt het elke wijziging meteen."""
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:stellingbord')
+        vb = p.locator('#beheerVoorbeeldDoel .signb')
+        expect(vb.locator('.titel')).to_have_text('A1')
+        expect(vb.locator('.w-inhoud')).not_to_have_text('')
+        streep = vb.locator('.band.streep')
+        expect(streep).to_have_css('background-color', 'rgb(0, 90, 187)')
+        rij = self.kleurrand().locator('tr.kleurrij').filter(has=p.locator('[data-pad$=".waarde"][value="a"]'))
+        rij.locator('select[data-pad$=".naam"]').select_option('rood')
+        expect(p.locator('#beheerVoorbeeldDoel .signb .band.streep')).to_have_css('background-color', 'rgb(255, 0, 0)')
+
     def test_bakbord_maat_in_beheer(self):
         p = self.pagina
         self.maak_model()
