@@ -110,7 +110,7 @@ export function startMaken(root, h) {
       let el;
       if (duimen.get(sj.id)?.sleutel === sleutel) { kader.innerHTML = duimen.get(sj.id).html; el = kader.firstElementChild; }
       else {
-        el = teken(vul(sj, voorbeeld, {}, 'voorbeeld'), h.E().huisstijl);
+        el = teken(vul(sj, voorbeeld, { Code: 'A1', Wat: 'Voorbeeld' }, 'voorbeeld'), h.E().huisstijl);
         el.style.transform = `scale(${s})`;
         el.style.transformOrigin = '0 0';
         kader.appendChild(el);

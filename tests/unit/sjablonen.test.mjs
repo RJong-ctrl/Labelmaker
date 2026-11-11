@@ -352,7 +352,7 @@ test('stellingbord_als_sjabloon_met_kleur_per_zone', () => {
   assert.equal(i.qr, 'G3');
   assert.equal(i.rand, '#ff0000');                                       // zone G = rood
   assert.equal(vul(sj, leeg, { Code: 'A4-2-1' }, '').rand, '#005abb');   // begint met A
-  assert.equal(vul(sj, leeg, { Code: 'Q1' }, '').rand, '#7f7f7f');       // onbekende zone
+  assert.equal(vul(sj, leeg, { Code: 'Q1' }, '').rand, '#005abb');       // onbekende zone: DSL blauw
   assert.equal(vul(sj, leeg, { Code: 'G3', Randkleur: 'Groen' }, '').rand, '#00b050'); // zelf gekozen gaat voor
 });
 
@@ -370,4 +370,12 @@ test('bakbord_16_cm_breed', () => {
   assert.equal(i.qr, 'GE9402-QR');
   assert.equal(i.rand, '#005abb');                                              // standaard DSL blauw
   assert.equal(vul(sj, A.GE9402, { Randkleur: 'Rood' }, 'x').rand, '#ff0000'); // zelf te kiezen
+});
+
+test('wandborden_standaard_dsl_blauw', () => {
+  for (const id of ['wandbord-staand', 'wandbord-liggend', 'wandbord-a5-staand', 'wandbord-a5-liggend']) {
+    const art = { ...A.GE9402, locatie: 'A1' };
+    assert.equal(vul(S[id], art, {}, 'x').rand, '#005abb', id);
+    assert.equal(vul(S[id], art, { Randkleur: 'Geel' }, 'x').rand, '#ffff00', id);   // zelf te kiezen
+  }
 });

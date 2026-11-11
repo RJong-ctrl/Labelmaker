@@ -63,11 +63,12 @@ export const wandbord = (id, naam, b, h) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b, h }, gat: false, voet: true,
   velden: [kolom('Locatie', 'locatie', true), aanvul('Inhoud')],
   plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Inhoud')], qr: [v('Locatie')] },
+  kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb' } },   // standaard DSL blauw, Randkleur te kiezen
 });
 
 /** Randkleur per zone: de waarden gelden voor alles wat met die letter begint (begin: true). In Beheer te wijzigen. */
 const ZONES = { a: '#005abb', b: '#ffff00', c: '#ff8c00', d: '#7030a0', e: '#00b0f0', f: '#c000c0', g: '#ff0000', h: '#00b050', j: '#0050ff', k: '#ff8c00', v: '#ffffff', w: '#7030a0', x: '#7f7f7f', z: '#7f7f7f' };
-const zoneKleuren = () => ({ rand: { sleutel: [v('Code')], begin: true, waarden: { ...ZONES } } });
+const zoneKleuren = () => ({ rand: { sleutel: [v('Code')], begin: true, waarden: { ...ZONES }, anders: '#005abb' } });
 
 /** Stellingbord voor de kopse kant: code van de rij heel groot, wat erin hoort, QR van de code. */
 export const stellingbord = (id, naam, b, h) => ({

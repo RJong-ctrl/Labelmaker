@@ -44,6 +44,8 @@ class Maken(MakenHulp, PaginaTest):
         for id in ['leeg-staand', 'kist', 'kist-modern', 'wandbord-staand', 'qrlabel', 'locatie']:
             expect(venster.locator('[data-tegel="%s"]' % id)).to_have_count(1)
         expect(venster.locator('.duim .signb, .duim .lbl')).to_have_count(venster.locator('[data-tegel]').count())
+        # voorbeeldjes tonen ook iets bij sjablonen met eigen velden (Code/Wat)
+        expect(venster.locator('[data-tegel="stellingbord"] .titel')).to_have_text('A1')
         p.keyboard.press('Escape')
         expect(venster).to_be_hidden()
         p.locator('#makenKies').click()
