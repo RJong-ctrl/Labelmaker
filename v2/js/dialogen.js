@@ -101,11 +101,11 @@ export function vraagProfiel(dlg) {
 }
 
 /** Meerdere bordjes uit een lijst (geplakt uit Excel). Geeft { tekst, kleur: bool, bewaar: bool } of null. */
-export function vraagReeks(dlg, sjabloonNaam) {
+export function vraagReeks(dlg, sjabloonNaam, { kleurKeuze = true } = {}) {
   const html = `<form class="reeks"><h2>Bordjes uit een lijst</h2>`
     + `<p class="hint">${esc(sjabloonNaam)}: één bordje per regel. Plak uit Excel of typ: code, wat erin hoort (tab of ; ertussen). Een kopregel wordt overgeslagen.</p>`
     + '<label class="veld"><span>Lijst</span><textarea name="tekst" rows="10" required placeholder="A1&#9;Versterkers, rackcases&#10;A2&#9;Mengtafels"></textarea></label>'
-    + '<label class="vink"><input type="checkbox" name="kleur" checked> Randkleur per zone (A, B, C …)</label>'
+    + (kleurKeuze ? '<label class="vink"><input type="checkbox" name="kleur" checked> Randkleur per zone (A, B, C …)</label>' : '<p class="hint">Randkleur per zone volgt het sjabloon (in te stellen in Beheer).</p>')
     + '<label class="vink"><input type="checkbox" name="bewaar" checked> Bewaren onder Losse items</label>'
     + knoppen('Op printvel') + '</form>';
   return toon(dlg, html, (form) => {

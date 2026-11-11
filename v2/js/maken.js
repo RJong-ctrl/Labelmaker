@@ -132,7 +132,7 @@ export function startMaken(root, h) {
       + artikelChip(a)
       + '<div id="makenVelden" class="velden"></div>'
       + '<div class="knoppenrij"><label class="vink"><input type="checkbox" id="makenBewaar"> Bewaren onder Losse items</label>'
-      + (huidigSjabloon()?.opmaak === 'wand' && !a && !m.vanRij ? '<button type="button" id="makenReeks">Uit lijst…</button>' : '')
+      + (kanReeks() && !a && !m.vanRij ? '<button type="button" id="makenReeks">Uit lijst…</button>' : '')
       + `<button type="button" id="makenLeeg">Leegmaken</button><button type="button" id="makenOpVel" class="primary">${m.vanRij ? 'Bijwerken' : 'Op printvel'}</button></div>`;
     tekenVelden();
   }
@@ -295,10 +295,14 @@ export function startMaken(root, h) {
     reset(!m.vanRij && !m.artikel && m.sjabloonId !== 'auto' ? m.sjabloonId : 'auto');
   }
 
+  // 'Uit lijst…' bij wandborden en bij sjablonen met een veld Code (stellingbord, bakbord).
+  const kanReeks = () => { const sj = huidigSjabloon(); return sj?.opmaak === 'wand' || !!sj?.velden?.some(v => v.naam === 'Code' && v.herkomst?.type === 'aanvulling'); };
+
   /** Bordjes uit een geplakte lijst (bijv. de magazijnindeling): per code een los item op het printvel. */
   async function reeksOpVel() {
     const sj = huidigSjabloon();
-    const antwoord = await vraagReeks(root.getElementById('aanvulling'), sj.naam);
+    const eigenKleuren = !!sj.kleuren?.rand?.begin;   // sjabloon kleurt zelf per zone
+    const antwoord = await vraagReeks(root.getElementById('aanvulling'), sj.naam, { kleurKeuze: !eigenKleuren });
     if (!antwoord) return;
     const lijst = leesReeks(antwoord.tekst);
     if (!lijst.length) { h.melding('Geen regels gevonden in de lijst.', true); return; }
@@ -310,8 +314,11 @@ export function startMaken(root, h) {
         id, naam: wat ? `${code} · ${wat}` : code, code, qr: code, exemplaren: [], pad: '', map: 'Magazijnindeling', locatie: code,
         soort: 'bulk', type: 'Los item', combinatie: false, aantal: 0, sjabloon: sj.id, ...(antwoord.bewaar ? {} : { tijdelijk: true }),
       });
-      const kleur = antwoord.kleur ? zoneKleur(code) : '';
-      await h.model.vervangAanvulling(id, { ...(veld('Inhoud') ? { Inhoud: wat } : {}), ...(kleur ? { Randkleur: kleur } : {}) });
+      const kleur = antwoord.kleur && !eigenKleuren ? zoneKleur(code) : '';
+      await h.model.vervangAanvulling(id, {
+        ...(veld('Code') ? { Code: code } : {}), ...(veld('Wat') ? { Wat: wat } : {}), ...(veld('Inhoud') ? { Inhoud: wat } : {}),
+        ...(kleur ? { Randkleur: kleur } : {}),
+      });
       h.voegToe(sj.printer, { sjabloon: sj.id, artikel: id, qr: code, aantal: 1 });
     }
     h.indexeer();

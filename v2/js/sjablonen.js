@@ -65,6 +65,23 @@ export const wandbord = (id, naam, b, h) => ({
   plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Inhoud')], qr: [v('Locatie')] },
 });
 
+/** Randkleur per zone: de waarden gelden voor alles wat met die letter begint (begin: true). In Beheer te wijzigen. */
+const ZONES = { a: '#005abb', b: '#ffff00', c: '#ff8c00', d: '#7030a0', e: '#00b0f0', f: '#c000c0', g: '#ff0000', h: '#00b050', j: '#0050ff', k: '#ff8c00', v: '#ffffff', w: '#7030a0', x: '#7f7f7f', z: '#7f7f7f' };
+const zoneKleuren = () => ({ rand: { sleutel: [v('Code')], begin: true, waarden: { ...ZONES } } });
+
+/** Stellingbord voor de kopse kant: code van de rij heel groot, wat erin hoort, QR van de code. */
+export const stellingbord = (id, naam, b, h) => ({
+  ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b, h }, gat: false, voet: true,
+  velden: [aanvul('Code', { verplicht: true }), aanvul('Wat')],
+  plekken: { ...leeg, titel: [v('Code')], onder: [v('Wat')], qr: [v('Code')] },
+  kleuren: zoneKleuren(),
+});
+
+/** Bakbord voor magazijnbakken: 16 cm breed, code groot, wat erin zit, QR. Vijf per A4, geen voet. */
+export const bakbord = (id, naam) => ({
+  ...stellingbord(id, naam, 160, 48), voet: false,
+});
+
 /** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes), opgebouwd als het oude bordje: logo, vak voor
  *  naam en gewicht (vroeger klant en productie), QR; inhoud met kistnummer en het vak voor de projectsticker; zwarte voet.
  *  Inhoud: één regel per onderdeel ('aantal naam'). Twee per A4. */
@@ -104,6 +121,8 @@ export const DSL_SJABLONEN = [
   leegBordje('leeg-liggend', 'Leeg bordje liggend', 'liggend', 105, 74),
   vrijBordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),
   vrijBordje('bordje-liggend', 'Bordje liggend', 'liggend', 105, 74),
+  stellingbord('stellingbord', 'Stellingbord (kopse kant)', 194, 281),
+  bakbord('bakbord', 'Bakbord (16 cm)'),
   wandbord('wandbord-staand', 'Wandbord A4 staand', 194, 281),
   wandbord('wandbord-liggend', 'Wandbord A4 liggend', 281, 194),
   wandbord('wandbord-a5-staand', 'Wandbord A5 staand', 136, 194),
@@ -170,7 +189,10 @@ export function geldigeKleur(hex) {
 function kleur(regel, w) {
   if (!regel) return ONBEKEND;
   const tokens = regel.sleutel || [{ veld: regel.veld }];
-  return geldigeKleur(regel.waarden?.[sleutel(plek(tokens, w))]) || geldigeKleur(regel.anders) || ONBEKEND;
+  const s = sleutel(plek(tokens, w));
+  // begin: een waarde geldt voor alles wat ermee begint (zone A → A1, A4-2-1); de langste wint.
+  const k = regel.begin && s ? Object.keys(regel.waarden || {}).filter(x => x && s.startsWith(x)).sort((a, b) => b.length - a.length)[0] : s;
+  return geldigeKleur(regel.waarden?.[k]) || geldigeKleur(regel.anders) || ONBEKEND;
 }
 
 // Vrije regels 'Kop: waarde' (één per regel) als eigenschappen.

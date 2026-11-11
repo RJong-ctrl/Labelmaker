@@ -394,6 +394,34 @@ class Maken(MakenHulp, PaginaTest):
         self.assertEqual(len(self.losse()), 3)
         self.assertEqual(self.fouten, [])
 
+    def test_stellingborden_uit_lijst(self):
+        p = self.pagina
+        self.kies('stellingbord')
+        p.locator('#makenReeks').click()
+        d = p.locator('#aanvulling')
+        expect(d.locator('input[name="kleur"]')).to_have_count(0)      # kleur per zone zit in het sjabloon
+        d.locator('textarea[name="tekst"]').fill('A1\tVersterkers, rackcases\nH2\tKabels in gitterboxen')
+        d.get_by_role('button', name='Op printvel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 2 op A4')
+        expect(p.locator('#vellen .signb .titel')).to_have_text(['A1', 'H2'])
+        expect(p.locator('#vellen .signb .streep').nth(1)).to_have_css('background-color', 'rgb(0, 176, 80)')
+        p.locator('#velLijst li').nth(1).get_by_role('button', name='Aanpassen').click()
+        expect(p.locator('#makenVelden input[name="Wat"]')).to_have_value('Kabels in gitterboxen')
+        self.assertEqual(self.fouten, [])
+
+    def test_bakborden_vijf_per_a4(self):
+        p = self.pagina
+        self.kies('bakbord')
+        p.locator('#makenReeks').click()
+        d = p.locator('#aanvulling')
+        d.locator('textarea[name="tekst"]').fill('\n'.join('A4-2-%d\tSpeakon kabels %dm' % (n, n) for n in range(1, 7)))
+        d.get_by_role('button', name='Op printvel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 6 op A4')
+        expect(p.locator('#vellen .a4')).to_have_count(2)
+        expect(p.locator('#vellen .a4').first.locator('.signb')).to_have_count(5)
+        expect(p.locator('#vellen .signb .titel').first).to_have_text('A4-2-1')
+        self.assertEqual(self.fouten, [])
+
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
         p = self.pagina

@@ -95,6 +95,14 @@ function bordje(i, hs) {
       + `<div class="krechts" style="width:${mm(st.b)}"><div class="kbot"><div class="kgew">${groot ? `<span>Kist</span><b>${groot}</b>` : ''}${gw ? `<span>Gewicht</span><b>${esc(gw)}</b>` : ''}</div>${i.qr ? qrBlok(qs) : ''}</div>`
       + `<div class="ksticker" style="height:${mm(st.h)}">Projectsticker</div></div></div>`
       + voet;
+  } else if (wand && W / H > 2.5) {
+    // Smal en breed (bakbord): links de code groot en wat erin zit, rechts een flinke QR over de hele hoogte.
+    const qs = H - 2 * pad - 5 * f;
+    main = `<div style="flex:1 1 auto;min-height:0;display:flex;gap:${mm(5 * f)}">`
+      + `<div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column">`
+      + vak('t titel wt', H * 0.42 * PT, titel, `height:${mm(H * 0.42)};flex:0 0 auto`)
+      + (i.onder ? vak('w-inhoud wrap', H * 0.16 * PT, esc(i.onder), `flex:1 1 0;min-height:0;justify-content:flex-start;margin-top:${mm(1.5 * f)}`, 7, 2) : '')
+      + `</div><div style="display:flex;align-items:center">${qrBlok(qs)}</div></div>`;
   } else if (wand) {
     // Wandbord: de locatie zo groot mogelijk, eronder wat er ligt, QR van de locatie rechtsonder.
     const tH = H * (staand ? 0.34 : 0.4);

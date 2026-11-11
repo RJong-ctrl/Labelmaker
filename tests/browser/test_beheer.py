@@ -240,6 +240,39 @@ class Editor(Hulp):
     def kleurrand(self):
         return self.pagina.locator('#beheerForm .kleurregel[data-regel="rand"]')
 
+    def test_stellingbord_in_beheer_kleur_per_zone(self):
+        """Stellingbord: kleur per zone (begin van de code) is in Beheer te wijzigen en blijft zo bewaard."""
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:stellingbord')
+        rand = self.kleurrand()
+        begin = rand.locator('input[type=checkbox][data-pad="kleur.rand.begin"]')
+        expect(begin).to_be_checked()
+        rij = rand.locator('tr.kleurrij').filter(has=p.locator('[data-pad$=".waarde"][value="g"]'))
+        rij.locator('select[data-pad$=".naam"]').select_option('groen')
+        self.wacht_model("e.sjablonen.find(s => s.id === 'stellingbord').kleuren.rand.waarden.g === '#00b050' && e.sjablonen.find(s => s.id === 'stellingbord').kleuren.rand.begin === true")
+
+    def test_bakbord_maat_in_beheer(self):
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:bakbord')
+        hoogte = p.locator('#beheerForm [data-pad="formaat.h"]')
+        expect(hoogte).to_have_value('48')
+        hoogte.fill('60')
+        hoogte.press('Tab')
+        self.wacht_model("e.sjablonen.find(s => s.id === 'bakbord').formaat.h === 60 && e.sjablonen.find(s => s.id === 'bakbord').kleuren.rand.begin === true")
+
+    def test_vaste_kleur_blijft_na_bewerken(self):
+        """Materiaalbordje modern (altijd DSL blauw) houdt zijn vaste kleur als je het in Beheer bewerkt."""
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        self.open('sjabloon:kist-modern')
+        p.locator('#beheerForm [data-pad="naam"]').fill('Materiaalbordje modern')
+        self.wacht_model("e.sjablonen.find(s => s.id === 'kist-modern').naam === 'Materiaalbordje modern' && e.sjablonen.find(s => s.id === 'kist-modern').kleuren.rand.vast === true && e.sjablonen.find(s => s.id === 'kist-modern').kleuren.rand.anders === '#005abb'")
+
     def test_sjabloon_bewerken_live(self):
         p = self.pagina
         self.maak_model()

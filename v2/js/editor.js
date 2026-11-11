@@ -65,7 +65,8 @@ function normaliseer(bron) {
   s.kleuren = { ...(s.kleuren || {}) };
   for (const k of ['rand', 'label']) {
     const r = s.kleuren[k];
-    if (r) s.kleuren[k] = { sleutel: r.sleutel ? [...r.sleutel] : (r.veld ? [{ veld: r.veld }] : []), waarden: { ...(r.waarden || {}) } };
+    // overige eigenschappen (begin, anders, vast) blijven behouden
+    if (r) { const { veld, ...rest } = r; s.kleuren[k] = { ...rest, sleutel: r.sleutel ? [...r.sleutel] : (veld ? [{ veld }] : []), waarden: { ...(r.waarden || {}) } }; }
   }
   return s;
 }
@@ -102,7 +103,8 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
         const w = sleutel(r.waarde), c = geldigeKleur(r.kleur);
         if (w && c) waarden[w] = c;
       }
-      if (tokens.length || Object.keys(waarden).length) uit.kleuren[k] = { sleutel: tokens, waarden };
+      const { sleutel: _s, waarden: _w, ...rest } = s.kleuren[k] || {};
+      if (tokens.length || Object.keys(waarden).length || rest.anders) uit.kleuren[k] = { ...rest, sleutel: tokens, waarden };
       else delete uit.kleuren[k];
     }
     if (!uit.regelsVeld) delete uit.regelsVeld;
@@ -202,6 +204,7 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     const tokens = s.kleuren[k]?.sleutel || [];
     return `<div class="kleurregel" data-regel="${k}"><h4>${KLEURREGEL[k]}</h4>`
       + `<label class="veld"><span>Volgt <small>bijv. {Lengte}</small></span><input type="text" class="tokens" data-pad="kleur.${k}.sleutel" value="${esc(naarTekst(tokens))}" autocomplete="off" spellcheck="false"></label>`
+      + `<label class="vink"><input type="checkbox" data-pad="kleur.${k}.begin"${s.kleuren[k]?.begin ? ' checked' : ''}> Waarde is het begin <small>(A geldt voor A1, A4-2-1 …)</small></label>`
       + `<table class="kleurtabel"><thead><tr><th scope="col">Waarde</th><th scope="col">Kleur</th><th scope="col"><span class="bh-sr">Verwijderen</span></th></tr></thead>`
       + `<tbody>${rijen[k].map((r, i) => htmlKleurRij(k, r, i)).join('')}</tbody></table>`
       + `<datalist id="ed${uid}-w-${k}"></datalist>`
@@ -367,6 +370,10 @@ export function tekenEditor(doel, sjabloon, { opWijziging = () => {}, waardenVoo
     const d = p.split('.');
     if (el.type === 'checkbox') {
       if (d[0] === 'veld') s.velden[+d[1]].verplicht = el.checked;
+      else if (d[0] === 'kleur' && d[2] === 'begin') {
+        s.kleuren[d[1]] = { sleutel: [], waarden: {}, ...(s.kleuren[d[1]] || {}) };
+        if (el.checked) s.kleuren[d[1]].begin = true; else delete s.kleuren[d[1]].begin;
+      }
       else s[p] = el.checked;
       wijzig();
     } else if (p === 'opmaak') { zetOpmaak(el.value); herteken('basis', 'plekken', 'kleuren'); wijzig(); }

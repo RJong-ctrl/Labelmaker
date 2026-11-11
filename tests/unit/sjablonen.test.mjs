@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'stellingbord', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -338,4 +338,33 @@ test('extra_inhoud_per_kisttype_komt_erbij', () => {
     assert.deepEqual(vul(S.kist, kist, extra, qr).lijst, [['2', 'Martin Audio DD6'], ['2', 'Speakon kabel 10m'], ['1', 'Regenhoes']]);
   }
   assert.deepEqual(vul(S['kist-modern'], kist, extra, '*GE2162-01').lijst.length, 3);
+});
+
+test('stellingbord_als_sjabloon_met_kleur_per_zone', () => {
+  const sj = S.stellingbord;
+  assert.equal(sj.opmaak, 'wand');
+  assert.deepEqual(sj.formaat, { b: 194, h: 281 });
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Code', 'Wat']);
+  const leeg = { ...A.GE9402, naam: '', code: '', locatie: '' };
+  const i = vul(sj, leeg, { Code: 'G3', Wat: 'Torens, takels' }, '');
+  assert.equal(i.titel, 'G3');
+  assert.equal(i.onder, 'Torens, takels');
+  assert.equal(i.qr, 'G3');
+  assert.equal(i.rand, '#ff0000');                                       // zone G = rood
+  assert.equal(vul(sj, leeg, { Code: 'A4-2-1' }, '').rand, '#005abb');   // begint met A
+  assert.equal(vul(sj, leeg, { Code: 'Q1' }, '').rand, '#7f7f7f');       // onbekende zone
+  assert.equal(vul(sj, leeg, { Code: 'G3', Randkleur: 'Groen' }, '').rand, '#00b050'); // zelf gekozen gaat voor
+});
+
+test('bakbord_16_cm_breed', () => {
+  const sj = S.bakbord;
+  assert.deepEqual(sj.formaat, { b: 160, h: 48 });
+  assert.equal(sj.printer, 'a4');
+  assert.equal(sj.voet, false);
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Code', 'Wat']);
+  const i = vul(sj, { ...A.GE9402, naam: '', code: '' }, { Code: 'A4-2-1', Wat: 'Speakon kabels 10m' }, '');
+  assert.equal(i.titel, 'A4-2-1');
+  assert.equal(i.onder, 'Speakon kabels 10m');
+  assert.equal(i.qr, 'A4-2-1');
+  assert.equal(i.rand, '#005abb');
 });
