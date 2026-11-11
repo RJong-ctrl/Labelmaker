@@ -117,15 +117,20 @@ export const GROEPEN = [
   { sleutel: 'bordjes', titel: 'Bordjes' },
   { sleutel: 'magazijn', titel: 'Magazijn' },
   { sleutel: 'kisten', titel: 'Kisten' },
-  { sleutel: 'stroken', titel: 'Stroken' },
   { sleutel: 'labels', titel: 'Labels' },
 ];
+// Stroken (gitterbox) horen bij het magazijn, net als het bakbord (Robin, 11 nov).
 export function groepVan(sj) {
   const sleutel = sj.printer === 'label' ? 'labels'
-    : sj.opmaak === 'wand' ? 'magazijn'
-      : String(sj.opmaak || '').startsWith('kist') ? 'kisten'
-        : sj.opmaak === 'strook' ? 'stroken' : 'bordjes';
+    : sj.opmaak === 'wand' || sj.opmaak === 'strook' ? 'magazijn'
+      : String(sj.opmaak || '').startsWith('kist') ? 'kisten' : 'bordjes';
   return GROEPEN.find(g => g.sleutel === sleutel);
+}
+/** Volgorde binnen het magazijn: stellingborden, smalle stroken (bakbord, gitterbox), dan wandborden. */
+export function volgordeIn(sj) {
+  if (sj.opmaak === 'strook' || (sj.opmaak === 'wand' && sj.formaat?.b / sj.formaat?.h > 2.5)) return 1;
+  if (String(sj.id).startsWith('stellingbord')) return 0;
+  return 2;
 }
 
 export const DSL_SJABLONEN = [

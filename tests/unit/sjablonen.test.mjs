@@ -413,7 +413,7 @@ test('stellingbord_a5', () => {
 });
 
 test('sjablonen_in_groepen', () => {
-  assert.deepEqual(GROEPEN.map(g => g.sleutel), ['bordjes', 'magazijn', 'kisten', 'stroken', 'labels']);
+  assert.deepEqual(GROEPEN.map(g => g.sleutel), ['bordjes', 'magazijn', 'kisten', 'labels']);
   const g = (id) => groepVan(S[id]).sleutel;
   assert.equal(g('bordje-staand'), 'bordjes');
   assert.equal(g('backdrop'), 'bordjes');
@@ -421,6 +421,6 @@ test('sjablonen_in_groepen', () => {
   assert.equal(g('bakbord'), 'magazijn');
   assert.equal(g('wandbord-a5-liggend'), 'magazijn');
   assert.equal(g('kist-modern'), 'kisten');
-  assert.equal(g('gitterbox'), 'stroken');
+  assert.equal(g('gitterbox'), 'magazijn');      // strook hoort bij het magazijn, naast het bakbord
   assert.equal(g('qrlabel'), 'labels');
 });

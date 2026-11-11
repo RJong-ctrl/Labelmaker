@@ -1,7 +1,7 @@
 // Maken: een leeg formulier om een bordje, strook of label te maken. Een artikel
 // opzoeken (of scannen) vult de velden in; alles blijft aanpasbaar.
 
-import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN, GROEPEN, groepVan } from './sjablonen.js';
+import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN, GROEPEN, groepVan, volgordeIn } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { veldInvoer, vraagReeks } from './dialogen.js';
 import { leesReeks, zoneKleur } from './reeks.js';
@@ -40,7 +40,8 @@ export function startMaken(root, h) {
   const qrEigen = () => m.qrBewerkt && !(m.artikel && (m.qr === (m.artikel.qr || '') || (m.artikel.exemplaren || []).includes(m.qr)));
 
   /** Sjablonen per soort (bordjes, magazijn, kisten, stroken, labels), lege soorten overgeslagen. */
-  const perGroep = () => GROEPEN.map(g => [g, h.E().sjablonen.filter(s => groepVan(s) === g)]).filter(([, l]) => l.length);
+  const perGroep = () => GROEPEN.map(g => [g, h.E().sjablonen.filter(s => groepVan(s) === g)
+    .map((s, i) => [s, i]).sort((a, b) => volgordeIn(a[0]) - volgordeIn(b[0]) || a[1] - b[1]).map(([s]) => s)]).filter(([, l]) => l.length);
   const groepTitel = (g) => (g.sleutel === 'labels' ? `Labels · ${h.E().printers?.label?.naam || 'labelprinter'}` : g.titel);
 
   function soortOpties() {

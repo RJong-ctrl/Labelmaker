@@ -46,8 +46,10 @@ class Maken(MakenHulp, PaginaTest):
             expect(venster.locator('[data-tegel="%s"]' % id)).to_have_count(1)
         expect(venster.locator('.duim .signb, .duim .lbl')).to_have_count(venster.locator('[data-tegel]').count())
         # per soort een eigen rij
-        expect(venster.locator('.tegelkop')).to_have_text(['Bordjes', 'Magazijn', 'Kisten', 'Stroken', re.compile('Labels')])
-        expect(venster.locator('.tegels').nth(1).locator('[data-tegel]')).to_have_count(7)
+        expect(venster.locator('.tegelkop')).to_have_text(['Bordjes', 'Magazijn', 'Kisten', re.compile('Labels')])
+        magazijn = venster.locator('.tegels').nth(1).locator('[data-tegel]')
+        ids = magazijn.evaluate_all('l => l.map(e => e.dataset.tegel)')
+        self.assertEqual(ids[:4], ['stellingbord', 'stellingbord-a5', 'bakbord', 'gitterbox'])   # stroken naast elkaar
         # voorbeeldjes tonen ook iets bij sjablonen met eigen velden (Code/Wat)
         expect(venster.locator('[data-tegel="stellingbord"] .titel')).to_have_text('A1')
         p.keyboard.press('Escape')
