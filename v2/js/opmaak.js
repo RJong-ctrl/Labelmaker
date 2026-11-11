@@ -97,12 +97,13 @@ function bordje(i, hs) {
       + voet;
   } else if (wand && W / H > 2.5) {
     // Smal en breed (bakbord): links de code groot en wat erin zit, rechts een flinke QR over de hele hoogte.
-    const qs = H - 2 * pad - 5 * f;
+    // De code staat al groot links: onder de QR niet nog een keer.
+    const qs = H - 2 * pad;
     main = `<div style="flex:1 1 auto;min-height:0;display:flex;gap:${mm(5 * f)}">`
       + `<div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column">`
-      + vak('t titel wt', H * 0.42 * PT, titel, `height:${mm(H * 0.42)};flex:0 0 auto`)
-      + (i.onder ? vak('w-inhoud wrap', H * 0.16 * PT, esc(i.onder), `flex:1 1 0;min-height:0;justify-content:flex-start;margin-top:${mm(1.5 * f)}`, 7, 2) : '')
-      + `</div><div style="display:flex;align-items:center">${qrBlok(qs)}</div></div>`;
+      + vak('t titel wt', H * 0.36 * PT, titel, `height:${mm(H * 0.36)};flex:0 0 auto`)
+      + (i.onder ? vak('w-inhoud wrap', H * 0.24 * PT, esc(i.onder), `flex:1 1 0;min-height:0;justify-content:center;margin-top:${mm(1 * f)}`, 8, 2) : '')
+      + `</div><div style="display:flex;align-items:center"><div class="qbox">${qrOfMelding(i.qr, qs)}</div></div></div>`;
   } else if (wand) {
     // Wandbord: de locatie zo groot mogelijk, eronder wat er ligt, QR van de locatie rechtsonder.
     const tH = H * (staand ? 0.34 : 0.4);

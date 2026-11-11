@@ -422,6 +422,20 @@ class Maken(MakenHulp, PaginaTest):
         expect(p.locator('#vellen .signb .titel').first).to_have_text('A4-2-1')
         self.assertEqual(self.fouten, [])
 
+    def test_bakbord_code_een_keer_en_wat_goed_leesbaar(self):
+        p = self.pagina
+        self.kies('bakbord')
+        p.locator('#makenVelden input[name="Code"]').fill('A4-2-1')
+        p.locator('#makenVelden input[name="Wat"]').fill('Speakon kabels 10m')
+        b = p.locator('#makenVoorbeeld .signb')
+        expect(b.locator('.titel')).to_have_text('A4-2-1')
+        expect(b.locator('.qc')).to_have_count(0)                  # code niet nog eens onder de QR
+        expect(p.locator('#makenVelden input[name="__qr"]')).to_have_count(0)   # QR komt uit Code, geen apart veld
+        p.wait_for_timeout(600)
+        pt = lambda sel: float(b.locator(sel + '>span').evaluate('e => parseFloat(e.style.fontSize)'))
+        self.assertGreaterEqual(pt('.w-inhoud'), 28, 'wat erin zit moet goed leesbaar zijn')
+        self.assertGreaterEqual(pt('.w-inhoud'), pt('.titel') * 0.5)
+
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
         p = self.pagina

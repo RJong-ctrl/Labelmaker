@@ -167,7 +167,8 @@ export function startMaken(root, h) {
     }
     const ex = m.artikel?.exemplaren?.length ? `<label class="vink breed"><input type="checkbox" id="makenPerEx"${m.perExemplaar ? ' checked' : ''}> Eén per exemplaar (${m.artikel.exemplaren.length})</label>` : '';
     root.getElementById('makenVelden').innerHTML = velden.join('')
-      + `<label class="veld"><span>QR-code <small>(leeg = geen)</small></span><input type="text" name="__qr" value="${esc(qrWaarde())}" autocomplete="off"></label>`
+      // Haalt het sjabloon de QR zelf uit een veld (bijv. Code of Locatie), dan geen apart QR-veld.
+      + (sj?.plekken?.qr?.length ? '' : `<label class="veld"><span>QR-code <small>(leeg = geen)</small></span><input type="text" name="__qr" value="${esc(qrWaarde())}" autocomplete="off"></label>`)
       + `<label class="veld"><span>Aantal</span><input type="number" name="__aantal" min="1" max="999" value="${m.aantal}"></label>` + ex;
     tekenVoorbeeld();
   }
