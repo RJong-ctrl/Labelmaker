@@ -262,7 +262,7 @@ class Editor(Hulp):
         expect(hoogte).to_have_value('48')
         hoogte.fill('60')
         hoogte.press('Tab')
-        self.wacht_model("e.sjablonen.find(s => s.id === 'bakbord').formaat.h === 60 && e.sjablonen.find(s => s.id === 'bakbord').kleuren.rand.begin === true")
+        self.wacht_model("e.sjablonen.find(s => s.id === 'bakbord').formaat.h === 60")
 
     def test_vaste_kleur_blijft_na_bewerken(self):
         """Materiaalbordje modern (altijd DSL blauw) houdt zijn vaste kleur als je het in Beheer bewerkt."""

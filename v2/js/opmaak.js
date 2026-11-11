@@ -96,14 +96,14 @@ function bordje(i, hs) {
       + `<div class="ksticker" style="height:${mm(st.h)}">Projectsticker</div></div></div>`
       + voet;
   } else if (wand && W / H > 2.5) {
-    // Smal en breed (bakbord): links de code groot en wat erin zit, rechts een flinke QR over de hele hoogte.
-    // De code staat al groot links: onder de QR niet nog een keer.
-    const qs = H - 2 * pad;
+    // Smal en breed (bakbord): links de naam groot met het artikelnummer eronder, rechts de QR over de hele
+    // hoogte met de QR-waarde één keer klein eronder.
+    const qs = H - 2 * pad - 5.5;
     main = `<div style="flex:1 1 auto;min-height:0;display:flex;gap:${mm(5 * f)}">`
       + `<div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column">`
-      + vak('t titel wt', H * 0.36 * PT, titel, `height:${mm(H * 0.36)};flex:0 0 auto`)
-      + (i.onder ? vak('w-inhoud wrap', H * 0.24 * PT, esc(i.onder), `flex:1 1 0;min-height:0;justify-content:center;margin-top:${mm(1 * f)}`, 8, 2) : '')
-      + `</div><div style="display:flex;align-items:center"><div class="qbox">${qrOfMelding(i.qr, qs)}</div></div></div>`;
+      + vak('t titel wrap wt', H * 0.3 * PT, titel, `flex:1 1 0;min-height:0;justify-content:flex-start`, 8, 2)
+      + (i.onder ? vak('w-inhoud', H * 0.16 * PT, esc(i.onder), `height:${mm(H * 0.2)};flex:0 0 auto;margin-top:${mm(1 * f)}`, 6) : '')
+      + `</div><div style="display:flex;align-items:center">${i.qr ? `<div class="qbox">${qrOfMelding(i.qr, qs)}<div class="qc" style="font-size:6.5pt;max-width:${mm(qs + 6)}">${esc(i.qr)}</div></div>` : ''}</div></div>`;
   } else if (wand) {
     // Wandbord: de locatie zo groot mogelijk, eronder wat er ligt, QR van de locatie rechtsonder.
     const tH = H * (staand ? 0.34 : 0.4);

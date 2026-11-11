@@ -77,9 +77,12 @@ export const stellingbord = (id, naam, b, h) => ({
   kleuren: zoneKleuren(),
 });
 
-/** Bakbord voor magazijnbakken: 16 cm breed, code groot, wat erin zit, QR. Vijf per A4, geen voet. */
+/** Bakbord voor magazijnbakken: 16 cm breed. Naam linksboven, artikelnummer eronder, QR van het artikel
+ *  (QR-veld, met de waarde één keer klein eronder). Vijf per A4, geen voet. Randkleur naar keuze. */
 export const bakbord = (id, naam) => ({
-  ...stellingbord(id, naam, 160, 48), voet: false,
+  ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b: 160, h: 48 }, gat: false, voet: false,
+  velden: [kolom('Naam', 'naam', true), kolom('Code', 'code')],
+  plekken: { ...leeg, titel: [v('Naam')], onder: [v('Code')] },
 });
 
 /** Materiaalbordje voor op de kist (gelamineerd in een A5-hoes), opgebouwd als het oude bordje: logo, vak voor

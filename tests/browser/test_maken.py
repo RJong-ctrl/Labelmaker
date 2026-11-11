@@ -409,32 +409,25 @@ class Maken(MakenHulp, PaginaTest):
         expect(p.locator('#makenVelden input[name="Wat"]')).to_have_value('Kabels in gitterboxen')
         self.assertEqual(self.fouten, [])
 
-    def test_bakborden_vijf_per_a4(self):
+    def test_bakbord_naam_code_en_qr(self):
+        """Bakbord: naam linksboven, artikelnummer eronder, QR uit het QR-veld en die één keer klein onder de QR."""
         p = self.pagina
+        self.inlezen()
+        self.kies('bakbord') if p.locator('#makenSoort').count() == 0 else None
+        self.opzoeken('GE9402')
         self.kies('bakbord')
-        p.locator('#makenReeks').click()
-        d = p.locator('#aanvulling')
-        d.locator('textarea[name="tekst"]').fill('\n'.join('A4-2-%d\tSpeakon kabels %dm' % (n, n) for n in range(1, 7)))
-        d.get_by_role('button', name='Op printvel').click()
-        expect(p.locator('#printA4')).to_have_text('Print 6 op A4')
+        qr = p.locator('#makenVelden input[name="__qr"]')
+        expect(qr).to_have_count(1)
+        b = p.locator('#makenVoorbeeld .signb')
+        expect(b.locator('.titel')).to_have_text('Speakon 4p Verlengkabel 2,5m')
+        expect(b.locator('.w-inhoud')).to_have_text('GE9402')
+        expect(b.locator('.qc')).to_have_count(1)
+        expect(b.locator('.qc')).to_have_text(qr.input_value())
+        p.locator('#makenVelden input[name="__aantal"]').fill('6')
+        p.locator('#makenOpVel').click()
         expect(p.locator('#vellen .a4')).to_have_count(2)
         expect(p.locator('#vellen .a4').first.locator('.signb')).to_have_count(5)
-        expect(p.locator('#vellen .signb .titel').first).to_have_text('A4-2-1')
         self.assertEqual(self.fouten, [])
-
-    def test_bakbord_code_een_keer_en_wat_goed_leesbaar(self):
-        p = self.pagina
-        self.kies('bakbord')
-        p.locator('#makenVelden input[name="Code"]').fill('A4-2-1')
-        p.locator('#makenVelden input[name="Wat"]').fill('Speakon kabels 10m')
-        b = p.locator('#makenVoorbeeld .signb')
-        expect(b.locator('.titel')).to_have_text('A4-2-1')
-        expect(b.locator('.qc')).to_have_count(0)                  # code niet nog eens onder de QR
-        expect(p.locator('#makenVelden input[name="__qr"]')).to_have_count(0)   # QR komt uit Code, geen apart veld
-        p.wait_for_timeout(600)
-        pt = lambda sel: float(b.locator(sel + '>span').evaluate('e => parseFloat(e.style.fontSize)'))
-        self.assertGreaterEqual(pt('.w-inhoud'), 28, 'wat erin zit moet goed leesbaar zijn')
-        self.assertGreaterEqual(pt('.w-inhoud'), pt('.titel') * 0.5)
 
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""

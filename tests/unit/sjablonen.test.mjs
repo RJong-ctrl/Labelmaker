@@ -357,14 +357,15 @@ test('stellingbord_als_sjabloon_met_kleur_per_zone', () => {
 });
 
 test('bakbord_16_cm_breed', () => {
+  // Bakbord: naam linksboven, artikelnummer eronder, QR van het artikel (QR-veld), die één keer klein onder de QR.
   const sj = S.bakbord;
   assert.deepEqual(sj.formaat, { b: 160, h: 48 });
   assert.equal(sj.printer, 'a4');
   assert.equal(sj.voet, false);
-  assert.deepEqual(sj.velden.map(v => v.naam), ['Code', 'Wat']);
-  const i = vul(sj, { ...A.GE9402, naam: '', code: '' }, { Code: 'A4-2-1', Wat: 'Speakon kabels 10m' }, '');
-  assert.equal(i.titel, 'A4-2-1');
-  assert.equal(i.onder, 'Speakon kabels 10m');
-  assert.equal(i.qr, 'A4-2-1');
-  assert.equal(i.rand, '#005abb');
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Naam', 'Code']);
+  assert.ok(!sj.plekken.qr?.length);     // QR uit het QR-veld (artikel), niet uit een veld
+  const i = vul(sj, A.GE9402, {}, 'GE9402-QR');
+  assert.equal(i.titel, 'Speakon 4p Verlengkabel 2,5m');
+  assert.equal(i.onder, 'GE9402');
+  assert.equal(i.qr, 'GE9402-QR');
 });
