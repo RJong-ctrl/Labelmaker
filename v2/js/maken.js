@@ -1,7 +1,7 @@
 // Maken: een leeg formulier om een bordje, strook of label te maken. Een artikel
 // opzoeken (of scannen) vult de velden in; alles blijft aanpasbaar.
 
-import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN } from './sjablonen.js';
+import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN, GROEPEN, groepVan } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { veldInvoer, vraagReeks } from './dialogen.js';
 import { leesReeks, zoneKleur } from './reeks.js';
@@ -39,13 +39,13 @@ export function startMaken(root, h) {
   // Een QR van het artikel zelf (artikel-QR of een van zijn exemplaren) is geen eigen wijziging.
   const qrEigen = () => m.qrBewerkt && !(m.artikel && (m.qr === (m.artikel.qr || '') || (m.artikel.exemplaren || []).includes(m.qr)));
 
+  /** Sjablonen per soort (bordjes, magazijn, kisten, stroken, labels), lege soorten overgeslagen. */
+  const perGroep = () => GROEPEN.map(g => [g, h.E().sjablonen.filter(s => groepVan(s) === g)]).filter(([, l]) => l.length);
+  const groepTitel = (g) => (g.sleutel === 'labels' ? `Labels · ${h.E().printers?.label?.naam || 'labelprinter'}` : g.titel);
+
   function soortOpties() {
-    const groep = (printer, titel) => {
-      const lijst = h.E().sjablonen.filter(s => s.printer === printer);
-      return lijst.length ? `<optgroup label="${esc(titel)}">${lijst.map(s => `<option value="${esc(s.id)}"${s.id === m.sjabloonId ? ' selected' : ''}>${esc(s.naam)}</option>`).join('')}</optgroup>` : '';
-    };
     return (m.artikel ? `<option value="auto"${m.sjabloonId === 'auto' ? ' selected' : ''}>Automatisch (volgt het artikel)</option>` : '')
-      + groep('a4', 'A4') + groep('label', h.E().printers?.label?.naam || 'Labelprinter');
+      + perGroep().map(([g, lijst]) => `<optgroup label="${esc(g.titel)}">${lijst.map(s => `<option value="${esc(s.id)}"${s.id === m.sjabloonId ? ' selected' : ''}>${esc(s.naam)}</option>`).join('')}</optgroup>`).join('');
   }
 
   // Beginscherm: tegels met de sjablonen (en bovenaan zoeken/scannen). Een tegel of een artikel opent het formulier.
@@ -84,12 +84,9 @@ export function startMaken(root, h) {
         root.querySelector('#makenVelden input, #makenVelden textarea, #makenVelden select')?.focus();
       });
     }
-    const groep = (printer, titel) => {
-      const lijst = h.E().sjablonen.filter(s => s.printer === printer);
-      return lijst.length ? `<h3 class="tegelkop">${esc(titel)}</h3><div class="tegels">${lijst.map(s => `<button type="button" class="tegel${s.id === m.sjabloonId ? ' gekozen' : ''}" data-tegel="${esc(s.id)}"><span class="duim" data-duim="${esc(s.id)}"></span><span class="tnaam">${esc(s.naam)}</span></button>`).join('')}</div>` : '';
-    };
+    const tegel = (s) => `<button type="button" class="tegel${s.id === m.sjabloonId ? ' gekozen' : ''}" data-tegel="${esc(s.id)}"><span class="duim" data-duim="${esc(s.id)}"></span><span class="tnaam">${esc(s.naam)}</span></button>`;
     dlg.innerHTML = '<div class="kop"><h2 id="sjabloonVensterKop">Sjabloon kiezen</h2><button type="button" class="klein" data-sluit aria-label="Sluiten">×</button></div>'
-      + '<div id="makenTegels">' + groep('a4', 'A4 · bordjes en stroken') + groep('label', `${h.E().printers?.label?.naam || 'Labelprinter'} · labels`) + '</div>';
+      + '<div id="makenTegels">' + perGroep().map(([g, lijst]) => `<h3 class="tegelkop">${esc(groepTitel(g))}</h3><div class="tegels">${lijst.map(tegel).join('')}</div>`).join('') + '</div>';
     dlg.showModal();
     tekenDuimen();
   }

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { leesXlsx } from '../../v2/js/bestanden.js';
 import { importeer } from '../../v2/js/import.js';
-import { DSL_SJABLONEN, vul, ontbrekend, qrsVoor, standaardSjabloon } from '../../v2/js/sjablonen.js';
+import { DSL_SJABLONEN, groepVan, GROEPEN, vul, ontbrekend, qrsVoor, standaardSjabloon } from '../../v2/js/sjablonen.js';
 import { KLEURNAMEN, tint, inkt, sleutel } from '../../v2/js/kleuren.js';
 
 const b = await readFile(new URL('../fixtures/out/voorbeeld.xlsx', import.meta.url));
@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'stellingbord', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -400,4 +400,27 @@ test('stellingbord_standaard_zonder_qr', () => {
   assert.deepEqual(veld.keuzes.map(k => k.tekst), ['Zonder QR-code', 'Met QR-code']);
   assert.equal(vul(sj, A.GE9402, { Code: 'A1' }, 'x').qr, '');
   assert.equal(vul(sj, A.GE9402, { Code: 'A1', 'QR-code': 'ja' }, 'x').qr, 'A1');
+});
+
+test('stellingbord_a5', () => {
+  const sj = S['stellingbord-a5'];
+  assert.deepEqual(sj.formaat, { b: 136, h: 194 });
+  assert.equal(sj.opmaak, 'wand');
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Code', 'Wat', 'QR-code']);
+  assert.equal(vul(sj, A.GE9402, { Code: 'A1' }, 'x').qr, '');       // ook standaard zonder QR
+  assert.equal(S.stellingbord.naam, 'Stellingbord A4');
+  assert.equal(sj.naam, 'Stellingbord A5');
+});
+
+test('sjablonen_in_groepen', () => {
+  assert.deepEqual(GROEPEN.map(g => g.sleutel), ['bordjes', 'magazijn', 'kisten', 'stroken', 'labels']);
+  const g = (id) => groepVan(S[id]).sleutel;
+  assert.equal(g('bordje-staand'), 'bordjes');
+  assert.equal(g('backdrop'), 'bordjes');
+  assert.equal(g('stellingbord-a5'), 'magazijn');
+  assert.equal(g('bakbord'), 'magazijn');
+  assert.equal(g('wandbord-a5-liggend'), 'magazijn');
+  assert.equal(g('kist-modern'), 'kisten');
+  assert.equal(g('gitterbox'), 'stroken');
+  assert.equal(g('qrlabel'), 'labels');
 });

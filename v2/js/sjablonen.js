@@ -112,6 +112,22 @@ export const kistbordje = (id, naam, opmaak = 'kist') => ({
   kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb', vast: true } },
 });
 
+/** Soorten in de sjabloonkeuze, elk een eigen rij. */
+export const GROEPEN = [
+  { sleutel: 'bordjes', titel: 'Bordjes' },
+  { sleutel: 'magazijn', titel: 'Magazijn' },
+  { sleutel: 'kisten', titel: 'Kisten' },
+  { sleutel: 'stroken', titel: 'Stroken' },
+  { sleutel: 'labels', titel: 'Labels' },
+];
+export function groepVan(sj) {
+  const sleutel = sj.printer === 'label' ? 'labels'
+    : sj.opmaak === 'wand' ? 'magazijn'
+      : String(sj.opmaak || '').startsWith('kist') ? 'kisten'
+        : sj.opmaak === 'strook' ? 'stroken' : 'bordjes';
+  return GROEPEN.find(g => g.sleutel === sleutel);
+}
+
 export const DSL_SJABLONEN = [
   qrlabel('qrlabel', 'QR-label', 56),
   qrlabel('qrlabel-half', 'QR-label half', 28),
@@ -136,7 +152,8 @@ export const DSL_SJABLONEN = [
   leegBordje('leeg-liggend', 'Leeg bordje liggend', 'liggend', 105, 74),
   vrijBordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),
   vrijBordje('bordje-liggend', 'Bordje liggend', 'liggend', 105, 74),
-  stellingbord('stellingbord', 'Stellingbord (kopse kant)', 194, 281),
+  stellingbord('stellingbord', 'Stellingbord A4', 194, 281),
+  stellingbord('stellingbord-a5', 'Stellingbord A5', 136, 194),
   bakbord('bakbord', 'Bakbord (16 cm)'),
   wandbord('wandbord-staand', 'Wandbord A4 staand', 194, 281),
   wandbord('wandbord-liggend', 'Wandbord A4 liggend', 281, 194),

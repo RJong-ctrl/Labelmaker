@@ -107,7 +107,7 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 /* ---------- maken ---------- */
 .maken .kiesblok{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:4px}
 .maken .kiesblok .hint{margin:0}
-dialog.sjabloonkeuze{width:min(760px,92vw);max-height:86vh;overflow:auto;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
+dialog.sjabloonkeuze{width:min(1080px,94vw);max-height:88vh;overflow:auto;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
 dialog.sjabloonkeuze::backdrop{background:rgba(0,0,0,.55)}
 dialog.sjabloonkeuze .kop{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 dialog.sjabloonkeuze h2{margin:0;font-size:18px}
