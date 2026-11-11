@@ -20,10 +20,13 @@ const VOORBEELD_ARTIKEL = {
 };
 // Proefwaarden voor lege aanvulvelden in het voorbeeld (alleen zonder passend artikel), zodat je ziet
 // wat er verandert als je het sjabloon bewerkt.
-const PROEF = { Code: 'A1', Wat: 'Voorbeeld inhoud', Inhoud: '2 Voorbeeld onderdeel\n1 Flightcase', Omschrijving: 'Voorbeeld omschrijving', Gewicht: '12,5', Locatie: 'A1' };
+const PROEF = { Code: 'A1', Wat: 'Voorbeeld inhoud', Omschrijving: 'Voorbeeld omschrijving', Locatie: 'A1', 'Extra inhoud': '2 Speakon kabel 10m' };
+// Uit de kist (exemplaren-export): kistnummer, gewicht en inhoud.
+const PROEF_KIST = { nr: 'DSL01', gewicht: '27,34', inhoud: '2 Martin Audio DD6\n1 Flightcase DD6' };
 function proefwaarden(sj) {
   const uit = {};
   for (const v of sj.velden || []) {
+    if (v.herkomst?.type === 'exemplaar') { uit[v.naam] = PROEF_KIST[v.herkomst.sleutel] ?? ''; continue; }
     if (v.herkomst?.type !== 'aanvulling' || v.keuzes?.length || v.opties?.length) continue;
     uit[v.naam] = PROEF[v.naam] ?? (v.meerregelig ? '' : v.naam);
   }

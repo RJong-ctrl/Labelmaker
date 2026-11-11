@@ -253,6 +253,18 @@ class Editor(Hulp):
         rij.locator('select[data-pad$=".naam"]').select_option('groen')
         self.wacht_model("e.sjablonen.find(s => s.id === 'stellingbord').kleuren.rand.waarden.g === '#00b050' && e.sjablonen.find(s => s.id === 'stellingbord').kleuren.rand.begin === true")
 
+    def test_materiaalbordjes_voorbeeld_met_inhoud(self):
+        """Materiaalbordjes in Beheer: het voorbeeld toont proefinhoud, kistnummer en gewicht."""
+        p = self.pagina
+        self.maak_model()
+        self.start()
+        for sj in ['kist-modern', 'kist']:
+            self.open('sjabloon:' + sj)
+            vb = p.locator('#beheerVoorbeeldDoel .signb')
+            expect(vb.locator('.kt')).not_to_have_count(0)
+            expect(vb).to_contain_text('DSL01')
+            expect(vb).to_contain_text('kg')
+
     def test_stellingbord_voorbeeld_toont_wijzigingen(self):
         """Zonder passend artikel toont het voorbeeld proefwaarden (A1, Voorbeeld) en volgt het elke wijziging meteen."""
         p = self.pagina
