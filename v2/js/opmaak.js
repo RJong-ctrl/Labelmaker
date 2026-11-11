@@ -60,7 +60,9 @@ function bordje(i, hs) {
   const wand = i.opmaak === 'wand', kist = i.opmaak === 'kist-modern';
   const staand = i.opmaak === 'staand' || (wand && H > W), strook = i.opmaak === 'strook';
   const f = wand || kist ? Math.min(W, H) / 74 : staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48);
-  const bw = wand || kist ? Math.min(W, H) * 0.17 : staand ? W * 0.19 : Math.min(W * 0.15, H * 0.3);
+  // Kleurband met logo: breed en laag (bakbord) net als de strook, anders naar de kortste zijde.
+  const breed = wand && W / H > 2.5;
+  const bw = breed ? Math.min(W * 0.15, H * 0.3) : wand || kist ? Math.min(W, H) * 0.17 : staand ? W * 0.19 : Math.min(W * 0.15, H * 0.3);
   const gap = staand ? 4 * f : 3.5 * f, pad = staand ? 4 * f : 3 * f;
   const titel = esc(i.titel), groot = esc(i.groot);
   const rijen = i.eigenschappen.map(([k, v]) => [k, v]);
@@ -95,7 +97,7 @@ function bordje(i, hs) {
       + `<div class="krechts" style="width:${mm(st.b)}"><div class="kbot"><div class="kgew">${groot ? `<span>Kist</span><b>${groot}</b>` : ''}${gw ? `<span>Gewicht</span><b>${esc(gw)}</b>` : ''}</div>${i.qr ? qrBlok(qs) : ''}</div>`
       + `<div class="ksticker" style="height:${mm(st.h)}">Projectsticker</div></div></div>`
       + voet;
-  } else if (wand && W / H > 2.5) {
+  } else if (breed) {
     // Smal en breed (bakbord): links de naam groot met het artikelnummer eronder, rechts de QR over de hele
     // hoogte met de QR-waarde één keer klein eronder.
     const qs = H - 2 * pad - 5.5;

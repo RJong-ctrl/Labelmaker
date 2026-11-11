@@ -429,6 +429,19 @@ class Maken(MakenHulp, PaginaTest):
         expect(p.locator('#vellen .a4').first.locator('.signb')).to_have_count(5)
         self.assertEqual(self.fouten, [])
 
+    def test_bakbord_logo_zoals_strook(self):
+        """Bakbord en strook zijn allebei 48 mm hoog: de kleurband met logo moet even breed zijn."""
+        p = self.pagina
+        maat = {}
+        self.inlezen()
+        self.opzoeken('GE9402')
+        for soort in ['bakbord', 'gitterbox']:
+            self.kies(soort)
+            b = p.locator('#makenVoorbeeld .signb')
+            expect(b.locator('.blg')).to_have_count(1)
+            maat[soort] = b.locator('.blg').bounding_box()['width'] / b.bounding_box()['height']
+        self.assertAlmostEqual(maat['bakbord'], maat['gitterbox'], delta=0.01)
+
     def test_kist_scannen_vult_inhoud(self):
         """Inhoud en gewicht uit de exemplaren-export: scan de kist, het bordje vult zich."""
         p = self.pagina
