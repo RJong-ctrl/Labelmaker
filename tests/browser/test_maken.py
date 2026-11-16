@@ -411,6 +411,27 @@ class Maken(MakenHulp, PaginaTest):
             self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)
         self.assertEqual(self.fouten, [])
 
+    def test_speakertas_zonder_sticker_met_inhoud(self):
+        """Speakertas-kaartje: moderne stijl met inhoud, gewicht en QR, gatmarkering, geen projectsticker."""
+        p = self.pagina
+        self.kies('speakertas')
+        p.locator('#makenVelden input[name="Naam"]').fill('d&b E8 speakertas')
+        p.locator('#makenVelden input[name="Gewicht"]').fill('9,4')
+        p.locator('#makenVelden textarea[name="Inhoud"]').fill('1 d&b E8\n1 regenhoes')
+        p.locator('#makenVelden input[name="__qr"]').fill('e8-tas-03')
+        k = p.locator('#makenVoorbeeld .signb.kist-modern')
+        expect(k.locator('.ksticker')).to_have_count(0)
+        expect(k.locator('.kt')).to_have_text(['d&b E8', 'regenhoes'])
+        expect(k.locator('.kgew')).to_contain_text('9,4 kg')
+        expect(k.locator('.qq')).to_have_count(1)
+        expect(k.locator('.gat')).to_have_count(1)
+        p.wait_for_timeout(600)
+        bb = k.bounding_box()
+        for el in [k.locator('.kgrid').bounding_box(), k.locator('.kbot').bounding_box()]:
+            self.assertLessEqual(el['y'] + el['height'], bb['y'] + bb['height'] + 0.5)
+            self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)
+        self.assertEqual(self.fouten, [])
+
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""
         p = self.pagina

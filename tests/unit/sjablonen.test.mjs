@@ -440,16 +440,20 @@ test('kist_bw1000', () => {
 });
 
 test('speakertas_kaartje', () => {
-  // Kaartje aan een speakertas: liggend als Pipe & Drape, gat om op te hangen, QR van het exemplaar en gewicht.
+  // Kaartje aan een speakertas: liggend 105 × 74 in de stijl van het moderne materiaalbordje (B&W type 1000),
+  // met inhoud, gewicht en QR van het exemplaar, gat om op te hangen, zonder projectsticker (Robin, 16 nov).
   const sj = S.speakertas;
-  assert.equal(sj.opmaak, 'liggend');
+  assert.equal(sj.opmaak, 'kist-modern');
   assert.deepEqual(sj.formaat, S['pipe-drape'].formaat);
   assert.equal(sj.gat, true);
-  const kistArt = { ...A.GE9402, naam: 'Speakertas DD6', kisten: { 'tas-02': { nr: 'DSL02', gewicht: '7,5', inhoud: '' } } };
-  const i = vul(sj, kistArt, {}, 'tas-02');
-  assert.equal(i.titel, 'Speakertas DD6');
-  assert.equal(i.groot, '7,5 kg');
+  assert.equal(sj.sticker, false);
+  assert.deepEqual(sj.velden.map(v => v.naam), S['kist-modern'].velden.map(v => v.naam));
+  const tas = { ...A.GE9402, naam: 'Speakertas E8', kisten: { 'tas-02': { nr: 'DSL02', gewicht: '7,5', inhoud: '1 d&b E8\n1 regenhoes' } } };
+  const i = vul(sj, tas, {}, 'tas-02');
+  assert.equal(i.titel, 'Speakertas E8');
   assert.equal(i.qr, 'tas-02');
-  assert.deepEqual(i.eigenschappen, [['Exemplaar', 'DSL02']]);
-  assert.equal(vul(sj, A.GE9402, {}, 'x').groot, '');   // geen gewicht: niets groots
+  assert.equal(i.sticker, false);
+  assert.equal(i.waarden.Gewicht, '7,5');
+  assert.deepEqual(i.lijst, [['1', 'd&b E8'], ['1', 'regenhoes']]);
+  assert.equal(vul(S['kist-modern'], tas, {}, 'tas-02').sticker, true);
 });

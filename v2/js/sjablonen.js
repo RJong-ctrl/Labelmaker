@@ -119,6 +119,13 @@ export const kistBw1000 = () => ({
   formaat: { b: 150, h: 87, r: 6 }, voet: false,
 });
 
+/** Kaartje aan een speakertas (Robin, 16 nov): liggend 105 × 74 zoals Pipe & Drape, in de stijl van het moderne
+ *  materiaalbordje: naam, inhoud, exemplaar, gewicht en QR van het exemplaar; gat om op te hangen, geen projectsticker. */
+export const speakertas = () => ({
+  ...kistbordje('speakertas', 'Speakertas-kaartje', 'kist-modern'),
+  formaat: { b: 105, h: 74 }, gat: true, voet: false, sticker: false,
+});
+
 /** Soorten in de sjabloonkeuze, elk een eigen rij. */
 export const GROEPEN = [
   { sleutel: 'bordjes', titel: 'Bordjes' },
@@ -160,14 +167,7 @@ export const DSL_SJABLONEN = [
     plekken: { ...leeg, titel: ['Pipe & Drape'], groot: [v('Lengte'), ' × ', v('Hoogte'), 'm'], eigenschappen: [{ kop: 'Inhoud', waarde: [v('Naam')] }] },
     kleuren: { rand: { sleutel: [v('Lengte'), ' × ', v('Hoogte')], waarden: {} } },
   },
-  // Kaartje aan een speakertas (Robin, 16 nov): zoals Pipe & Drape, met gat; QR van het exemplaar, gewicht groot.
-  {
-    ...basis, id: 'speakertas', naam: 'Speakertas-kaartje', printer: 'a4', opmaak: 'liggend', formaat: { b: 105, h: 74 },
-    gat: true, voet: true,
-    velden: [kolom('Naam', 'naam', true), uitKist('Exemplaar', 'nr', 'code'), uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' })],
-    plekken: { ...leeg, titel: [v('Naam')], groot: [v('Gewicht'), ' kg'], eigenschappen: [{ kop: 'Exemplaar', waarde: [v('Exemplaar')] }] },
-    kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb' } },
-  },
+  speakertas(),
   leegBordje('leeg-staand', 'Leeg bordje staand', 'staand', 74, 105),
   leegBordje('leeg-liggend', 'Leeg bordje liggend', 'liggend', 105, 74),
   vrijBordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),
@@ -289,6 +289,7 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     rand: (!sjabloon.kleuren.rand?.vast && eigenRand(aanvullingen)) || kleur(sjabloon.kleuren.rand, w),
     cert: sjabloon.cert || '',
     gat: !!sjabloon.gat,
+    sticker: sjabloon.sticker !== false,
     voet: !!sjabloon.voet,
     logoBoven: !!sjabloon.logoBoven,
     waarden: w,
