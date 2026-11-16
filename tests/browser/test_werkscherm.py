@@ -63,6 +63,10 @@ class Werkscherm(Hulp):
         # dezelfde export nog eens: geen venster, wel even melden
         self.lees_csv(['Kabel A;KA1;G2;4', 'Kabel C;KC1;H1;1'])
         expect(p.locator('#melding')).to_contain_text('Geen verschillen')
+        expect(d).to_be_visible()                                     # ook dan even laten weten (Robin, 16 nov)
+        expect(d.locator('.v-geen')).to_contain_text('Geen verschillen')
+        expect(d.locator('table.verschil')).to_have_count(0)
+        d.get_by_role('button', name='Sluiten').click()
         expect(d).not_to_be_visible()
 
     def test_leeg_scherm_legt_uit(self):
@@ -289,7 +293,9 @@ class Vrijheid(Hulp):
         expect(p.locator('#lijst li', has_text='Statafel zwart')).to_contain_text('B-2')
         p.locator('#bestand').set_input_files({'name': 'eigen.csv', 'mimeType': 'text/csv', 'buffer': csv.encode('utf-8')})
         expect(p.locator('#melding')).to_contain_text('1 artikel ingelezen')
-        expect(d).to_be_hidden()
+        # kolommen worden niet opnieuw gevraagd; wel het verschillenoverzicht (geen verschillen)
+        expect(d.locator('select[name="naam"]')).to_have_count(0)
+        expect(d.locator('h2')).to_have_text('Verschillen met de vorige export')
 
 
 class Robuust(Hulp):

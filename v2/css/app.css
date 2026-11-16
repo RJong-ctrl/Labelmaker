@@ -108,6 +108,7 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 .maken .kiesblok{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:4px}
 .maken .kiesblok .hint{margin:0}
 form.verschillen{width:min(760px,88vw)}
+form.verschillen .v-geen{margin:12px 0 4px;font-size:15px;font-weight:600}
 form.verschillen h3{margin:14px 0 6px;font-size:14px}
 form.verschillen .vlijst{max-height:38vh;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:4px 8px;margin:0;font-size:13px}
 form.verschillen ul.vlijst{list-style:none}

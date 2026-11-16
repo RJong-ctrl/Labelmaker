@@ -122,7 +122,9 @@ export function toonVerschillen(dlg, v) {
   const regels = v.gewijzigd.slice(0, MAX).flatMap(g => g.wat.map((w, n) =>
     `<tr>${n ? '<td></td>' : `<td><b>${esc(g.code)}</b> ${esc(g.naam)}</td>`}<td>${esc(w.veld)}</td><td class="was">${esc(w.van) || '—'}</td><td>${esc(w.naar) || '—'}</td></tr>`)).join('');
   const html = '<form class="verschillen"><h2>Verschillen met de vorige export</h2>'
-    + `<p class="hint">${v.gewijzigd.length} gewijzigd · ${v.nieuw.length} nieuw · ${v.weg.length} niet meer in de export</p>`
+    + (v.gewijzigd.length + v.nieuw.length + v.weg.length
+      ? `<p class="hint">${v.gewijzigd.length} gewijzigd · ${v.nieuw.length} nieuw · ${v.weg.length} niet meer in de export</p>`
+      : '<p class="v-geen">✓ Geen verschillen: alles is hetzelfde als bij de vorige export.</p>')
     + (v.gewijzigd.length ? `<h3>Gewijzigd</h3><div class="vlijst"><table class="verschil"><thead><tr><th>Artikel</th><th>Wat</th><th>Was</th><th>Nu</th></tr></thead><tbody>${regels}</tbody></table></div>${meer(v.gewijzigd.length)}` : '')
     + (v.nieuw.length ? `<h3>Nieuw</h3><ul class="vlijst v-nieuw">${v.nieuw.slice(0, MAX).map(art).join('')}</ul>${meer(v.nieuw.length)}` : '')
     + (v.weg.length ? `<h3>Niet meer in de export</h3><ul class="vlijst v-weg">${v.weg.slice(0, MAX).map(art).join('')}</ul>${meer(v.weg.length)}` : '')

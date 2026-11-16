@@ -362,7 +362,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
       const aantalV = v.gewijzigd.length + v.nieuw.length + v.weg.length;
       if (!v.eerste && !aantalV) delen.push('Geen verschillen met de vorige export.');
       melding(delen.join(' '));
-      if (aantalV) await toonVerschillen($('aanvulling'), v);
+      if (!v.eerste) await toonVerschillen($('aanvulling'), v);   // ook zonder verschillen (Robin, 16 nov)
     } catch (e) {
       melding('Inlezen mislukt: ' + e.message, true);
     } finally {

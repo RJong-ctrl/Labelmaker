@@ -57,14 +57,14 @@ class Printen(PaginaTest):
         self.assertAlmostEqual(h, 297, delta=0.5)
         self.assertEqual(self.fouten, [])
 
-    def test_formaten_op_eigen_vel(self):
+    def test_formaten_samen_op_vel(self):
         items = [{'sjabloon': 'gitterbox', 'artikel': 'GE9402', 'qr': 'nl4-2.50m', 'aantal': 1},
                  {'sjabloon': 'backdrop', 'artikel': 'LI8163-B', 'qr': 'bd6x3b-01', 'aantal': 1},
                  {'sjabloon': 'pipe-drape', 'artikel': 'PD5143', 'qr': '1004421', 'aantal': 5}]
         _, _, pad = self.printen('a4', items)
-        self.assertEqual(pdf_info(pad)[0], 4)  # strook 1, backdrop 1, P&D 5 → 4 per vel = 2
+        self.assertEqual(pdf_info(pad)[0], 2)  # strook, backdrop en 5 × P&D samen: 2 vellen i.p.v. 4 (Robin, 16 nov)
         snij = self.pagina.locator('#drukwerk .a4 .snijtekens').count()
-        self.assertEqual(snij, 4)
+        self.assertEqual(snij, 2)
 
     def test_citizen_formaat(self):
         tekst, _, pad = self.printen('label', [{'sjabloon': 'qrlabel', 'artikel': 'GE9402', 'qr': 'nl4-2.50m', 'aantal': 3}])

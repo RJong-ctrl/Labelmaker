@@ -3,7 +3,7 @@
 
 import { vul } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
-import { A4, a4Indeling, verdeel } from './indeling.js';
+import { A4, pakA4 } from './indeling.js';
 import { esc } from './html.js';
 
 export const LABEL = { b: 76, h: 56 };
@@ -57,9 +57,10 @@ function elementen(printer, items, context) {
   return uit;
 }
 
-function snijtekens(posities, b, h) {
+/** Snijtekens bij de hoeken van elk bordje; plekken = [{ x, y, b, h }] in mm. */
+function snijtekens(plekken) {
   let d = '';
-  for (const [x, y] of posities) {
+  for (const { x, y, b, h } of plekken) {
     const x2 = x + b, y2 = y + h;
     for (const [cx, cy, sx, sy] of [[x, y, -1, -1], [x2, y, 1, -1], [x, y2, -1, 1], [x2, y2, 1, 1]]) {
       d += `M${(cx + sx * SNIJ_AFSTAND).toFixed(2)} ${cy.toFixed(2)}h${sx * SNIJ}M${cx.toFixed(2)} ${(cy + sy * SNIJ_AFSTAND).toFixed(2)}v${sy * SNIJ}`;
@@ -68,34 +69,23 @@ function snijtekens(posities, b, h) {
   return `<svg class="snijtekens" viewBox="0 0 ${A4.b} ${A4.h}" style="position:absolute;left:0;top:0;width:${A4.b}mm;height:${A4.h}mm;pointer-events:none"><path d="${d}" stroke="#000" stroke-width=".2" fill="none"/></svg>`;
 }
 
+// Alle formaten samen: zo weinig mogelijk vellen (Robin, 16 nov); één formaat ligt zoals altijd in een rooster.
 function a4Vellen(lijst) {
-  const groepen = new Map();
-  for (const x of lijst) {
-    const k = x.formaat.b + 'x' + x.formaat.h;
-    if (!groepen.has(k)) groepen.set(k, { formaat: x.formaat, els: [] });
-    groepen.get(k).els.push(x.el);
-  }
-  const vellen = [];
-  for (const { formaat, els } of groepen.values()) {
-    const ind = a4Indeling(formaat.b, formaat.h);
-    if (!ind.posities.length) continue;
-    for (const groep of verdeel(els, ind.posities.length)) {
-      const vel = document.createElement('div');
-      vel.className = 'a4';
-      groep.forEach((el, j) => {
-        const [x, y] = ind.posities[j];
-        const plek = document.createElement('div');
-        plek.className = 'plek';
-        plek.style.cssText = `left:${x.toFixed(2)}mm;top:${y.toFixed(2)}mm;width:${ind.b}mm;height:${ind.h}mm`;
-        if (ind.gedraaid) el.style.transform = `translateY(${ind.h}mm) rotate(-90deg)`;
-        plek.appendChild(el);
-        vel.appendChild(plek);
-      });
-      vel.insertAdjacentHTML('beforeend', snijtekens(ind.posities.slice(0, groep.length), ind.b, ind.h));
-      vellen.push(vel);
+  return pakA4(lijst.map(x => x.formaat)).map(plekken => {
+    const vel = document.createElement('div');
+    vel.className = 'a4';
+    for (const p of plekken) {
+      const { el } = lijst[p.i];
+      const plek = document.createElement('div');
+      plek.className = 'plek';
+      plek.style.cssText = `left:${p.x.toFixed(2)}mm;top:${p.y.toFixed(2)}mm;width:${p.b}mm;height:${p.h}mm`;
+      if (p.gedraaid) el.style.transform = `translateY(${p.h}mm) rotate(-90deg)`;
+      plek.appendChild(el);
+      vel.appendChild(plek);
     }
-  }
-  return vellen;
+    vel.insertAdjacentHTML('beforeend', snijtekens(plekken));
+    return vel;
+  });
 }
 
 // Een label per pagina; labels van hoogstens de halve labelhoogte gaan met twee op één label.
