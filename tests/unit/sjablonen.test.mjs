@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-bw1000', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-bw1000', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'speakertas', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -437,4 +437,19 @@ test('kist_bw1000', () => {
   assert.equal(groepVan(sj).sleutel, 'kisten');
   assert.deepEqual(sj.velden.map(v => v.naam), S['kist-modern'].velden.map(v => v.naam));
   assert.equal(vul(sj, A.GE9402, {}, 'x').formaat.r, r);
+});
+
+test('speakertas_kaartje', () => {
+  // Kaartje aan een speakertas: liggend als Pipe & Drape, gat om op te hangen, QR van het exemplaar en gewicht.
+  const sj = S.speakertas;
+  assert.equal(sj.opmaak, 'liggend');
+  assert.deepEqual(sj.formaat, S['pipe-drape'].formaat);
+  assert.equal(sj.gat, true);
+  const kistArt = { ...A.GE9402, naam: 'Speakertas DD6', kisten: { 'tas-02': { nr: 'DSL02', gewicht: '7,5', inhoud: '' } } };
+  const i = vul(sj, kistArt, {}, 'tas-02');
+  assert.equal(i.titel, 'Speakertas DD6');
+  assert.equal(i.groot, '7,5 kg');
+  assert.equal(i.qr, 'tas-02');
+  assert.deepEqual(i.eigenschappen, [['Exemplaar', 'DSL02']]);
+  assert.equal(vul(sj, A.GE9402, {}, 'x').groot, '');   // geen gewicht: niets groots
 });

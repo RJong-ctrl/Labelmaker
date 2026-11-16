@@ -160,6 +160,14 @@ export const DSL_SJABLONEN = [
     plekken: { ...leeg, titel: ['Pipe & Drape'], groot: [v('Lengte'), ' × ', v('Hoogte'), 'm'], eigenschappen: [{ kop: 'Inhoud', waarde: [v('Naam')] }] },
     kleuren: { rand: { sleutel: [v('Lengte'), ' × ', v('Hoogte')], waarden: {} } },
   },
+  // Kaartje aan een speakertas (Robin, 16 nov): zoals Pipe & Drape, met gat; QR van het exemplaar, gewicht groot.
+  {
+    ...basis, id: 'speakertas', naam: 'Speakertas-kaartje', printer: 'a4', opmaak: 'liggend', formaat: { b: 105, h: 74 },
+    gat: true, voet: true,
+    velden: [kolom('Naam', 'naam', true), uitKist('Exemplaar', 'nr', 'code'), uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' })],
+    plekken: { ...leeg, titel: [v('Naam')], groot: [v('Gewicht'), ' kg'], eigenschappen: [{ kop: 'Exemplaar', waarde: [v('Exemplaar')] }] },
+    kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb' } },
+  },
   leegBordje('leeg-staand', 'Leeg bordje staand', 'staand', 74, 105),
   leegBordje('leeg-liggend', 'Leeg bordje liggend', 'liggend', 105, 74),
   vrijBordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),

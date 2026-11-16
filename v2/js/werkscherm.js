@@ -8,7 +8,8 @@ import { tekenVellen, pasVellenAan, print } from './printen.js';
 import { A4 } from './indeling.js';
 import { esc } from './html.js';
 import { profielen, kiesProfiel, maakProfiel } from './profielen.js';
-import { vraagVelden, vraagLosItem, vraagKolommen, vraagProfiel } from './dialogen.js';
+import { vraagVelden, vraagLosItem, vraagKolommen, vraagProfiel, toonVerschillen } from './dialogen.js';
+import { verschillen } from './verschillen.js';
 import { startMaken } from './maken.js';
 
 const MAX_RIJEN = 200;
@@ -335,6 +336,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
         await model.zetInstelling('kolommen', kolommen).catch(opslagFout);
       }
       if (!artikelen.length) { melding('Geen artikelen gevonden in dit bestand.', true); return; }
+      const vorige = E().artikelen || [];
       try {
         await model.zetArtikelen(artikelen);
       } catch (e) {
@@ -356,7 +358,11 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
       const nietGevonden = mist.filter(v => kolommen[v]).map(v => kolommen[v]);
       if (nietGevonden.length) delen.push(`Kolommen niet gevonden: ${nietGevonden.join(', ')}.`);
       if (weg) delen.push(`${weg} ${weg === 1 ? 'regel' : 'regels'} van het printvel verwijderd: artikel niet meer in de export.`);
+      const v = verschillen(vorige, artikelen, { ontbrekend: mist });
+      const aantalV = v.gewijzigd.length + v.nieuw.length + v.weg.length;
+      if (!v.eerste && !aantalV) delen.push('Geen verschillen met de vorige export.');
       melding(delen.join(' '));
+      if (aantalV) await toonVerschillen($('aanvulling'), v);
     } catch (e) {
       melding('Inlezen mislukt: ' + e.message, true);
     } finally {

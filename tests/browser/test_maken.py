@@ -72,7 +72,22 @@ class Maken(MakenHulp, PaginaTest):
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
         expect(p.locator('#vellen .signb .streep')).to_have_css('background-color', 'rgb(0, 176, 80)')
+        # Na Op printvel blijft het label staan (Robin, 16 nov); Leegmaken begint opnieuw met hetzelfde sjabloon.
+        expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('Nooduitgang')
+        p.locator('#makenLeeg').click()
         expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('')
+
+    def test_artikel_blijft_staan_na_op_printvel(self):
+        """Na Op printvel niet terug naar de sjabloonlijst: artikel en formulier blijven staan, nog eens = tweede."""
+        p = self.pagina
+        self.inlezen()
+        self.opzoeken('CO1120')
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        expect(p.locator('#makenArtikel')).to_contain_text('Kenwood TK-3201 Portofoon')
+        expect(p.locator('#makenVoorbeeld .signb')).to_have_count(1)
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#printA4')).to_have_text('Print 2 op A4')
 
     def test_artikel_opzoeken_vult_in_en_aanpassen(self):
         p = self.pagina
@@ -581,6 +596,8 @@ class MakenPast(MakenHulp, PaginaTest):
         expect(p.locator('#makenVak')).to_be_visible()
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
+        expect(p.locator('#makenVak')).to_be_visible()     # label blijft staan
+        p.locator('#makenLeeg').click()
         expect(p.locator('#makenVak')).to_be_hidden()
         p.wait_for_timeout(600)
         kolom = p.locator('#voorbeeld').bounding_box()['height']

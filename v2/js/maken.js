@@ -290,8 +290,9 @@ export function startMaken(root, h) {
     h.naarPrinter(sj.printer);
     h.tekenAlles();
     h.melding(m.vanRij ? 'Bijgewerkt op het printvel.' : `Op het printvel gezet${bewaar ? ' en bewaard onder Losse items' : ''}.`);
-    // Zelf gekozen sjabloon blijft open voor het volgende; na een artikel of Bijwerken terug naar de tegels.
-    reset(!m.vanRij && !m.artikel && m.sjabloonId !== 'auto' ? m.sjabloonId : 'auto');
+    // Het label blijft staan (Robin, 16 nov): nog eens klikken zet er nog een op, Leegmaken begint opnieuw.
+    tekenFormulier();
+    root.getElementById('makenOpVel')?.focus();
   }
 
   // 'Uit lijst…' bij wandborden en bij sjablonen met een veld Code (stellingbord, bakbord).

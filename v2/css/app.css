@@ -107,6 +107,15 @@ dialog .acties .links{margin-right:auto;color:var(--err)}
 /* ---------- maken ---------- */
 .maken .kiesblok{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:4px}
 .maken .kiesblok .hint{margin:0}
+form.verschillen{width:min(760px,88vw)}
+form.verschillen h3{margin:14px 0 6px;font-size:14px}
+form.verschillen .vlijst{max-height:38vh;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:4px 8px;margin:0;font-size:13px}
+form.verschillen ul.vlijst{list-style:none}
+form.verschillen ul.vlijst li{padding:3px 0}
+table.verschil{border-collapse:collapse;width:100%}
+table.verschil th{text-align:left;font-size:12px;color:var(--muted,#888);position:sticky;top:0;background:var(--panel)}
+table.verschil td,table.verschil th{padding:4px 8px 4px 0;vertical-align:top;white-space:pre-line}
+table.verschil td.was{color:var(--muted,#888);text-decoration:line-through}
 dialog.sjabloonkeuze{width:min(1080px,94vw);max-height:88vh;overflow:auto;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
 dialog.sjabloonkeuze::backdrop{background:rgba(0,0,0,.55)}
 dialog.sjabloonkeuze .kop{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}

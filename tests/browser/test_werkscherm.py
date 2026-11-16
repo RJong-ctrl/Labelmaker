@@ -16,6 +16,11 @@ class Hulp(PaginaTest):
         p.locator('#bestand').set_input_files(VOORBEELD)
         p.wait_for_function("document.querySelector('#melding').textContent.includes('ingelezen')", timeout=30000)
 
+    def lees_csv(self, regels):
+        kop = 'Naam (in database);Code;Locatie in magazijn per voorraadlocatie [Standaard voorraadlocatie];Huidig aantal'
+        tekst = '\n'.join([kop] + regels).encode('utf-8')
+        self.pagina.locator('#bestand').set_input_files({'name': 'export.csv', 'mimeType': 'text/csv', 'buffer': tekst})
+
     def rij(self, code):
         return self.pagina.locator(f'#lijst li[data-code="{code}"]')
 
@@ -37,6 +42,29 @@ class Hulp(PaginaTest):
 
 
 class Werkscherm(Hulp):
+    def test_verschillen_na_nieuwe_export(self):
+        """Nieuwe Rentman-export inlezen: overzicht van wat er nieuw, weg en veranderd is (Robin, 16 nov)."""
+        p = self.pagina
+        self.lees_csv(['Kabel A;KA1;G1;4', 'Kabel B;KB1;G1;2'])
+        expect(p.locator('#melding')).to_contain_text('2 artikelen ingelezen')
+        expect(p.locator('#aanvulling')).not_to_be_visible()          # eerste keer: niets te vergelijken
+        self.lees_csv(['Kabel A;KA1;G2;4', 'Kabel C;KC1;H1;1'])
+        d = p.locator('#aanvulling')
+        expect(d).to_be_visible()
+        expect(d.locator('h2')).to_have_text('Verschillen met de vorige export')
+        rij = d.locator('table.verschil tr', has_text='KA1')
+        expect(rij).to_contain_text('Locatie')
+        expect(rij).to_contain_text('G1')
+        expect(rij).to_contain_text('G2')
+        expect(d.locator('.v-nieuw li')).to_have_text(['KC1 Kabel C'])
+        expect(d.locator('.v-weg li')).to_have_text(['KB1 Kabel B'])
+        d.get_by_role('button', name='Sluiten').click()
+        expect(d).not_to_be_visible()
+        # dezelfde export nog eens: geen venster, wel even melden
+        self.lees_csv(['Kabel A;KA1;G2;4', 'Kabel C;KC1;H1;1'])
+        expect(p.locator('#melding')).to_contain_text('Geen verschillen')
+        expect(d).not_to_be_visible()
+
     def test_leeg_scherm_legt_uit(self):
         self.naar_lijst()
         self.assertIn('Artikelen inlezen', self.pagina.locator('#artikelen').inner_text())

@@ -3,7 +3,7 @@
 // BELANGRIJK: verander VERSIE bij elke wijziging in een bestand van de app, anders blijven
 // bezoekers de oude bestanden uit hun cache houden. De lijst BESTANDEN moet alle bestanden
 // van de app bevatten (tests/unit/sw_bestanden.test.mjs controleert dat); data/ hoort er niet in.
-const VERSIE = '20261116-1432';
+const VERSIE = '20261116-1449';
 const CACHE = `labelmaker-${VERSIE}`;
 
 // Paden relatief aan deze sw.js (dus aan de map van de app).
@@ -47,6 +47,7 @@ const BESTANDEN = [
   'js/samenvoegen.js',
   'js/sjablonen.js',
   'js/standaard.js',
+  'js/verschillen.js',
   'js/werkscherm.js',
 ];
 
