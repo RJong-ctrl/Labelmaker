@@ -378,6 +378,23 @@ class Maken(MakenHulp, PaginaTest):
         kop = k.locator('.kkop').bounding_box()['width']
         self.assertGreater(k.locator('.kkop .titel').bounding_box()['width'], kop * 0.95)
 
+    def test_kist_bw1000_ronde_hoeken_en_sticker_past(self):
+        """B&W type 1000: klein bordje met ronde hoeken; projectsticker (76 × 56) en inhoud passen binnen het bordje."""
+        p = self.pagina
+        self.kies('kist-bw1000')
+        p.locator('#makenVelden input[name="Naam"]').fill('Shure ULXD4 ontvanger')
+        p.locator('#makenVelden textarea[name="Inhoud"]').fill('1 ULXD4\n2 antenne\n1 voeding')
+        k = p.locator('#makenVoorbeeld .signb.kist-modern')
+        expect(k).to_have_css('border-top-left-radius', re.compile(r'^2[0-9]\.'))   # 6 mm ≈ 22,7 px
+        p.wait_for_timeout(600)
+        bb = k.bounding_box()
+        st = k.locator('.ksticker').bounding_box()
+        self.assertAlmostEqual(st['width'] / bb['width'], 80 / 150, delta=0.01)
+        for el in [st, k.locator('.kgrid').bounding_box(), k.locator('.kbot').bounding_box()]:
+            self.assertLessEqual(el['y'] + el['height'], bb['y'] + bb['height'] + 0.5)
+            self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)
+        self.assertEqual(self.fouten, [])
+
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""
         p = self.pagina

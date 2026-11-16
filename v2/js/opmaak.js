@@ -86,15 +86,19 @@ function bordje(i, hs) {
   if (kist) {
     // Materiaalbordje: naam en kistnummer bovenaan; de inhoud staat centraal en luchtig (regels met lijntjes,
     // aantal vet). Rechts: gewicht en QR, daaronder het vak voor de projectsticker.
-    const kopH = 11 * f / 1.84, st = { b: 80, h: 60 }, qs = 20;
+    // Klein bordje (B&W type 1000): het stickervak blijft op ware grootte (Citizen 76 × 56), gewicht en QR
+    // schuiven onder de inhoud.
+    const klein = H < 110;
+    const kopH = 11 * f / 1.84, st = { b: 80, h: 60 }, qs = klein ? 15 : 20;
     const gewicht = String(i.waarden?.Gewicht || '').trim();
     const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
     const regels = (i.lijst || []).map(([n, t]) => `<div class="kr"><span class="ka">${n ? esc(n) + '×' : ''}</span><span class="kt">${esc(t)}</span></div>`).join('');
+    const kbot = `<div class="kbot${klein ? ' klein' : ''}"><div class="kgew">${groot ? `<span>Kist</span><b>${groot}</b>` : ''}${gw ? `<span>Gewicht</span><b>${esc(gw)}</b>` : ''}</div>${i.qr ? qrBlok(qs) : ''}</div>`;
     // De naam krijgt de hele breedte; het kistnummer staat klein rechts bij het gewicht.
     main = `<div class="kkop" style="height:${mm(kopH)}">${vak('t titel', kopH * PT * 0.9, titel, 'flex:1 1 0')}</div>`
       + `<div class="krij" style="gap:${mm(5)};margin-top:${mm(2.5)}">`
-      + `<div class="klinks">${regels ? vak('klijst', 18, `<div class="kgrid">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 5) : '<div class="kleeg">Inhoud</div>'}</div>`
-      + `<div class="krechts" style="width:${mm(st.b)}"><div class="kbot"><div class="kgew">${groot ? `<span>Kist</span><b>${groot}</b>` : ''}${gw ? `<span>Gewicht</span><b>${esc(gw)}</b>` : ''}</div>${i.qr ? qrBlok(qs) : ''}</div>`
+      + `<div class="klinks">${regels ? vak('klijst', klein ? 12 : 18, `<div class="kgrid">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4) : '<div class="kleeg">Inhoud</div>'}${klein ? kbot : ''}</div>`
+      + `<div class="krechts" style="width:${mm(st.b)}">${klein ? '' : kbot}`
       + `<div class="ksticker" style="height:${mm(st.h)}">Projectsticker</div></div></div>`
       + voet;
   } else if (breed) {
@@ -171,6 +175,8 @@ function bordje(i, hs) {
   el.dataset.sjabloon = i.sjabloon;
   el.style.width = W + 'mm';
   el.style.height = H + 'mm';
+  // Ronde hoeken voor een uitsparing (B&W-deksel); de snijlijn is dan de rand van het bordje.
+  if (i.formaat.r > 0) el.style.borderRadius = mm(Math.min(i.formaat.r, W / 2, H / 2));
   el.innerHTML =
     `<div class="band vlak" style="left:0;width:${mm(bw)};background:${licht ? '#f1f1f1' : tint(kleur, TINT)}"></div>`
     + `<div class="band streep" style="left:${mm(bw)};width:${mm(licht ? 1.2 : STREEP)};background:${esc(kleur)}${licht ? ';box-shadow:inset .25mm 0 0 #000,inset -.25mm 0 0 #000' : ''}"></div>`

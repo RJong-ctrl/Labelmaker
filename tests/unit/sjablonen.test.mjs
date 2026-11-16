@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-bw1000', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -423,4 +423,18 @@ test('sjablonen_in_groepen', () => {
   assert.equal(g('kist-modern'), 'kisten');
   assert.equal(g('gitterbox'), 'magazijn');      // strook hoort bij het magazijn, naast het bakbord
   assert.equal(g('qrlabel'), 'labels');
+});
+
+test('kist_bw1000', () => {
+  // B&W outdoor.case type 1000: uitsparing in het deksel 160 × 97 mm met ronde hoeken (Robin, 16 nov).
+  const sj = S['kist-bw1000'];
+  assert.equal(sj.opmaak, 'kist-modern');
+  assert.equal(sj.naam, 'Materiaalbordje B&W type 1000');
+  const { b, h, r } = sj.formaat;
+  const kantje = 3;                                   // lamineerrand rondom
+  assert.ok(b + 2 * kantje <= 158 && h + 2 * kantje <= 95, 'gelamineerd past met speling in 160 × 97');
+  assert.ok(r > 0);
+  assert.equal(groepVan(sj).sleutel, 'kisten');
+  assert.deepEqual(sj.velden.map(v => v.naam), S['kist-modern'].velden.map(v => v.naam));
+  assert.equal(vul(sj, A.GE9402, {}, 'x').formaat.r, r);
 });

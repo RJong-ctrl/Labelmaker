@@ -112,6 +112,13 @@ export const kistbordje = (id, naam, opmaak = 'kist') => ({
   kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb', vast: true } },
 });
 
+/** Materiaalbordje modern voor het deksel van de B&W outdoor.case type 1000 (Robin, 16 nov). Uitsparing 160 × 97 mm
+ *  met ronde hoeken: papier 150 × 87 (hoek r 6), met een lamineerrand van ± 3 mm wordt het 156 × 93 en past met speling. */
+export const kistBw1000 = () => ({
+  ...kistbordje('kist-bw1000', 'Materiaalbordje B&W type 1000', 'kist-modern'),
+  formaat: { b: 150, h: 87, r: 6 }, voet: false,
+});
+
 /** Soorten in de sjabloonkeuze, elk een eigen rij. */
 export const GROEPEN = [
   { sleutel: 'bordjes', titel: 'Bordjes' },
@@ -166,6 +173,7 @@ export const DSL_SJABLONEN = [
   wandbord('wandbord-a5-liggend', 'Wandbord A5 liggend', 194, 136),
   kistbordje('kist', 'Materiaalbordje kist (A5)'),
   kistbordje('kist-modern', 'Materiaalbordje kist modern (A5)', 'kist-modern'),
+  kistBw1000(),
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },
     logoBoven: true,

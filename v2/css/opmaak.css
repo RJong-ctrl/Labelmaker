@@ -104,6 +104,8 @@
 .signb.kist-modern .kleeg{flex:1 1 auto;color:#c8c8c8;font-size:8pt;text-transform:uppercase;letter-spacing:.08em;padding-top:2mm}
 .signb.kist-modern .krechts{flex:0 0 auto;display:flex;flex-direction:column;gap:3mm}
 .signb.kist-modern .kbot{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:space-between;gap:3mm;border-top:.4mm solid #000;padding-top:2mm}
+.signb.kist-modern .kbot.klein{flex:0 0 auto;align-items:flex-end;margin-top:2mm}
+.signb.kist-modern .kbot.klein .kgew b{font-size:10pt}
 .signb.kist-modern .kgew{display:flex;flex-direction:column;gap:.8mm;line-height:1.1}
 .signb.kist-modern .kgew b+span{margin-top:2mm}
 .signb.kist-modern .kgew span{font-size:7pt;color:#555;text-transform:uppercase;letter-spacing:.08em}
