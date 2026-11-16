@@ -389,7 +389,8 @@ class Maken(MakenHulp, PaginaTest):
         p.wait_for_timeout(600)
         bb = k.bounding_box()
         st = k.locator('.ksticker').bounding_box()
-        self.assertAlmostEqual(st['width'] / bb['width'], 80 / 150, delta=0.01)
+        self.assertAlmostEqual(st['width'] / bb['width'], 76 / 150, delta=0.005)   # precies de Citizen-sticker
+        self.assertAlmostEqual(st['height'] / bb['height'], 56 / 87, delta=0.005)
         for el in [st, k.locator('.kgrid').bounding_box(), k.locator('.kbot').bounding_box()]:
             self.assertLessEqual(el['y'] + el['height'], bb['y'] + bb['height'] + 0.5)
             self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)

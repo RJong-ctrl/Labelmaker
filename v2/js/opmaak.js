@@ -89,7 +89,7 @@ function bordje(i, hs) {
     // Klein bordje (B&W type 1000): het stickervak blijft op ware grootte (Citizen 76 × 56), gewicht en QR
     // schuiven onder de inhoud.
     const klein = H < 110;
-    const kopH = 11 * f / 1.84, st = { b: 80, h: 60 }, qs = klein ? 15 : 20;
+    const kopH = 11 * f / 1.84, st = klein ? { b: 76, h: 56 } : { b: 80, h: 60 }, qs = klein ? 15 : 20;   // klein: precies de sticker (Robin, 16 nov)
     const gewicht = String(i.waarden?.Gewicht || '').trim();
     const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
     const regels = (i.lijst || []).map(([n, t]) => `<div class="kr"><span class="ka">${n ? esc(n) + '×' : ''}</span><span class="kt">${esc(t)}</span></div>`).join('');
