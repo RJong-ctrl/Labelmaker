@@ -58,7 +58,7 @@ class Maken(MakenHulp, PaginaTest):
         self.assertAlmostEqual(a['y'], b['y'], delta=2)             # naast elkaar, niet onder elkaar
         expect(venster.locator('.tegelgroep').nth(1).locator('.subkop')).to_have_text(['Stellingen', 'Bakken & gitterboxen', 'Wanden'])
 
-        # voorbeeldjes tonen ook iets bij sjablonen met eigen velden (Code/Wat)
+        # voorbeeldjes tonen ook iets bij sjablonen met eigen velden (Locatie/Inhoud)
         expect(venster.locator('[data-tegel="stellingbord"] .titel')).to_have_text('A1')
         p.keyboard.press('Escape')
         expect(venster).to_be_hidden()
@@ -102,7 +102,7 @@ class Maken(MakenHulp, PaginaTest):
         self.inlezen()
         self.opzoeken('GE9402')
         expect(p.locator('#makenArtikel')).to_contain_text('Speakon 4p Verlengkabel 2,5m')
-        expect(p.locator('#makenVelden input[name="Omschrijving"]')).to_have_value('Speakon 4p Verlengkabel')
+        expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('Speakon 4p Verlengkabel')
         expect(p.locator('#makenVelden input[name="Lengte"]')).to_have_value('2,5')
         expect(p.locator('#makenVelden input[name="__qr"]')).to_have_value('nl4-2.50m')
         p.locator('#makenVelden input[name="Lengte"]').fill('')
@@ -393,7 +393,7 @@ class Maken(MakenHulp, PaginaTest):
         p = self.pagina
         self.kies('kist-modern')
         p.locator('#makenVelden input[name="Naam"]').fill('Martin Audio 2x LE1200s L/R Monitor Speaker [Case]')
-        p.locator('#makenVelden input[name="Code"]').fill('DSL01')
+        p.locator('#makenVelden input[name="Kistnummer"]').fill('DSL01')
         k = p.locator('#makenVoorbeeld .signb.kist-modern')
         expect(k.locator('.kkop .knr')).to_have_count(0)
         expect(k.locator('.krechts')).to_contain_text('DSL01')
@@ -516,7 +516,7 @@ class Maken(MakenHulp, PaginaTest):
         expect(p.locator('#vellen .signb .streep').nth(1)).to_have_css('background-color', 'rgb(0, 176, 80)')
         expect(p.locator('#vellen .signb .qbox')).to_have_count(0)        # stellingbord standaard zonder QR
         p.locator('#velLijst li').nth(1).get_by_role('button', name='Aanpassen').click()
-        expect(p.locator('#makenVelden input[name="Wat"]')).to_have_value('Kabels in gitterboxen')
+        expect(p.locator('#makenVelden input[name="Inhoud"]')).to_have_value('Kabels in gitterboxen')
         self.assertEqual(self.fouten, [])
 
     def test_bakbord_naam_code_en_qr(self):
@@ -565,7 +565,7 @@ class Maken(MakenHulp, PaginaTest):
             p.locator('#makenVelden select[name="QR-code"]').select_option('')
         # stellingbord: standaard zonder QR, aan te zetten
         self.kies('stellingbord')
-        p.locator('#makenVelden input[name="Code"]').fill('A1')
+        p.locator('#makenVelden input[name="Locatie"]').fill('A1')
         b = p.locator('#makenVoorbeeld .signb')
         expect(b.locator('.qbox')).to_have_count(0)
         expect(b).not_to_contain_text('Geen QR-code')
@@ -586,7 +586,7 @@ class Maken(MakenHulp, PaginaTest):
         p.locator('#makenZoek').fill('*GE2162-01')
         p.locator('#makenZoek').press('Enter')
         expect(p.locator('#makenVelden textarea[name="Inhoud"]')).to_have_value('2 Martin Audio DD6\n1 Flightcase DD6')
-        expect(p.locator('#makenVelden input[name="Code"]')).to_have_value('DSL01')
+        expect(p.locator('#makenVelden input[name="Kistnummer"]')).to_have_value('DSL01')
         k = p.locator('#makenVoorbeeld .signb.kist')
         expect(k.locator('.kt')).to_have_text(['Martin Audio DD6', 'Flightcase DD6'])
         expect(k).to_contain_text('27,34 kg')

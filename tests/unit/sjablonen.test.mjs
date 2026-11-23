@@ -253,7 +253,7 @@ test('wandbord_a4_locatie_groot', () => {
 
 test('kistbordje_met_inhoudslijst', () => {
   // Zoals het oude bordje, zonder klant/productie/datum/check (daar komt de projectsticker) en zonder locatie.
-  assert.deepEqual(S.kist.velden.map(v => v.naam), ['Naam', 'Code', 'Gewicht', 'Inhoud', 'Extra inhoud']);
+  assert.deepEqual(S.kist.velden.map(v => v.naam), ['Naam', 'Kistnummer', 'Gewicht', 'Inhoud', 'Extra inhoud']);
   const i = vul(S.kist, A.GE9402, { Gewicht: '66,20', Inhoud: '30 DMX 3p 1,25m grijs\n40× DMX 3p 2,5m\n2 x Afsluiter\nlosse regel\n\n' }, 'dsl01');
   assert.equal(i.opmaak, 'kist');
   assert.deepEqual(S.kist.formaat, { b: 194, h: 136 });
@@ -344,7 +344,7 @@ test('stellingbord_als_sjabloon_met_kleur_per_zone', () => {
   const sj = S.stellingbord;
   assert.equal(sj.opmaak, 'wand');
   assert.deepEqual(sj.formaat, { b: 194, h: 281 });
-  assert.deepEqual(sj.velden.map(v => v.naam), ['Code', 'Wat', 'QR-code']);
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Locatie', 'Inhoud', 'QR-code']);
   const leeg = { ...A.GE9402, naam: '', code: '', locatie: '' };
   const i = vul(sj, leeg, { Code: 'G3', Wat: 'Torens, takels' }, '');
   assert.equal(i.titel, 'G3');
@@ -362,7 +362,7 @@ test('bakbord_16_cm_breed', () => {
   assert.deepEqual(sj.formaat, { b: 160, h: 48 });
   assert.equal(sj.printer, 'a4');
   assert.equal(sj.voet, false);
-  assert.deepEqual(sj.velden.map(v => v.naam), ['Naam', 'Code']);
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Naam', 'Artikelnummer']);
   assert.ok(!sj.plekken.qr?.length);     // QR uit het QR-veld (artikel), niet uit een veld
   const i = vul(sj, A.GE9402, {}, 'GE9402-QR');
   assert.equal(i.titel, 'Speakon 4p Verlengkabel 2,5m');
@@ -406,7 +406,7 @@ test('stellingbord_a5', () => {
   const sj = S['stellingbord-a5'];
   assert.deepEqual(sj.formaat, { b: 136, h: 194 });
   assert.equal(sj.opmaak, 'wand');
-  assert.deepEqual(sj.velden.map(v => v.naam), ['Code', 'Wat', 'QR-code']);
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Locatie', 'Inhoud', 'QR-code']);
   assert.equal(vul(sj, A.GE9402, { Code: 'A1' }, 'x').qr, '');       // ook standaard zonder QR
   assert.equal(S.stellingbord.naam, 'Stellingbord A4');
   assert.equal(sj.naam, 'Stellingbord A5');
@@ -492,4 +492,42 @@ test('kist_bw6040', () => {
   assert.ok(b <= 194 || h <= 194, 'past (gedraaid) op A4');
   assert.equal(groepVan(sj).sleutel, 'kisten');
   assert.deepEqual(sj.velden.map(v => v.naam), S['kist-modern'].velden.map(v => v.naam));
+});
+
+test('velden_overal_hetzelfde', async () => {
+  // Continuïteit (Robin, 23 nov): hetzelfde gegeven heet in elk sjabloon hetzelfde.
+  const { PROFIEL_STANDAARD } = await import('../../v2/js/standaard.js');
+  const BASIS_SJABLONEN = [...PROFIEL_STANDAARD.basis.sjablonen, ...PROFIEL_STANDAARD.dsl.sjablonen];
+  const NAAM = {
+    'kolom:naam': 'Naam', 'naam:kaal': 'Naam', 'kolom:code': 'Artikelnummer', 'kolom:locatie': 'Locatie',
+    'exemplaar:nr': 'Kistnummer', 'exemplaar:gewicht': 'Gewicht', 'exemplaar:inhoud': 'Inhoud',
+  };
+  const fout = [];
+  for (const sj of [...DSL_SJABLONEN, ...BASIS_SJABLONEN]) {
+    for (const veld of sj.velden) {
+      const h = veld.herkomst;
+      const soort = h.type + ':' + (h.sleutel || h.kolom || h.patroon || '');
+      if (NAAM[soort] && veld.naam !== NAAM[soort]) fout.push(`${sj.id}: ${veld.naam} → ${NAAM[soort]}`);
+      if (['Code', 'Wat', 'Omschrijving'].includes(veld.naam) && sj.plekken.titel.some(t => t.veld === veld.naam)) fout.push(`${sj.id}: titel uit ${veld.naam}`);
+      if (/^(Breedte|Hoogte|Lengte)$/.test(veld.naam) && veld.eenheid !== 'm') fout.push(`${sj.id}: ${veld.naam} zonder eenheid m`);
+    }
+    // eigen locatiecode (stellingbord) heet ook Locatie, de omschrijving erbij Inhoud, net als op het wandbord
+    if (sj.opmaak === 'wand' && !sj.velden.some(v => v.naam === 'Naam')) {
+      if (!sj.velden.some(v => v.naam === 'Locatie')) fout.push(`${sj.id}: wandbord zonder Locatie`);
+      for (const n of ['Code', 'Wat']) if (sj.velden.some(v => v.naam === n)) fout.push(`${sj.id}: ${n}`);
+    }
+  }
+  assert.deepEqual(fout, []);
+});
+
+test('oude_veldnamen_blijven_werken', () => {
+  // Al ingevulde aanvullingen onder de oude naam (Code, Wat, Omschrijving) gaan niet verloren.
+  const sb = vul(S.stellingbord, { id: 'los', naam: '', code: '' }, { Code: 'B2', Wat: 'Kabels' }, '');
+  assert.equal(sb.titel, 'B2');
+  assert.equal(sb.onder, 'Kabels');
+  assert.equal(vul(S['bordje-staand'], A.GE9402, { Code: 'X1' }, '').onder, 'Artikelnummer X1');
+  assert.equal(vul(S.kist, A.GE9402, { Code: 'DSL09' }, '').waarden.Kistnummer, 'DSL09');
+  assert.equal(vul(S.gitterbox, A.GE9402, { Omschrijving: 'Stroomkabel' }, '').titel, 'Stroomkabel');
+  // de nieuwe naam gaat voor
+  assert.equal(vul(S.stellingbord, { id: 'los', naam: '', code: '' }, { Code: 'B2', Locatie: 'C3' }, '').titel, 'C3');
 });

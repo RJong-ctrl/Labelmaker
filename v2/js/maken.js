@@ -317,8 +317,8 @@ export function startMaken(root, h) {
     root.getElementById('makenOpVel')?.focus();
   }
 
-  // 'Uit lijst…' bij wandborden en bij sjablonen met een veld Code (stellingbord, bakbord).
-  const kanReeks = () => { const sj = huidigSjabloon(); return sj?.opmaak === 'wand' || !!sj?.velden?.some(v => v.naam === 'Code' && v.herkomst?.type === 'aanvulling'); };
+  // 'Uit lijst…' bij wandborden en bij sjablonen met een eigen locatieveld (stellingbord; vroeger 'Code').
+  const kanReeks = () => { const sj = huidigSjabloon(); return sj?.opmaak === 'wand' || !!sj?.velden?.some(v => ['Locatie', 'Code'].includes(v.naam) && v.herkomst?.type === 'aanvulling'); };
 
   /** Bordjes uit een geplakte lijst (bijv. de magazijnindeling): per code een los item op het printvel. */
   async function reeksOpVel() {
@@ -338,7 +338,9 @@ export function startMaken(root, h) {
       });
       const kleur = antwoord.kleur && !eigenKleuren ? zoneKleur(code) : '';
       await h.model.vervangAanvulling(id, {
-        ...(veld('Code') ? { Code: code } : {}), ...(veld('Wat') ? { Wat: wat } : {}), ...(veld('Inhoud') ? { Inhoud: wat } : {}),
+        // Locatie/Inhoud (sinds 23 nov); Code/Wat voor eigen sjablonen van vroeger
+        ...(veld('Locatie') ? { Locatie: code } : {}), ...(veld('Inhoud') ? { Inhoud: wat } : {}),
+        ...(veld('Code') ? { Code: code } : {}), ...(veld('Wat') ? { Wat: wat } : {}),
         ...(kleur ? { Randkleur: kleur } : {}),
       });
       h.voegToe(sj.printer, { sjabloon: sj.id, artikel: id, qr: code, aantal: 1 });

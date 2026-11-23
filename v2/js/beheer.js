@@ -20,7 +20,7 @@ const VOORBEELD_ARTIKEL = {
 };
 // Proefwaarden voor lege aanvulvelden in het voorbeeld (alleen zonder passend artikel), zodat je ziet
 // wat er verandert als je het sjabloon bewerkt.
-const PROEF = { Code: 'A1', Wat: 'Voorbeeld inhoud', Omschrijving: 'Voorbeeld omschrijving', Locatie: 'A1', 'Extra inhoud': '2 Speakon kabel 10m' };
+const PROEF = { Locatie: 'A1', Inhoud: 'Voorbeeld inhoud', Code: 'A1', Wat: 'Voorbeeld inhoud', Omschrijving: 'Voorbeeld omschrijving', 'Extra inhoud': '2 Speakon kabel 10m' };
 // Uit de kist (exemplaren-export): kistnummer, gewicht en inhoud.
 const PROEF_KIST = { nr: 'DSL01', gewicht: '27,34', inhoud: '2 Martin Audio DD6\n1 Flightcase DD6' };
 function proefwaarden(sj) {
@@ -646,9 +646,9 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
       gat: true, voet: true, logoBoven: false, cert: '', kleuren: {},
       velden: [
         { naam: 'Naam', soort: 'tekst', herkomst: { type: 'kolom', kolom: 'naam' }, verplicht: true },
-        { naam: 'Code', soort: 'tekst', herkomst: { type: 'kolom', kolom: 'code' }, verplicht: false },
+        { naam: 'Artikelnummer', soort: 'tekst', herkomst: { type: 'kolom', kolom: 'code' }, verplicht: false },
       ],
-      plekken: { titel: [{ veld: 'Naam' }], groot: [], label: [], eigenschappen: [], onder: [{ veld: 'Code' }] },
+      plekken: { titel: [{ veld: 'Naam' }], groot: [], label: [], eigenschappen: [], onder: [{ veld: 'Artikelnummer' }] },
     };
     if (!(await bewaar(() => model.zetSjabloon(s)))) return;
     meld('sjabloon', s.id);

@@ -4,8 +4,10 @@
 import { PATRONEN } from './afleiden.js';
 import { sleutel, ONBEKEND, kleurBijNaam } from './kleuren.js';
 
-const kolom = (naam, k, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'kolom', kolom: k }, verplicht });
-const uitNaam = (naam, patroon, verplicht = false) => ({ naam, soort: 'tekst', herkomst: { type: 'naam', patroon }, verplicht });
+const kolom = (naam, k, verplicht = false, extra = {}) => ({ naam, soort: 'tekst', herkomst: { type: 'kolom', kolom: k }, verplicht, ...extra });
+const uitNaam = (naam, patroon, verplicht = false, extra = {}) => ({ naam, soort: 'tekst', herkomst: { type: 'naam', patroon }, verplicht, ...extra });
+// Velden die vroeger anders heetten houden hun oude naam als 'oud': al ingevulde aanvullingen blijven werken (23 nov).
+const artikelnummer = (verplicht = false) => kolom('Artikelnummer', 'code', verplicht, { oud: ['Code'] });
 /** Keuze met of zonder QR-code op het bordje (leeg = met). */
 const qrKeuze = (standaardZonder = false) => ({ naam: 'QR-code', soort: 'keuze', herkomst: { type: 'aanvulling' }, verplicht: false, qrSchakelaar: true,
   ...(standaardZonder ? { standaardZonder: true } : {}),
@@ -35,12 +37,12 @@ const locatie = (id, naam, h) => ({
  *  ('Kop: waarde', één per regel), code onderaan. */
 export const vrijBordje = (id, naam, opmaak, b, h, extra = {}) => ({
   ...basis, id, naam, printer: 'a4', opmaak, formaat: { b, h }, gat: opmaak !== 'strook', voet: opmaak !== 'strook',
-  velden: [kolom('Naam', 'naam', true), kolom('Code', 'code'),
+  velden: [kolom('Naam', 'naam', true), artikelnummer(),
     { naam: 'Groot', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
     { naam: 'Omschrijving', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false },
     { naam: 'Regels', soort: 'tekst', meerregelig: true, herkomst: { type: 'aanvulling' }, verplicht: false }],
   regelsVeld: 'Regels',
-  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], eigenschappen: [{ kop: 'Omschrijving', waarde: [v('Omschrijving')] }], onder: ['Artikelnummer ', v('Code')] },
+  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], eigenschappen: [{ kop: 'Omschrijving', waarde: [v('Omschrijving')] }], onder: ['Artikelnummer ', v('Artikelnummer')] },
   kleuren: { rand: { sleutel: [v('Groot')], waarden: {} } },
   ...extra,
 });
@@ -76,14 +78,14 @@ export const wandbord = (id, naam, b, h) => ({
 
 /** Randkleur per zone: de waarden gelden voor alles wat met die letter begint (begin: true). In Beheer te wijzigen. */
 const ZONES = { a: '#005abb', b: '#ffff00', c: '#ff8c00', d: '#7030a0', e: '#00b0f0', f: '#c000c0', g: '#ff0000', h: '#00b050', j: '#0050ff', k: '#ff8c00', v: '#ffffff', w: '#7030a0', x: '#7f7f7f', z: '#7f7f7f' };
-const zoneKleuren = () => ({ rand: { sleutel: [v('Code')], begin: true, waarden: { ...ZONES }, anders: '#005abb' } });
+const zoneKleuren = () => ({ rand: { sleutel: [v('Locatie')], begin: true, waarden: { ...ZONES }, anders: '#005abb' } });
 
 /** Stellingbord voor de kopse kant: code van de rij heel groot, wat erin hoort, QR van de code. */
 export const stellingbord = (id, naam, b, h) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b, h }, gat: false, voet: true,
   // In Rentman heb je weinig aan de QR van een stellingbord: standaard zonder (Robin, 11 nov).
-  velden: [aanvul('Code', { verplicht: true }), aanvul('Wat'), qrKeuze(true)],
-  plekken: { ...leeg, titel: [v('Code')], onder: [v('Wat')], qr: [v('Code')] },
+  velden: [aanvul('Locatie', { verplicht: true, oud: ['Code'] }), aanvul('Inhoud', { oud: ['Wat'] }), qrKeuze(true)],
+  plekken: { ...leeg, titel: [v('Locatie')], onder: [v('Inhoud')], qr: [v('Locatie')] },
   kleuren: zoneKleuren(),
 });
 
@@ -91,8 +93,8 @@ export const stellingbord = (id, naam, b, h) => ({
  *  (QR-veld, met de waarde één keer klein eronder). Vijf per A4, geen voet. Randkleur naar keuze. */
 export const bakbord = (id, naam) => ({
   ...basis, id, naam, printer: 'a4', opmaak: 'wand', formaat: { b: 160, h: 48 }, gat: false, voet: false,
-  velden: [kolom('Naam', 'naam', true), kolom('Code', 'code')],
-  plekken: { ...leeg, titel: [v('Naam')], onder: [v('Code')] },
+  velden: [kolom('Naam', 'naam', true), artikelnummer()],
+  plekken: { ...leeg, titel: [v('Naam')], onder: [v('Artikelnummer')] },
   // Standaard DSL blauw, zoals de wandbordjes voorin het magazijn; Randkleur kiezen kan nog steeds.
   kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb' } },
 });
@@ -102,12 +104,12 @@ export const bakbord = (id, naam) => ({
  *  Inhoud: één regel per onderdeel ('aantal naam'). Twee per A4. */
 export const kistbordje = (id, naam, opmaak = 'kist') => ({
   ...basis, id, naam, printer: 'a4', opmaak, formaat: { b: 194, h: 136 }, gat: false, voet: true,
-  velden: [kolom('Naam', 'naam', true), uitKist('Code', 'nr', 'code'),
+  velden: [kolom('Naam', 'naam', true), uitKist('Kistnummer', 'nr', 'code', { oud: ['Code'] }),
     uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }), uitKist('Inhoud', 'inhoud', '', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' }),
     // Wat niet in de export staat (bulk: kabels, flightcase-inleg): één keer aanvullen, onthouden per type kist.
     aanvul('Extra inhoud', { meerregelig: true, onthouden: true, plaatshouder: 'Wat er verder in zit, één per regel (2 Speakon kabel 10m)' })],
   lijstVeld: ['Inhoud', 'Extra inhoud'],
-  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Code')], onder: [v('Code')] },
+  plekken: { ...leeg, titel: [v('Naam')], groot: [v('Kistnummer')], onder: [v('Kistnummer')] },
   // Vaste kleur: altijd DSL blauw (een gekozen randkleur telt hier niet).
   kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb', vast: true } },
 });
@@ -181,7 +183,7 @@ export const DSL_SJABLONEN = [
   {
     ...basis, id: 'backdrop', naam: 'Backdrop', printer: 'a4', opmaak: 'staand', formaat: { b: 74, h: 105 },
     gat: true, voet: true,
-    velden: [uitNaam('Naam', 'kaal', true), uitNaam('Breedte', 'breedte', true), uitNaam('Hoogte', 'hoogte', true), uitNaam('Kwaliteit', 'kwaliteit'), keuze('Kleur', ['Zwart', 'Wit', 'Rood'])],
+    velden: [uitNaam('Naam', 'kaal', true), uitNaam('Breedte', 'breedte', true, { eenheid: 'm' }), uitNaam('Hoogte', 'hoogte', true, { eenheid: 'm' }), uitNaam('Kwaliteit', 'kwaliteit'), keuze('Kleur', ['Zwart', 'Wit', 'Rood'])],
     plekken: { ...leeg, titel: [v('Naam')], groot: [v('Breedte'), ' × ', v('Hoogte'), 'm'], eigenschappen: [{ kop: 'Kwaliteit', waarde: [v('Kwaliteit')] }, { kop: 'Kleur', waarde: [v('Kleur')] }] },
     kleuren: { rand: { sleutel: [v('Breedte'), ' × ', v('Hoogte')], waarden: {} } },
     cert: 'Gecertificeerd volgens DIN 4102 B1',
@@ -189,7 +191,7 @@ export const DSL_SJABLONEN = [
   {
     ...basis, id: 'pipe-drape', naam: 'Pipe & Drape', printer: 'a4', opmaak: 'liggend', formaat: { b: 105, h: 74 },
     gat: true, voet: true,
-    velden: [uitNaam('Naam', 'kaal', true), uitNaam('Lengte', 'breedte', true), uitNaam('Hoogte', 'hoogte', true)],
+    velden: [uitNaam('Naam', 'kaal', true), uitNaam('Lengte', 'breedte', true, { eenheid: 'm' }), uitNaam('Hoogte', 'hoogte', true, { eenheid: 'm' })],
     plekken: { ...leeg, titel: ['Pipe & Drape'], groot: [v('Lengte'), ' × ', v('Hoogte'), 'm'], eigenschappen: [{ kop: 'Inhoud', waarde: [v('Naam')] }] },
     kleuren: { rand: { sleutel: [v('Lengte'), ' × ', v('Hoogte')], waarden: {} } },
   },
@@ -212,9 +214,9 @@ export const DSL_SJABLONEN = [
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },
     logoBoven: true,
-    velden: [uitNaam('Omschrijving', 'kaal', true), uitNaam('Lengte', 'lengte'), uitNaam('Connector', 'polen'), uitNaam('Kabel', 'kabel'),
-      keuze('Doorsnede', ['2,5 mm²', '4 mm²'], 'Kabel'), kolom('Artikelnummer', 'code', true)],
-    plekken: { ...leeg, titel: [v('Omschrijving')], groot: [v('Lengte'), ' m'], label: [v('Connector'), ' ', v('Doorsnede')], onder: ['Artikelnummer ', v('Artikelnummer')] },
+    velden: [uitNaam('Naam', 'kaal', true, { oud: ['Omschrijving'] }), uitNaam('Lengte', 'lengte', false, { eenheid: 'm' }), uitNaam('Connector', 'polen'), uitNaam('Kabel', 'kabel'),
+      keuze('Doorsnede', ['2,5 mm²', '4 mm²'], 'Kabel'), artikelnummer(true)],
+    plekken: { ...leeg, titel: [v('Naam')], groot: [v('Lengte'), ' m'], label: [v('Connector'), ' ', v('Doorsnede')], onder: ['Artikelnummer ', v('Artikelnummer')] },
     kleuren: {
       rand: { veld: 'Lengte', waarden: { '2,5': '#ffff00', '5': '#00b050', '7,5': '#0050ff', '10': '#ff0000', '15': '#7030a0', '20': '#ffffff', '25': '#ff8c00' } },
       label: { veld: 'Doorsnede', waarden: { '2,5mm²': '#c00000', '4mm²': '#00a050' } },
@@ -226,6 +228,7 @@ export const DSL_SJABLONEN = [
 export function veldwaarde(veld, artikel, aanvullingen = {}, qr = '') {
   // Een aanvulling met de naam van het veld gaat altijd voor, ook leeg (= niet op het bordje).
   if (aanvullingen && Object.hasOwn(aanvullingen, veld.naam)) return String(aanvullingen[veld.naam] ?? '').trim();
+  for (const oud of veld.oud || []) if (aanvullingen && Object.hasOwn(aanvullingen, oud)) return String(aanvullingen[oud] ?? '').trim();
   return natuurlijkeWaarde(veld, artikel, qr);
 }
 

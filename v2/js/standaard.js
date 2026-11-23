@@ -26,7 +26,7 @@ const BASIS_SJABLONEN = [
   leegBordje('leeg-liggend', 'Leeg bordje liggend', 'liggend', 105, 74),
   bordje('bordje-staand', 'Bordje staand', 'staand', 74, 105),
   bordje('bordje-liggend', 'Bordje liggend', 'liggend', 105, 74),
-  bordje('strook', 'Strook', 'strook', 180, 48, { logoBoven: true, plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], onder: ['Code ', v('Code')] } }),
+  bordje('strook', 'Strook', 'strook', 180, 48, { logoBoven: true, plekken: { ...leeg, titel: [v('Naam')], groot: [v('Groot')], onder: ['Artikelnummer ', v('Artikelnummer')] } }),
   stellingbord('stellingbord', 'Stellingbord A4', 194, 281),
   stellingbord('stellingbord-a5', 'Stellingbord A5', 136, 194),
   bakbord('bakbord', 'Bakbord (16 cm)'),
