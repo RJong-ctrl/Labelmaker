@@ -66,6 +66,8 @@
 .signb.kist .krij{display:grid;gap:var(--l);flex:0 0 auto}
 .signb.kist .kc{background:#fff;min-width:0;min-height:0;overflow:hidden}
 .signb.kist .kv{display:flex;align-items:center;gap:.35em;padding:0 2mm;height:100%;line-height:1}
+/* ruimte voor de staart van g, j, p (kg) in het afgesneden vak */
+.signb.kist .kv .kw{line-height:1.3}
 .signb.kist .kv b{flex:0 0 auto;font-weight:700}
 .signb.kist .kw>span{white-space:nowrap;font-weight:500}
 .signb.kist .kdatum .kw>span{font-weight:700}

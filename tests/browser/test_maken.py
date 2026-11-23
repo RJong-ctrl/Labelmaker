@@ -324,6 +324,10 @@ class Maken(MakenHulp, PaginaTest):
         expect(k.locator('.kstapel .kv b')).to_have_text(['Klant:', 'Productie:'])
         expect(k.locator('.kdatum .kv b')).to_have_text(['Datum:', 'Check:', 'Gewicht:'])
         expect(k.locator('.kdatum')).to_contain_text('66,20 kg')
+        # de staart van de g (kg) mag niet worden afgeknipt (Robin, 23 nov): genoeg regelhoogte in het afgesneden vak
+        ruimte = k.locator('.kdatum .kw').evaluate('''e => { const cs = getComputedStyle(e);
+            return parseFloat(cs.lineHeight) / parseFloat(cs.fontSize); }''')
+        self.assertGreaterEqual(ruimte, 1.25)
         expect(k.locator('.kkop .kl')).to_have_text('Inhoud:')
         expect(k.locator('.kkop .kn')).to_have_text('DMX kit groot [Case]')
         expect(k.locator('.kkop .kcode')).to_have_text('DSL01')
