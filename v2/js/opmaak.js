@@ -194,14 +194,20 @@ function bordje(i, hs) {
 // ---------- materiaalbordje voor op de kist (opbouw van het oude bordje) ----------
 
 function kist(i, hs) {
-  const W = i.formaat.b, H = i.formaat.h, L = 1.2, w = i.waarden || {};
-  const kopH = H * 0.2, voetH = hs.voet.length ? H * 0.085 : 0, st = { b: 80, h: 60 };
-  const veld = (naam, waarde, pt) => `<div class="kv" style="font-size:${pt}pt"><b>${esc(naam)}:</b>${vak('kw', pt, esc(waarde || ''), 'flex:1 1 auto', 5)}</div>`;
+  // Precies het oude Publisher-bordje (Robin, 23 nov):
+  //   logo | Klant: / Productie: | QR
+  //   Datum: | Check: | Gewicht: …
+  //   Inhoud: <naam vet> … kistnummer rechtsboven, daaronder aantal + omschrijving
+  //   zwarte voet met adres.
+  // Klant, productie, datum en check blijven leeg om met de hand in te vullen.
+  const W = i.formaat.b, H = i.formaat.h, L = 1.1, w = i.waarden || {};
+  const kopH = H * 0.23, datumH = H * 0.085, voetH = hs.voet.length ? H * 0.10 : 0;
+  const veld = (naam, waarde, pt) => `<div class="kv" style="font-size:${pt}pt"><b>${esc(naam)}:</b>${waarde ? vak('kw', pt, esc(waarde), 'flex:1 1 auto', 5) : ''}</div>`;
   const gewicht = String(w.Gewicht || '').trim();
   const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
-  const qs = kopH - 2 * L - 2;
+  const qs = kopH - 2 * L - 4;
   const lijst = i.lijst || [];
-  // Veel regels: twee kolommen. De letter wordt zo groot als past (hooguit 12 pt); lange namen lopen door.
+  // Veel regels: twee kolommen. De letter wordt zo groot als past (hooguit 13 pt); lange namen lopen door.
   const regels = lijst.map(([n, t]) => `<div class="kr"><span class="ka">${esc(n)}</span><span class="kt">${esc(t)}</span></div>`).join('');
   const el = document.createElement('div');
   el.className = 'signb kist';
@@ -209,18 +215,17 @@ function kist(i, hs) {
   el.style.width = W + 'mm';
   el.style.height = H + 'mm';
   el.style.setProperty('--l', mm(L));
-  // Kop zoals het oude bordje: logo, twee regels (vroeger klant en productie, nu naam en gewicht), QR.
-  // Rechts naast de inhoud het vak voor de projectsticker (Citizen-label 76 × 56 mm).
   el.innerHTML =
-    `<div class="krij" style="height:${mm(kopH)};grid-template-columns:${mm(kopH * 1.25)} 1fr ${mm(kopH)}">`
+    `<div class="krij kkopr" style="height:${mm(kopH)};grid-template-columns:${mm(W * 0.235)} 1fr ${mm(kopH)}">`
     + `<div class="kc klogo">${hs.logo ? `<img alt="" src="${esc(hs.logo)}">` : ''}</div>`
-    + `<div class="kstapel"><div class="kc">${veld('Naam', i.titel, 13)}</div><div class="kc">${veld('Gewicht', gw, 13)}</div></div>`
+    + `<div class="kstapel"><div class="kc">${veld('Klant', '', 15)}</div><div class="kc">${veld('Productie', '', 15)}</div></div>`
     + `<div class="kc kqr">${i.qr ? qrOfMelding(i.qr, qs) : ''}</div></div>`
-    + `<div class="krij kmidden" style="grid-template-columns:1fr ${mm(st.b + 4)}">`
-    + `<div class="kc kinhoud"><div class="kkop"><span class="kl">Inhoud:</span><span style="flex:1 1 auto"></span><span class="kcode">${esc(i.onder)}</span></div>`
-    + (regels ? vak('klijst', 12, `<div class="kgrid${lijst.length > 13 ? ' twee' : ''}">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4.5) : '')
-    + '</div>'
-    + `<div class="kc kstickervak"><div class="ksticker" style="width:${mm(st.b)};height:${mm(st.h)}">Projectsticker</div></div></div>`
+    + `<div class="krij kdatum" style="height:${mm(datumH)};grid-template-columns:37fr 37fr 26fr">`
+    + `<div class="kc">${veld('Datum', '', 12)}</div><div class="kc">${veld('Check', '', 12)}</div><div class="kc">${veld('Gewicht', gw, 12)}</div></div>`
+    + `<div class="krij kmidden"><div class="kc kinhoud">`
+    + `<div class="kkop"><span class="kl">Inhoud:</span>${vak('kn', 15, esc(i.titel || ''), 'flex:1 1 auto', 8)}<span class="kcode">${esc(i.onder)}</span></div>`
+    + (regels ? vak('klijst', 13, `<div class="kgrid${lijst.length > 13 ? ' twee' : ''}">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4.5) : '')
+    + '</div></div>'
     + (voetH ? `<div class="kvoet" style="height:${mm(voetH)}">${hs.voet.map(l => '<div>' + l.split('|').map(x => esc(x.trim())).join('&nbsp; ') + '</div>').join('')}</div>` : '');
   return el;
 }

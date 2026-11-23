@@ -65,10 +65,11 @@
 .signb.kist{border:0;background:#000;padding:var(--l);display:flex;flex-direction:column;gap:var(--l)}
 .signb.kist .krij{display:grid;gap:var(--l);flex:0 0 auto}
 .signb.kist .kc{background:#fff;min-width:0;min-height:0;overflow:hidden}
-.signb.kist .kv{display:flex;align-items:center;gap:.35em;padding:0 2.5mm;height:100%;line-height:1}
+.signb.kist .kv{display:flex;align-items:center;gap:.35em;padding:0 2mm;height:100%;line-height:1}
 .signb.kist .kv b{flex:0 0 auto;font-weight:700}
 .signb.kist .kw>span{white-space:nowrap;font-weight:500}
-.signb.kist .klogo{display:flex;align-items:center;justify-content:center;padding:2.5mm}
+.signb.kist .kdatum .kw>span{font-weight:700}
+.signb.kist .klogo{display:flex;align-items:center;justify-content:center;padding:3mm 5mm}
 .signb.kist .klogo img{max-width:100%;max-height:100%;object-fit:contain}
 .signb.kist .kstapel{display:grid;grid-template-rows:1fr 1fr;gap:var(--l);min-width:0}
 .signb.kist .kmidden{flex:1 1 auto;min-height:0}
@@ -76,18 +77,18 @@
 .signb.kist .kstickervak{display:flex;align-items:center;justify-content:center}
 .signb.kist .ksticker{flex:0 0 auto;border:.3mm dashed #b0b0b0;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;color:#b8b8b8;font-size:8pt;letter-spacing:.08em;text-transform:uppercase}
 .signb.kist .kqr{display:flex;align-items:center;justify-content:center}
-.signb.kist .kinhoud{display:flex;flex-direction:column;padding:3mm 4.5mm 3mm;gap:2mm}
-.signb.kist .kkop{display:flex;align-items:baseline;gap:.4em;flex:0 0 auto;height:7.5mm}
-.signb.kist .kl{font-size:10pt;flex:0 0 auto}
+.signb.kist .kinhoud{display:flex;flex-direction:column;padding:2.5mm 2mm 2.5mm 3mm;gap:1mm}
+.signb.kist .kkop{display:flex;align-items:center;gap:.4em;flex:0 0 auto;height:6.5mm}
+.signb.kist .kl{font-size:11pt;flex:0 0 auto}
 .signb.kist .kn{height:100%}
 .signb.kist .kn>span{white-space:nowrap;font-weight:700}
-.signb.kist .kcode{font-size:10pt;flex:0 0 auto;align-self:flex-start}
-.signb.kist .klijst{padding-left:8mm}
+.signb.kist .kcode{font-size:11pt;flex:0 0 auto;align-self:flex-start}
+.signb.kist .klijst{padding-left:19mm}
 .signb.kist .kgrid.twee{columns:2;column-gap:7mm}
-.signb.kist .kr{display:grid;grid-template-columns:2.2em 1fr;column-gap:1em;break-inside:avoid;line-height:1.2;padding:.12em 0}
+.signb.kist .kr{display:grid;grid-template-columns:2.4em 1fr;column-gap:.9em;break-inside:avoid;line-height:1.2;padding:.12em 0}
 .signb.kist .ka{text-align:left}
 .signb.kist .kt{white-space:normal;overflow-wrap:anywhere}
-.signb.kist .kvoet{flex:0 0 auto;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:7.5pt;font-weight:700;line-height:1.35}
+.signb.kist .kvoet{flex:0 0 auto;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:8pt;font-weight:700;line-height:1.35}
 .signb.kist .kvoet>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 /* materiaalbordje kist (huisstijl): inhoud centraal en luchtig; rechts gewicht, QR en projectsticker */

@@ -291,23 +291,31 @@ class Maken(MakenHulp, PaginaTest):
         self.assertEqual(self.fouten, [])
 
     def test_kistbordje_twee_per_a4(self):
+        """Klassiek A5: precies zoals het oude Publisher-bordje (Robin, 23 nov)."""
         p = self.pagina
         self.kies('kist')
-        expect(p.locator('#makenVelden input[name="Klant"]')).to_have_count(0)    # daar komt de projectsticker
         p.locator('#makenVelden input[name="Naam"]').fill('DMX kit groot [Case]')
+        p.locator('#makenVelden input[name="Kistnummer"]').fill('DSL01')
         p.locator('#makenVelden input[name="Gewicht"]').fill('66,20')
         p.locator('#makenVelden textarea[name="Inhoud"]').fill('30 DMX 3p 1,25m\n2 DMX 3p Afsluiter')
         k = p.locator('#makenVoorbeeld .signb.kist')
         expect(k.locator('.kt')).to_have_text(['DMX 3p 1,25m', 'DMX 3p Afsluiter'])
         expect(k.locator('.ka')).to_have_text(['30', '2'])
-        expect(k).to_contain_text('66,20 kg')
-        # opbouw zoals het oude bordje: logo, vak voor de projectsticker, QR, zwarte voet
-        for deel in ['.klogo', '.ksticker', '.kqr', '.kvoet']:
+        # kop: logo | Klant / Productie | QR ; rij: Datum | Check | Gewicht ; Inhoud: naam (vet), kistnummer rechts ; zwarte voet
+        for deel in ['.klogo', '.kqr', '.kvoet']:
             expect(k.locator(deel)).to_have_count(1)
-        # naam bovenaan op de plek van de locatie; geen locatie meer
-        expect(k.locator('.kstapel')).to_contain_text('Naam:')
-        expect(k.locator('.kstapel')).to_contain_text('DMX kit groot [Case]')
-        expect(k).not_to_contain_text('Locatie')
+        expect(k.locator('.ksticker')).to_have_count(0)
+        expect(k.locator('.kstapel .kv b')).to_have_text(['Klant:', 'Productie:'])
+        expect(k.locator('.kdatum .kv b')).to_have_text(['Datum:', 'Check:', 'Gewicht:'])
+        expect(k.locator('.kdatum')).to_contain_text('66,20 kg')
+        expect(k.locator('.kkop .kl')).to_have_text('Inhoud:')
+        expect(k.locator('.kkop .kn')).to_have_text('DMX kit groot [Case]')
+        expect(k.locator('.kkop .kcode')).to_have_text('DSL01')
+        # verhoudingen van het origineel: kop ± 23 %, datumrij ± 8,5 %, voet ± 10 % van de hoogte
+        p.wait_for_timeout(300)
+        H = k.bounding_box()['height']
+        for deel, aandeel in [('.krij.kkopr', 0.23), ('.krij.kdatum', 0.085), ('.kvoet', 0.10)]:
+            self.assertAlmostEqual(k.locator(deel).bounding_box()['height'] / H, aandeel, delta=0.02, msg=deel)
         p.locator('#makenVelden input[name="__aantal"]').fill('2')
         p.locator('#makenOpVel').click()
         expect(p.locator('#vellen .a4')).to_have_count(1)
@@ -331,9 +339,9 @@ class Maken(MakenHulp, PaginaTest):
         self.assertEqual(k.locator('.kt').evaluate_all('l => l.filter(e => e.scrollWidth > e.clientWidth + 1).length'), 0, 'tekst afgekapt')
 
     def test_projectsticker_past(self):
-        """Projectsticker = Citizen-label 76 × 56 mm: het vak moet minstens zo groot zijn, in beide bordjes."""
+        """Projectsticker = Citizen-label 76 × 56 mm: het vak moet minstens zo groot zijn (klassiek heeft er geen)."""
         p = self.pagina
-        for soort in ['kist', 'kist-modern']:
+        for soort in ['kist-modern']:
             self.kies(soort)
             p.locator('#makenVelden input[name="Naam"]').fill('Kist')
             b = p.locator('#makenVoorbeeld .signb')
