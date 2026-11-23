@@ -47,9 +47,17 @@ class Maken(MakenHulp, PaginaTest):
         expect(venster.locator('.duim .signb, .duim .lbl')).to_have_count(venster.locator('[data-tegel]').count())
         # per soort een eigen rij
         expect(venster.locator('.tegelkop')).to_have_text(['Bordjes', 'Magazijn', 'Kisten', re.compile('Labels')])
-        magazijn = venster.locator('.tegels').nth(1).locator('[data-tegel]')
-        ids = magazijn.evaluate_all('l => l.map(e => e.dataset.tegel)')
-        self.assertEqual(ids[:4], ['stellingbord', 'stellingbord-a5', 'bakbord', 'gitterbox'])   # stroken naast elkaar
+        # binnen een soort kleine rijtjes met een titeltje, naast elkaar (Robin, 23 nov)
+        kisten = venster.locator('.tegelgroep').nth(2)
+        expect(kisten.locator('.subkop')).to_have_text(['Materiaalbordjes', 'B&W cases'])
+        mat = kisten.locator('.subgroep').nth(0).locator('[data-tegel]')
+        self.assertEqual(mat.evaluate_all('l => l.map(e => e.dataset.tegel)'), ['kist', 'kist-modern', 'speakertas'])
+        bw = kisten.locator('.subgroep').nth(1).locator('[data-tegel]')
+        self.assertEqual(bw.evaluate_all('l => l.map(e => e.dataset.tegel)'), ['kist-bw1000', 'kist-bw6040'])
+        a, b = kisten.locator('.subgroep').nth(0).bounding_box(), kisten.locator('.subgroep').nth(1).bounding_box()
+        self.assertAlmostEqual(a['y'], b['y'], delta=2)             # naast elkaar, niet onder elkaar
+        expect(venster.locator('.tegelgroep').nth(1).locator('.subkop')).to_have_text(['Stellingen', 'Bakken & gitterboxen', 'Wanden'])
+
         # voorbeeldjes tonen ook iets bij sjablonen met eigen velden (Code/Wat)
         expect(venster.locator('[data-tegel="stellingbord"] .titel')).to_have_text('A1')
         p.keyboard.press('Escape')

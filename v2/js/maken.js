@@ -1,7 +1,7 @@
 // Maken: een leeg formulier om een bordje, strook of label te maken. Een artikel
 // opzoeken (of scannen) vult de velden in; alles blijft aanpasbaar.
 
-import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN, GROEPEN, groepVan, volgordeIn } from './sjablonen.js';
+import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { veldInvoer, vraagReeks } from './dialogen.js';
 import { leesReeks, zoneKleur } from './reeks.js';
@@ -39,14 +39,17 @@ export function startMaken(root, h) {
   // Een QR van het artikel zelf (artikel-QR of een van zijn exemplaren) is geen eigen wijziging.
   const qrEigen = () => m.qrBewerkt && !(m.artikel && (m.qr === (m.artikel.qr || '') || (m.artikel.exemplaren || []).includes(m.qr)));
 
-  /** Sjablonen per soort (bordjes, magazijn, kisten, stroken, labels), lege soorten overgeslagen. */
-  const perGroep = () => GROEPEN.map(g => [g, h.E().sjablonen.filter(s => groepVan(s) === g)
-    .map((s, i) => [s, i]).sort((a, b) => volgordeIn(a[0]) - volgordeIn(b[0]) || a[1] - b[1]).map(([s]) => s)]).filter(([, l]) => l.length);
+  /** Sjablonen per soort, en daarbinnen per rijtje (subgroep); lege overgeslagen. Lege bordjes en kaartjes zonder sticker achteraan. */
+  const achter = (s) => (String(s.id).startsWith('leeg-') || s.sticker === false ? 1 : 0);
+  const perGroep = () => GROEPEN.map(g => [g, SUBGROEPEN.filter(sg => sg.groep === g.sleutel).map(sg => [sg,
+    h.E().sjablonen.filter(s => subgroepVan(s) === sg).map((s, i) => [s, i])
+      .sort((a, b) => achter(a[0]) - achter(b[0]) || a[1] - b[1]).map(([s]) => s)])
+    .filter(([, l]) => l.length)]).filter(([, subs]) => subs.length);
   const groepTitel = (g) => (g.sleutel === 'labels' ? `Labels · ${h.E().printers?.label?.naam || 'labelprinter'}` : g.titel);
 
   function soortOpties() {
     return (m.artikel ? `<option value="auto"${m.sjabloonId === 'auto' ? ' selected' : ''}>Automatisch (volgt het artikel)</option>` : '')
-      + perGroep().map(([g, lijst]) => `<optgroup label="${esc(g.titel)}">${lijst.map(s => `<option value="${esc(s.id)}"${s.id === m.sjabloonId ? ' selected' : ''}>${esc(s.naam)}</option>`).join('')}</optgroup>`).join('');
+      + perGroep().flatMap(([g, subs]) => subs.map(([sg, lijst]) => `<optgroup label="${esc(g.titel)} · ${esc(sg.titel)}">${lijst.map(s => `<option value="${esc(s.id)}"${s.id === m.sjabloonId ? ' selected' : ''}>${esc(s.naam)}</option>`).join('')}</optgroup>`)).join('');
   }
 
   // Beginscherm: tegels met de sjablonen (en bovenaan zoeken/scannen). Een tegel of een artikel opent het formulier.
@@ -87,7 +90,9 @@ export function startMaken(root, h) {
     }
     const tegel = (s) => `<button type="button" class="tegel${s.id === m.sjabloonId ? ' gekozen' : ''}" data-tegel="${esc(s.id)}"><span class="duim" data-duim="${esc(s.id)}"></span><span class="tnaam">${esc(s.naam)}</span></button>`;
     dlg.innerHTML = '<div class="kop"><h2 id="sjabloonVensterKop">Sjabloon kiezen</h2><button type="button" class="klein" data-sluit aria-label="Sluiten">×</button></div>'
-      + '<div id="makenTegels">' + perGroep().map(([g, lijst]) => `<h3 class="tegelkop">${esc(groepTitel(g))}</h3><div class="tegels">${lijst.map(tegel).join('')}</div>`).join('') + '</div>';
+      + '<div id="makenTegels">' + perGroep().map(([g, subs]) => `<section class="tegelgroep"><h3 class="tegelkop">${esc(groepTitel(g))}</h3><div class="subgroepen">`
+        + subs.map(([sg, lijst]) => `<div class="subgroep"><h4 class="subkop">${esc(sg.titel)}</h4><div class="tegels">${lijst.map(tegel).join('')}</div></div>`).join('')
+        + '</div></section>').join('') + '</div>';
     dlg.showModal();
     tekenDuimen();
   }

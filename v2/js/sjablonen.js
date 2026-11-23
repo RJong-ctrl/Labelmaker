@@ -147,11 +147,30 @@ export function groepVan(sj) {
       : String(sj.opmaak || '').startsWith('kist') ? 'kisten' : 'bordjes';
   return GROEPEN.find(g => g.sleutel === sleutel);
 }
-/** Volgorde binnen het magazijn: stellingborden, smalle stroken (bakbord, gitterbox), dan wandborden. */
-export function volgordeIn(sj) {
-  if (sj.opmaak === 'strook' || (sj.opmaak === 'wand' && sj.formaat?.b / sj.formaat?.h > 2.5)) return 1;
-  if (String(sj.id).startsWith('stellingbord')) return 0;
-  return 2;
+/** Kleine rijtjes binnen een groep, met een titeltje, naast elkaar in het venster (Robin, 23 nov). */
+export const SUBGROEPEN = [
+  { sleutel: 'algemeen', groep: 'bordjes', titel: 'Algemeen' },
+  { sleutel: 'doeken', groep: 'bordjes', titel: 'Doeken' },
+  { sleutel: 'stellingen', groep: 'magazijn', titel: 'Stellingen' },
+  { sleutel: 'bakken', groep: 'magazijn', titel: 'Bakken & gitterboxen' },
+  { sleutel: 'wanden', groep: 'magazijn', titel: 'Wanden' },
+  { sleutel: 'materiaal', groep: 'kisten', titel: 'Materiaalbordjes' },
+  { sleutel: 'bw', groep: 'kisten', titel: 'B&W cases' },
+  { sleutel: 'qr', groep: 'labels', titel: 'QR-labels' },
+  { sleutel: 'locatie', groep: 'labels', titel: 'Locatielabels' },
+];
+export function subgroepVan(sj) {
+  const groep = groepVan(sj).sleutel;
+  const naam = String(sj.naam || ''), id = String(sj.id || '');
+  const sleutel = {
+    labels: () => (sj.opmaak === 'locatie' ? 'locatie' : 'qr'),
+    bordjes: () => (/backdrop|pipe|drape|doek/i.test(naam + ' ' + id) ? 'doeken' : 'algemeen'),
+    magazijn: () => (sj.opmaak === 'strook' || (sj.opmaak === 'wand' && sj.formaat?.b / sj.formaat?.h > 2.5) ? 'bakken'
+      : /^stellingbord|stelling/i.test(id + ' ' + naam) ? 'stellingen' : 'wanden'),
+    // Ronde hoeken = bordje voor in een case-deksel (B&W).
+    kisten: () => (sj.formaat?.r > 0 || /b&w|bw\d/i.test(naam + ' ' + id) ? 'bw' : 'materiaal'),
+  }[groep]();
+  return SUBGROEPEN.find(x => x.groep === groep && x.sleutel === sleutel);
 }
 
 export const DSL_SJABLONEN = [

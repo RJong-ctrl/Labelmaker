@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { leesXlsx } from '../../v2/js/bestanden.js';
 import { importeer } from '../../v2/js/import.js';
-import { DSL_SJABLONEN, groepVan, GROEPEN, vul, ontbrekend, qrsVoor, standaardSjabloon } from '../../v2/js/sjablonen.js';
+import { DSL_SJABLONEN, groepVan, GROEPEN, SUBGROEPEN, subgroepVan, vul, ontbrekend, qrsVoor, standaardSjabloon } from '../../v2/js/sjablonen.js';
 import { KLEURNAMEN, tint, inkt, sleutel } from '../../v2/js/kleuren.js';
 
 const b = await readFile(new URL('../fixtures/out/voorbeeld.xlsx', import.meta.url));
@@ -423,6 +423,29 @@ test('sjablonen_in_groepen', () => {
   assert.equal(g('kist-modern'), 'kisten');
   assert.equal(g('gitterbox'), 'magazijn');      // strook hoort bij het magazijn, naast het bakbord
   assert.equal(g('qrlabel'), 'labels');
+});
+
+test('sjablonen_in_subgroepen', () => {
+  // Binnen een groep kleine rijtjes met een titel, naast elkaar (Robin, 23 nov): B&W cases los naast de kisten.
+  const sub = (id) => subgroepVan(S[id]).titel;
+  const per = {};
+  for (const sj of DSL_SJABLONEN) (per[groepVan(sj).sleutel + ' / ' + sub(sj.id)] ??= []).push(sj.id);
+  assert.deepEqual(per, {
+    'labels / QR-labels': ['qrlabel', 'qrlabel-half'],
+    'labels / Locatielabels': ['locatie', 'locatie-half'],
+    'bordjes / Doeken': ['backdrop', 'pipe-drape'],
+    'kisten / Materiaalbordjes': ['speakertas', 'kist', 'kist-modern'],
+    'bordjes / Algemeen': ['leeg-staand', 'leeg-liggend', 'bordje-staand', 'bordje-liggend'],
+    'magazijn / Stellingen': ['stellingbord', 'stellingbord-a5'],
+    'magazijn / Bakken & gitterboxen': ['bakbord', 'gitterbox'],
+    'magazijn / Wanden': ['wandbord-staand', 'wandbord-liggend', 'wandbord-a5-staand', 'wandbord-a5-liggend'],
+    'kisten / B&W cases': ['kist-bw1000', 'kist-bw6040'],
+  });
+  // elke subgroep hoort bij zijn eigen groep, en een eigen sjabloon valt ook ergens in
+  for (const sj of DSL_SJABLONEN) assert.equal(subgroepVan(sj).groep, groepVan(sj).sleutel);
+  assert.equal(subgroepVan({ id: 'x', naam: 'Eigen case', opmaak: 'kist-modern', formaat: { b: 120, h: 80, r: 5 } }).titel, 'B&W cases');
+  // volgorde in het venster: de groepen in GROEPEN-volgorde, binnen een groep de subgroepen in SUBGROEPEN-volgorde
+  assert.deepEqual(SUBGROEPEN.map(s => s.groep), ['bordjes', 'bordjes', 'magazijn', 'magazijn', 'magazijn', 'kisten', 'kisten', 'labels', 'labels']);
 });
 
 test('kist_bw1000', () => {
