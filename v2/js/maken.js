@@ -173,7 +173,24 @@ export function startMaken(root, h) {
       // Haalt het sjabloon de QR zelf uit een veld (bijv. Code of Locatie), dan geen apart QR-veld.
       + (sj?.plekken?.qr?.length ? '' : `<label class="veld"><span>QR-code <small>(leeg = geen)</small></span><input type="text" name="__qr" value="${esc(qrWaarde())}" autocomplete="off"></label>`)
       + `<label class="veld"><span>Aantal</span><input type="number" name="__aantal" min="1" max="999" value="${m.aantal}"></label>` + ex;
+    vulInhoud();
     tekenVoorbeeld();
+  }
+
+  // Het Inhoud-veld (of anders het eerste tekstvak) neemt de vrije ruimte onder in het paneel (Robin, 23 nov).
+  function vulInhoud() {
+    const paneel = root.getElementById('maken');
+    const ta = paneel?.querySelector('#makenVelden textarea[name="Inhoud"]') || paneel?.querySelector('#makenVelden textarea');
+    if (!ta || !paneel.offsetParent) return;
+    ta.style.height = '';
+    const basis = ta.getBoundingClientRect().height;
+    const onder = Math.max(...[...paneel.children].map(e => e.getBoundingClientRect().bottom));
+    const ruimte = paneel.getBoundingClientRect().bottom - parseFloat(getComputedStyle(paneel).paddingBottom || 0) - onder - 2;
+    if (ruimte > 4) ta.style.height = (basis + ruimte) + 'px';
+  }
+  if (typeof ResizeObserver === 'function' && root.getElementById('maken')) {
+    let wacht = 0;
+    new ResizeObserver(() => { cancelAnimationFrame(wacht); wacht = requestAnimationFrame(vulInhoud); }).observe(root.getElementById('maken'));
   }
 
   let beurt = 0;

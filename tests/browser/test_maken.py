@@ -460,6 +460,25 @@ class Maken(MakenHulp, PaginaTest):
             self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)
         self.assertEqual(self.fouten, [])
 
+    def test_inhoud_vult_de_ruimte_tot_onderin(self):
+        """Het Inhoud-veld gebruikt de vrije ruimte onder in het Maken-paneel (Robin, 23 nov)."""
+        p = self.pagina
+        self.kies('kist-bw6040')
+        ta = p.locator('#makenVelden textarea[name="Inhoud"]')
+        extra = p.locator('#makenVelden textarea[name="Extra inhoud"]')
+        p.wait_for_timeout(300)
+        maken = p.locator('#maken').bounding_box()
+        h1 = ta.bounding_box()['height']
+        self.assertGreater(h1, extra.bounding_box()['height'] * 1.8)
+        laatste = p.evaluate("() => Math.max(...[...document.querySelectorAll('#maken > *')].map(e => e.getBoundingClientRect().bottom))")
+        self.assertLess(maken['y'] + maken['height'] - laatste, 40)       # weinig lege ruimte over
+        self.assertLessEqual(laatste, maken['y'] + maken['height'] + 1)   # en geen scrollbalk erbij
+        # kleiner venster: het veld krimpt weer mee (maar niet onder de gewone hoogte)
+        p.set_viewport_size({'width': 1400, 'height': 700})
+        p.wait_for_timeout(300)
+        self.assertLess(ta.bounding_box()['height'], h1)
+        self.assertGreaterEqual(ta.bounding_box()['height'] + 1, extra.bounding_box()['height'])
+
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""
         p = self.pagina
