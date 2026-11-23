@@ -327,6 +327,12 @@ class Maken(MakenHulp, PaginaTest):
         expect(k.locator('.kkop .kl')).to_have_text('Inhoud:')
         expect(k.locator('.kkop .kn')).to_have_text('DMX kit groot [Case]')
         expect(k.locator('.kkop .kcode')).to_have_text('DSL01')
+        # 'Inhoud:', de naam en het kistnummer op één schrijflijn (Robin, 23 nov)
+        lijnen = k.locator('.kkop .kl, .kkop .kn span, .kkop .kcode').evaluate_all('''l => l.map(e => {
+            const m = document.createElement('span'); m.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+            e.appendChild(m); const y = m.getBoundingClientRect().top; m.remove(); return y; })''')
+        self.assertEqual(len(lijnen), 3)
+        self.assertLess(max(lijnen) - min(lijnen), 1.0, lijnen)
         # verhoudingen van het origineel: kop ± 23 %, datumrij ± 8,5 %, voet ± 10 % van de hoogte
         p.wait_for_timeout(300)
         H = k.bounding_box()['height']

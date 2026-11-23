@@ -78,11 +78,11 @@
 .signb.kist .ksticker{flex:0 0 auto;border:.3mm dashed #b0b0b0;border-radius:1.5mm;display:flex;align-items:center;justify-content:center;color:#b8b8b8;font-size:8pt;letter-spacing:.08em;text-transform:uppercase}
 .signb.kist .kqr{display:flex;align-items:center;justify-content:center}
 .signb.kist .kinhoud{display:flex;flex-direction:column;padding:2.5mm 2mm 2.5mm 3mm;gap:1mm}
-.signb.kist .kkop{display:flex;align-items:center;gap:.4em;flex:0 0 auto;height:6.5mm}
+.signb.kist .kkop{display:flex;align-items:baseline;gap:.4em;flex:0 0 auto;height:6.5mm}
 .signb.kist .kl{font-size:11pt;flex:0 0 auto}
-.signb.kist .kn{height:100%}
+.signb.kist .kn{height:100%;align-items:baseline}
 .signb.kist .kn>span{white-space:nowrap;font-weight:700}
-.signb.kist .kcode{font-size:11pt;flex:0 0 auto;align-self:flex-start}
+.signb.kist .kcode{font-size:11pt;flex:0 0 auto}
 .signb.kist .klijst{padding-left:16mm}
 .signb.kist .kgrid.twee{columns:2;column-gap:7mm}
 .signb.kist .kr{display:grid;grid-template-columns:2.4em 1fr;column-gap:.9em;break-inside:avoid;line-height:1.08;padding:.06em 0}
