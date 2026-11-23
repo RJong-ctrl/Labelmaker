@@ -552,25 +552,49 @@ class Maken(MakenHulp, PaginaTest):
             maat[soort] = b.locator('.blg').bounding_box()['width'] / b.bounding_box()['height']
         self.assertAlmostEqual(maat['bakbord'], maat['gitterbox'], delta=0.01)
 
-    def test_wandbord_zonder_qr(self):
+    def test_qr_overal_hetzelfde(self):
+        """Elk sjabloon dezelfde QR-regel: veld QR-code + vinkje Zonder QR-code (Robin, 23 nov)."""
         p = self.pagina
+        qr = p.locator('#makenVelden input[name="__qr"]')
+        zonder = p.locator('#makenVelden input[name="__geenqr"]')
+        b = p.locator('#makenVoorbeeld .signb')
+        for soort in ['bordje-staand', 'kist-modern', 'gitterbox', 'wandbord-staand', 'stellingbord', 'kist-bw1000']:
+            self.kies(soort)
+            expect(qr).to_have_count(1)
+            expect(zonder).to_have_count(1)
+            expect(p.locator('#makenVelden select[name="QR-code"]')).to_have_count(0)
+            expect(p.locator('#makenVelden label', has=p.locator('input[name="__qr"]'))).to_contain_text('QR-code')
+        # gewoon bordje: zelf invullen; vinkje haalt hem weg en zet hem terug
+        self.kies('bordje-staand')
+        p.locator('#makenVelden input[name="Naam"]').fill('Test')
+        qr.fill('abc-1')
+        expect(b.locator('.qbox')).to_have_count(1)
+        zonder.check()
+        expect(b.locator('.qbox')).to_have_count(0)
+        expect(qr).to_be_disabled()
+        zonder.uncheck()
+        expect(qr).to_have_value('abc-1')
+        expect(b.locator('.qbox')).to_have_count(1)
+        # wandbord: de QR volgt de locatie
         for soort in ['wandbord-staand', 'wandbord-liggend']:
             self.kies(soort)
-            p.locator('#makenVelden input[name="Locatie"]').fill('A1')
-            b = p.locator('#makenVoorbeeld .signb')
+            p.locator('#makenVelden input[name="Locatie"]').fill('B4')
+            expect(qr).to_have_value('B4')
+            expect(qr).to_be_disabled()
             expect(b.locator('.qbox')).to_have_count(1)
-            p.locator('#makenVelden select[name="QR-code"]').select_option('nee')
+            zonder.check()
             expect(b.locator('.qbox')).to_have_count(0)
             expect(b).not_to_contain_text('Geen QR-code')
-            p.locator('#makenVelden select[name="QR-code"]').select_option('')
+            zonder.uncheck()
+            expect(b.locator('.qbox')).to_have_count(1)
         # stellingbord: standaard zonder QR, aan te zetten
         self.kies('stellingbord')
         p.locator('#makenVelden input[name="Locatie"]').fill('A1')
-        b = p.locator('#makenVoorbeeld .signb')
+        expect(zonder).to_be_checked()
         expect(b.locator('.qbox')).to_have_count(0)
-        expect(b).not_to_contain_text('Geen QR-code')
-        p.locator('#makenVelden select[name="QR-code"]').select_option('ja')
+        zonder.uncheck()
         expect(b.locator('.qbox')).to_have_count(1)
+        expect(qr).to_have_value('A1')
         self.assertEqual(self.fouten, [])
 
     def test_kist_scannen_vult_inhoud(self):

@@ -143,6 +143,10 @@ dialog.sjabloonkeuze .tegel.gekozen{border-color:var(--accent)}
 .maken .rij2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .maken label.veld{display:grid;gap:3px;font-weight:600;font-size:13px;min-width:0}
 .maken input[type=text],.maken input[type=search],.maken input[type=number],.maken select{padding-top:6px;padding-bottom:6px}
+.maken .qrveld{display:grid;gap:4px;min-width:0;align-content:start}
+.maken label.veld{align-content:start}
+.maken input:disabled{opacity:.55;cursor:not-allowed}
+.maken .qrveld label.vink{font-weight:400;font-size:12.5px}
 .maken label.veld small{font-weight:400;color:var(--muted)}
 .maken input[type=text],.maken input[type=search],.maken input[type=number],.maken select,.maken textarea{width:100%}
 .maken textarea{height:5.2em;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 9px;font:inherit;font-size:14px;resize:vertical}

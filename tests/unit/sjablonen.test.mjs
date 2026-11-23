@@ -531,3 +531,13 @@ test('oude_veldnamen_blijven_werken', () => {
   // de nieuwe naam gaat voor
   assert.equal(vul(S.stellingbord, { id: 'los', naam: '', code: '' }, { Code: 'B2', Locatie: 'C3' }, '').titel, 'C3');
 });
+
+test('bewust_zonder_qr', async () => {
+  // 'Zonder QR-code' aangevinkt: geen QR en ook geen rode 'Geen QR-code'-melding; ontbrekende QR blijft gemeld.
+  const { GEEN_QR } = await import('../../v2/js/sjablonen.js');
+  const i = vul(S['bordje-staand'], A.GE9402, {}, GEEN_QR);
+  assert.equal(i.qr, '');
+  assert.equal(i.geenQr, true);
+  assert.equal(vul(S['bordje-staand'], A.GE9402, {}, '').geenQr, false);
+  assert.equal(vul(S.stellingbord, { id: 'l', naam: '', code: '' }, { Locatie: 'A1' }, '').geenQr, true);   // standaard zonder
+});

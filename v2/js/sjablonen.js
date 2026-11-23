@@ -302,8 +302,14 @@ function lijstUit(tekst) {
   });
 }
 
+/** QR-waarde voor 'bewust zonder QR-code' (vinkje in Maken): niets tonen, ook geen melding. */
+export const GEEN_QR = '∅';
+
 export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
+  const bewustZonder = qr === GEEN_QR;
+  if (bewustZonder) qr = '';
   const w = waarden(sjabloon, artikel, aanvullingen, qr);
+  const geenQr = bewustZonder || zonderQr(sjabloon, w);
   const p = sjabloon.plekken;
   const labelTekst = plek(p.label, w);
   return {
@@ -315,7 +321,8 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     label: labelTekst ? { tekst: labelTekst, kleur: kleur(sjabloon.kleuren.label, w) } : null,
     eigenschappen: [...(p.eigenschappen || []).map(e => [e.kop, plek(e.waarde, w)]), ...(sjabloon.regelsVeld ? regelsUit(w[sjabloon.regelsVeld]) : [])].filter(e => e[1]),
     onder: plek(p.onder, w),
-    qr: zonderQr(sjabloon, w) ? '' : p.qr ? plek(p.qr, w) : String(qr || ''),
+    qr: geenQr ? '' : p.qr ? plek(p.qr, w) : String(qr || ''),
+    geenQr,
     rand: (!sjabloon.kleuren.rand?.vast && eigenRand(aanvullingen)) || kleur(sjabloon.kleuren.rand, w),
     cert: sjabloon.cert || '',
     gat: !!sjabloon.gat,

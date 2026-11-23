@@ -42,8 +42,11 @@ const DPM = 203 / 25.4; // Citizen: punten per mm
 
 const mm = (n) => n.toFixed(2) + 'mm';
 
+// Bewust zonder QR-code (vinkje in Maken): geen melding; alleen een ontbrekende QR wordt rood gemeld.
+let stilZonderQr = false;
 function qrOfMelding(tekst, maat, klasse = 'qq') {
   const stijl = `width:${mm(maat)};height:${mm(maat)}`;
+  if (!tekst && stilZonderQr) return '';
   if (!tekst) return `<div class="${klasse} geen-qr" style="${stijl}">Geen QR-code</div>`;
   try { return `<div class="${klasse}" style="${stijl}">${qrSvg(tekst).svg}</div>`; }
   catch { return `<div class="${klasse} geen-qr" style="${stijl}">QR-inhoud te lang</div>`; }
@@ -80,7 +83,7 @@ function bordje(i, hs) {
     ? `<div class="ft" style="font-size:${(5 * f).toFixed(1)}pt;margin-top:${mm(2.6 * f)};padding-top:${mm(1.6 * f)}">` +
       hs.voet.map(l => '<div>' + l.split('|').map(x => esc(x.trim())).join('<span class="fsep" aria-hidden="true"></span>') + '</div>').join('') + '</div>'
     : '';
-  const qrBlok = (qs) => `<div class="qbox">${qrOfMelding(i.qr, qs)}${i.qr ? `<div class="qc" style="font-size:${(5.5 * f).toFixed(1)}pt;max-width:${mm(qs + 4)}">${esc(i.qr)}</div>` : ''}</div>`;
+  const qrBlok = (qs) => i.geenQr ? '' : `<div class="qbox">${qrOfMelding(i.qr, qs)}${i.qr ? `<div class="qc" style="font-size:${(5.5 * f).toFixed(1)}pt;max-width:${mm(qs + 4)}">${esc(i.qr)}</div>` : ''}</div>`;
 
   let main;
   if (kist) {
@@ -147,7 +150,7 @@ function bordje(i, hs) {
       + `<div class="stop" style="height:${mm(rowH)};gap:${mm(4 * f)}">${vak('t titel', rowH * PT * 0.9, titel, 'flex:1 1 0')}${groot ? vak('h hs groot', rowH * PT * 0.9, groot, 'flex:0 0 28%') : ''}</div>`
       + `<div class="smid" style="font-size:${(avH * 0.13 * PT).toFixed(1)}pt">${pil}${cert}</div>`
       + (meta ? `<div class="sbot" style="font-size:${(6.8 * f).toFixed(1)}pt;padding-top:${mm(1.2 * f)}">${meta}</div>` : '')
-      + `</div><div class="qbox" style="justify-content:center">${qrOfMelding(i.qr, qs)}${i.qr ? `<div class="qc" style="font-size:${(5.5 * f).toFixed(1)}pt;max-width:${mm(qs + 4)}">${esc(i.qr)}</div>` : ''}</div></div>`
+      + `</div>${i.geenQr ? '' : `<div class="qbox" style="justify-content:center">${qrOfMelding(i.qr, qs)}${i.qr ? `<div class="qc" style="font-size:${(5.5 * f).toFixed(1)}pt;max-width:${mm(qs + 4)}">${esc(i.qr)}</div>` : ''}</div>`}</div>`
       + voet;
   } else {
     const bd = Math.min(H * 0.3, 13 * f);
@@ -286,10 +289,14 @@ function locatieLabel(i) {
  */
 export function teken(inhoud, huisstijl = HUISSTIJL_DSL) {
   const hs = huisstijlVan(huisstijl);
-  const el = inhoud.opmaak === 'qrlabel' ? qrLabel(inhoud, hs)
-    : inhoud.opmaak === 'locatie' ? locatieLabel(inhoud)
-      : inhoud.opmaak === 'kist' ? kist(inhoud, hs)
-        : bordje(inhoud, hs);
+  stilZonderQr = !!inhoud.geenQr;
+  let el;
+  try {
+    el = inhoud.opmaak === 'qrlabel' ? qrLabel(inhoud, hs)
+      : inhoud.opmaak === 'locatie' ? locatieLabel(inhoud)
+        : inhoud.opmaak === 'kist' ? kist(inhoud, hs)
+          : bordje(inhoud, hs);
+  } finally { stilZonderQr = false; }
   el.dataset.lettertype = hs.lettertype;
   // Titel die met een J begint: ruimte voor de uitstekende haak (anders afgeknipt).
   if (el.classList.contains('signb')) for (const t of el.querySelectorAll('.t')) if (/^\s*J/.test(t.textContent)) t.classList.add('j');

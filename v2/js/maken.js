@@ -1,7 +1,7 @@
 // Maken: een leeg formulier om een bordje, strook of label te maken. Een artikel
 // opzoeken (of scannen) vult de velden in; alles blijft aanpasbaar.
 
-import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan } from './sjablonen.js';
+import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan, GEEN_QR } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { veldInvoer, vraagReeks } from './dialogen.js';
 import { leesReeks, zoneKleur } from './reeks.js';
@@ -18,7 +18,7 @@ const norm = (s) => String(s ?? '').toLowerCase().replace(/×/g, 'x').replace(/,
  */
 export function startMaken(root, h) {
   const doel = root.getElementById('maken');
-  const m = { kiezen: false, onthouden: {}, artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 };
+  const m = { kiezen: false, onthouden: {}, artikel: null, sjabloonId: 'auto', waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, geenQr: false, qrVorig: '', vanRij: null, perExemplaar: false, aantal: 1 };
 
   const sjabloonId = () => (m.sjabloonId !== 'auto' ? m.sjabloonId
     : m.artikel ? standaardSjabloon(m.artikel, 'bordje', h.E().regels) : (h.sjabloon('leeg-staand') ? 'leeg-staand' : h.E().sjablonen[0]?.id));
@@ -140,10 +140,42 @@ export function startMaken(root, h) {
     tekenVelden();
   }
 
+  // ---------- QR: op elk sjabloon dezelfde regel (Robin, 23 nov) ----------
+  // Veld QR-code + vinkje 'Zonder QR-code'. Haalt het sjabloon de QR uit een veld (wandbord: Locatie),
+  // dan volgt het veld die waarde en schakelt het vinkje het QR-keuzeveld van het sjabloon.
+  const qrSchakelaar = (sj) => sj?.velden?.find(v => v.qrSchakelaar);
+  const qrAfgeleid = (sj) => !!sj?.plekken?.qr?.length;
+  function zonderQr(sj) {
+    const k = qrSchakelaar(sj);
+    if (!k) return m.geenQr;
+    const w = m.bewerkt.has(k.naam) ? (m.waarden[k.naam] ?? '') : (artikelAanv()[k.naam] ?? '');
+    return w === 'nee' || (!!k.standaardZonder && w !== 'ja');
+  }
+  function qrTekst(sj) {
+    if (!qrAfgeleid(sj)) return m.geenQr ? m.qrVorig : qrWaarde();
+    const w = vul(sj, basisArtikel(), overrides(), qrWaarde()).waarden;
+    return sj.plekken.qr.map(x => (typeof x === 'string' ? x : (w[x.veld] ?? ''))).join('');
+  }
+  function qrRegel(sj) {
+    if (!sj) return '';
+    const af = qrAfgeleid(sj), zonder = zonderQr(sj);
+    const uitleg = af ? `volgt ${esc(sj.plekken.qr.find(x => x.veld)?.veld || '')}` : '(leeg = geen)';
+    return `<div class="veld qrveld"><label class="veld"><span>QR-code <small>${uitleg}</small></span>`
+      + `<input type="text" name="__qr" value="${esc(qrTekst(sj))}" autocomplete="off"${af || zonder ? ' disabled' : ''}></label>`
+      + `<label class="vink"><input type="checkbox" name="__geenqr"${zonder ? ' checked' : ''}> Zonder QR-code</label></div>`;
+  }
+  function zetZonderQr(aan) {
+    const sj = huidigSjabloon(), k = qrSchakelaar(sj);
+    if (k) { m.waarden[k.naam] = aan ? (k.standaardZonder ? '' : 'nee') : (k.standaardZonder ? 'ja' : ''); m.bewerkt.add(k.naam); }
+    else if (aan) { m.qrVorig = qrWaarde(); m.qr = GEEN_QR; m.qrBewerkt = true; m.geenQr = true; }
+    else { m.qr = m.qrVorig; m.qrBewerkt = true; m.geenQr = false; }
+    tekenVelden();
+  }
+
   function tekenVelden() {
     const sj = huidigSjabloon();
     const art = basisArtikel(), o = overrides();
-    const velden = (sj?.velden || []).map(v => {
+    const velden = (sj?.velden || []).filter(v => !v.qrSchakelaar).map(v => {
       const waarde = m.bewerkt.has(v.naam) ? (m.waarden[v.naam] ?? '')
         : Object.hasOwn(m.onthouden, v.naam) ? m.onthouden[v.naam] : veldwaarde(v, art, artikelAanv(), qrWaarde());
       const vorm = {
@@ -170,8 +202,7 @@ export function startMaken(root, h) {
     }
     const ex = m.artikel?.exemplaren?.length ? `<label class="vink breed"><input type="checkbox" id="makenPerEx"${m.perExemplaar ? ' checked' : ''}> Eén per exemplaar (${m.artikel.exemplaren.length})</label>` : '';
     root.getElementById('makenVelden').innerHTML = velden.join('')
-      // Haalt het sjabloon de QR zelf uit een veld (bijv. Code of Locatie), dan geen apart QR-veld.
-      + (sj?.plekken?.qr?.length ? '' : `<label class="veld"><span>QR-code <small>(leeg = geen)</small></span><input type="text" name="__qr" value="${esc(qrWaarde())}" autocomplete="off"></label>`)
+      + qrRegel(sj)
       + `<label class="veld"><span>Aantal</span><input type="number" name="__aantal" min="1" max="999" value="${m.aantal}"></label>` + ex;
     vulInhoud();
     tekenVoorbeeld();
@@ -257,7 +288,7 @@ export function startMaken(root, h) {
 
   /** Leeg formulier. behoud = id van het sjabloon dat open blijft (na Op printvel: verder met hetzelfde soort). */
   function reset(behoud = 'auto') {
-    Object.assign(m, { kiezen: false, onthouden: {}, artikel: null, sjabloonId: behoud, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, vanRij: null, perExemplaar: false, aantal: 1 });
+    Object.assign(m, { kiezen: false, onthouden: {}, artikel: null, sjabloonId: behoud, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, geenQr: false, qrVorig: '', vanRij: null, perExemplaar: false, aantal: 1 });
     tekenFormulier();
     root.getElementById('makenZoek')?.focus();
   }
@@ -355,7 +386,7 @@ export function startMaken(root, h) {
   /** Een regel van het printvel openen om aan te passen. */
   function laad(item, printer, index) {
     const a = h.perId().get(item.artikel);
-    Object.assign(m, { kiezen: false, onthouden: {}, artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, perExemplaar: false, vanRij: { printer, index }, aantal: item.aantal || 1 });
+    Object.assign(m, { kiezen: false, onthouden: {}, artikel: null, waarden: {}, bewerkt: new Set(), qr: '', qrBewerkt: false, geenQr: false, qrVorig: '', perExemplaar: false, vanRij: { printer, index }, aantal: item.aantal || 1 });
     if (a?.los) {
       // los item: bronartikel (als dat er nog is) met de opgeslagen wijzigingen
       const bron = a.bron ? h.perId().get(a.bron) : null;
@@ -363,10 +394,10 @@ export function startMaken(root, h) {
       const aanv = h.E().aanvullingen[a.id] || {};
       for (const [k, v] of Object.entries(aanv)) { m.waarden[k] = v; m.bewerkt.add(k); }
       if (!bron) { m.waarden.Naam = m.waarden.Naam ?? a.naam; m.bewerkt.add('Naam'); }
-      m.qr = item.qr; m.qrBewerkt = !bron || item.qr !== (bron.qr || '');
+      m.qr = item.qr; m.qrBewerkt = !bron || item.qr !== (bron.qr || ''); m.geenQr = item.qr === GEEN_QR; if (m.geenQr) m.qrVorig = bron?.qr || '';
     } else if (a) {
       m.artikel = a;
-      m.qr = item.qr; m.qrBewerkt = item.qr !== (a.qr || '');
+      m.qr = item.qr; m.qrBewerkt = item.qr !== (a.qr || ''); m.geenQr = item.qr === GEEN_QR; if (m.geenQr) m.qrVorig = a.qr || '';
     }
     m.sjabloonId = item.sjabloon;
     tekenFormulier();
@@ -378,10 +409,13 @@ export function startMaken(root, h) {
     const t = e.target;
     if (t.id === 'makenZoek') { tekenTreffers(); return; }
     if (t.name === '__aantal') { m.aantal = Math.max(1, parseInt(t.value, 10) || 1); return; }
-    if (!t.name) return;
+    if (!t.name || t.name === '__geenqr') return;
     if (t.name === '__qr') { m.qr = t.value.trim(); m.qrBewerkt = true; }
     else if (onthoudVeld(t.name)) m.onthouden[t.name] = t.value;
     else { m.waarden[t.name] = t.value; m.bewerkt.add(t.name); }
+    // QR die een veld volgt (Locatie): meteen meeschrijven
+    const sj = huidigSjabloon(), qrVeld = root.querySelector('#makenVelden input[name="__qr"]');
+    if (qrVeld && qrAfgeleid(sj) && sj.plekken.qr.some(x => x.veld === t.name)) qrVeld.value = qrTekst(sj);
     clearTimeout(voorbeeldTimer);
     voorbeeldTimer = setTimeout(tekenVoorbeeld, 150);
   });
@@ -389,6 +423,7 @@ export function startMaken(root, h) {
     const t = e.target;
     if (t.id === 'makenSoort') { m.sjabloonId = t.value; tekenVelden(); return; }
     if (t.id === 'makenPerEx') { m.perExemplaar = t.checked; return; }
+    if (t.name === '__geenqr') { zetZonderQr(t.checked); return; }
     if (t.name && onthoudVeld(t.name)) { bewaarOnthouden(t.name); return; }
     if (t.tagName === 'SELECT' && t.name) { m.waarden[t.name] = t.value; m.bewerkt.add(t.name); tekenVoorbeeld(); }
   });
