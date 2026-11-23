@@ -47,10 +47,6 @@ export function startMaken(root, h) {
     .filter(([, l]) => l.length)]).filter(([, subs]) => subs.length);
   const groepTitel = (g) => (g.sleutel === 'labels' ? `Labels · ${h.E().printers?.label?.naam || 'labelprinter'}` : g.titel);
 
-  function soortOpties() {
-    return (m.artikel ? `<option value="auto"${m.sjabloonId === 'auto' ? ' selected' : ''}>Automatisch (volgt het artikel)</option>` : '')
-      + perGroep().flatMap(([g, subs]) => subs.map(([sg, lijst]) => `<optgroup label="${esc(g.titel)} · ${esc(sg.titel)}">${lijst.map(s => `<option value="${esc(s.id)}"${s.id === m.sjabloonId ? ' selected' : ''}>${esc(s.naam)}</option>`).join('')}</optgroup>`)).join('');
-  }
 
   // Beginscherm: tegels met de sjablonen (en bovenaan zoeken/scannen). Een tegel of een artikel opent het formulier.
   const opStart = () => m.kiezen || (!m.artikel && m.sjabloonId === 'auto' && !m.vanRij);
@@ -89,8 +85,11 @@ export function startMaken(root, h) {
       });
     }
     const tegel = (s) => `<button type="button" class="tegel${s.id === m.sjabloonId ? ' gekozen' : ''}" data-tegel="${esc(s.id)}"><span class="duim" data-duim="${esc(s.id)}"></span><span class="tnaam">${esc(s.naam)}</span></button>`;
+    // Met een artikel: bovenaan 'Automatisch' (het sjabloon dat bij het artikel hoort).
+    const auto = m.artikel ? `<section class="tegelgroep"><h3 class="tegelkop">Bij dit artikel</h3><div class="subgroepen"><div class="subgroep"><div class="tegels">`
+      + `<button type="button" class="tegel auto${m.sjabloonId === 'auto' ? ' gekozen' : ''}" data-tegel="auto"><span class="tnaam"><b>Automatisch</b><br>volgt het artikel</span></button></div></div></div></section>` : '';
     dlg.innerHTML = '<div class="kop"><h2 id="sjabloonVensterKop">Sjabloon kiezen</h2><button type="button" class="klein" data-sluit aria-label="Sluiten">×</button></div>'
-      + '<div id="makenTegels">' + perGroep().map(([g, subs]) => `<section class="tegelgroep"><h3 class="tegelkop">${esc(groepTitel(g))}</h3><div class="subgroepen">`
+      + '<div id="makenTegels">' + auto + perGroep().map(([g, subs]) => `<section class="tegelgroep"><h3 class="tegelkop">${esc(groepTitel(g))}</h3><div class="subgroepen">`
         + subs.map(([sg, lijst]) => `<div class="subgroep"><h4 class="subkop">${esc(sg.titel)}</h4><div class="tegels">${lijst.map(tegel).join('')}</div></div>`).join('')
         + '</div></section>').join('') + '</div>';
     dlg.showModal();
@@ -130,8 +129,9 @@ export function startMaken(root, h) {
     if (opStart()) { tekenTegels(); return; }
     const a = m.artikel;
     doel.innerHTML = zoekveld()
-      + `<div class="makenkop"><button type="button" id="makenTerug" class="klein">Sjablonen…</button>`
-      + `<label class="veld"><span class="bh-sr">Sjabloon</span><select id="makenSoort" aria-label="Sjabloon">${soortOpties()}</select></label></div>`
+      // Wisselen gaat via dezelfde pop-up als kiezen (Robin, 23 nov).
+      + `<div class="makenkop"><span class="kopje">Sjabloon</span><button type="button" id="makenSoort" class="soortknop" data-sjabloon="${esc(m.sjabloonId)}" aria-haspopup="dialog">`
+      + `<span>${m.sjabloonId === 'auto' ? 'Automatisch: ' : ''}${esc(huidigSjabloon()?.naam || '')}</span><span aria-hidden="true">▾</span></button></div>`
       + artikelChip(a)
       + '<div id="makenVelden" class="velden"></div>'
       + '<div class="knoppenrij"><label class="vink"><input type="checkbox" id="makenBewaar"> Bewaren onder Losse items</label>'
@@ -421,7 +421,6 @@ export function startMaken(root, h) {
   });
   doel.addEventListener('change', (e) => {
     const t = e.target;
-    if (t.id === 'makenSoort') { m.sjabloonId = t.value; tekenVelden(); return; }
     if (t.id === 'makenPerEx') { m.perExemplaar = t.checked; return; }
     if (t.name === '__geenqr') { zetZonderQr(t.checked); return; }
     if (t.name && onthoudVeld(t.name)) { bewaarOnthouden(t.name); return; }
@@ -438,7 +437,7 @@ export function startMaken(root, h) {
   doel.addEventListener('click', (e) => {
     const li = e.target.closest('#makenTreffers li');
     if (li) { koppel(h.perId().get(li.dataset.id)); return; }
-    if (e.target.closest('#makenKies, #makenTerug')) { kiesvenster(); return; }
+    if (e.target.closest('#makenKies, #makenSoort')) { kiesvenster(); return; }
     if (e.target.closest('#makenLos')) { m.artikel = null; m.bewerkt.clear(); m.waarden = {}; m.onthouden = {}; m.qrBewerkt = false; tekenFormulier(); return; }
     if (e.target.closest('#makenReeks')) { reeksOpVel().catch(err => h.melding('Lijst verwerken mislukt: ' + err.message, true)); return; }
     if (e.target.closest('#makenLeeg')) { reset(m.artikel ? 'auto' : m.sjabloonId); return; }

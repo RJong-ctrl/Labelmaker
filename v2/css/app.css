@@ -134,9 +134,12 @@ dialog.sjabloonkeuze .tegel.gekozen{border-color:var(--accent)}
 .sjabloonkeuze .tegel .duim{height:60px;display:flex;align-items:center;justify-content:center}
 .sjabloonkeuze .tegel .duim .vb{box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:none}
 .sjabloonkeuze .tegel .tnaam{font-weight:600}
-.maken .makenkop{display:flex;align-items:center;gap:8px}
-.maken .makenkop .veld{flex:1 1 auto}
-.maken .makenkop button{flex:0 0 auto;white-space:nowrap}
+.maken .makenkop{display:grid;gap:4px}
+.maken .makenkop .kopje{font-weight:600;font-size:13px}
+.maken .soortknop{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;font:inherit;font-weight:600;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink);cursor:pointer}
+.maken .soortknop>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.maken .soortknop:hover{border-color:var(--accent,#f2b600)}
+.sjabloonkeuze .tegel.auto{justify-content:center;min-height:60px}
 /* ruimte rondom zodat de focusrand (2px + 2px) niet wordt afgesneden */
 .maken{overflow:auto;gap:8px;padding:5px;margin:-5px}
 .maken>*{flex-shrink:0}

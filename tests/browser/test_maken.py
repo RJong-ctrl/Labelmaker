@@ -13,13 +13,11 @@ VOORBEELD = os.path.join(FIXTURES, 'voorbeeld.xlsx')
 
 class MakenHulp:
     def kies(self, soort):
-        """Sjabloon kiezen: in het formulier met de keuzelijst, anders via het venster Sjabloon kiezen."""
+        """Sjabloon kiezen: altijd via het venster (ook vanuit het formulier, Robin 23 nov)."""
         p = self.pagina
-        if p.locator('#makenSoort').count():
-            p.locator('#makenSoort').select_option(soort)
-        else:
-            p.locator('#makenKies').click()
-            p.locator('#sjabloonVenster [data-tegel="%s"]' % soort).click()
+        p.locator('#makenSoort' if p.locator('#makenSoort').count() else '#makenKies').click()
+        p.locator('#sjabloonVenster [data-tegel="%s"]' % soort).click()
+        expect(p.locator('#sjabloonVenster')).to_be_hidden()
 
 
 class Maken(MakenHulp, PaginaTest):
@@ -66,9 +64,20 @@ class Maken(MakenHulp, PaginaTest):
         venster.locator('[data-tegel="leeg-staand"]').click()
         expect(venster).to_be_hidden()
         expect(p.locator('#makenVelden input[name="Naam"]')).to_be_focused()
-        expect(p.locator('#makenSoort')).to_have_value('leeg-staand')
-        p.locator('#makenTerug').click()
+        # wisselen vanuit het formulier: dezelfde pop-up, geen keuzelijst meer
+        soort = p.locator('#makenSoort')
+        expect(soort).to_have_attribute('data-sjabloon', 'leeg-staand')
+        expect(soort).to_contain_text('Leeg bordje staand')
+        expect(p.locator('select#makenSoort')).to_have_count(0)
+        expect(p.locator('#makenTerug')).to_have_count(0)
+        p.locator('#makenVelden input[name="Naam"]').fill('Blijft staan')
+        soort.click()
+        expect(venster).to_be_visible()
         expect(venster.locator('[data-tegel="leeg-staand"].gekozen')).to_have_count(1)
+        venster.locator('[data-tegel="kist"]').click()
+        expect(venster).to_be_hidden()
+        expect(soort).to_have_attribute('data-sjabloon', 'kist')
+        expect(soort).to_contain_text('Materiaalbordje kist')
         self.assertEqual(self.fouten, [])
 
     def test_leeg_bordje_van_scratch(self):
@@ -140,8 +149,15 @@ class Maken(MakenHulp, PaginaTest):
         p.locator('#makenZoek').press('Enter')
         expect(p.locator('#makenArtikel')).to_contain_text('Backdrop 6 x 3m B kwaliteit')
         expect(p.locator('#makenVelden input[name="__qr"]')).to_have_value('bd6x3b-02')
-        expect(p.locator('#makenSoort')).to_have_value('auto')
+        expect(p.locator('#makenSoort')).to_have_attribute('data-sjabloon', 'auto')
+        expect(p.locator('#makenSoort')).to_contain_text('Automatisch')
         expect(p.locator('#makenVoorbeeld .signb.staand')).to_have_count(1)
+        # met een artikel staat Automatisch bovenaan in de pop-up; een ander sjabloon houdt het artikel vast
+        p.locator('#makenSoort').click()
+        expect(p.locator('#sjabloonVenster [data-tegel="auto"].gekozen')).to_have_count(1)
+        p.locator('#sjabloonVenster [data-tegel="qrlabel"]').click()
+        expect(p.locator('#makenArtikel')).to_contain_text('Backdrop 6 x 3m B kwaliteit')
+        expect(p.locator('#makenSoort')).to_have_attribute('data-sjabloon', 'qrlabel')
 
     def losse(self, verwacht=None, wacht=5):
         """Ids van de losse items in de opslag; met verwacht: even wachten tot het opruimen klaar is."""
