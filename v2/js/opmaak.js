@@ -207,7 +207,7 @@ function kist(i, hs) {
   const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
   const qs = kopH - 2 * L - 4;
   const lijst = i.lijst || [];
-  // Veel regels: twee kolommen. De letter wordt zo groot als past (hooguit 14,5 pt); lange namen lopen door.
+  // Veel regels: twee kolommen. De letter wordt zo groot als past (hooguit 16 pt); lange namen lopen door.
   const regels = lijst.map(([n, t]) => `<div class="kr"><span class="ka">${esc(n)}</span><span class="kt">${esc(t)}</span></div>`).join('');
   const el = document.createElement('div');
   el.className = 'signb kist';
@@ -224,7 +224,7 @@ function kist(i, hs) {
     + `<div class="kc">${veld('Datum', '', 12)}</div><div class="kc">${veld('Check', '', 12)}</div><div class="kc">${veld('Gewicht', gw, 12)}</div></div>`
     + `<div class="krij kmidden"><div class="kc kinhoud">`
     + `<div class="kkop"><span class="kl">Inhoud:</span>${vak('kn', 16, esc(i.titel || ''), 'flex:1 1 auto', 8)}<span class="kcode">${esc(i.onder)}</span></div>`
-    + (regels ? vak('klijst', 14.5, `<div class="kgrid${lijst.length > 13 ? ' twee' : ''}">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4.5) : '')
+    + (regels ? vak('klijst', 16, `<div class="kgrid${lijst.length > 13 ? ' twee' : ''}">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4.5) : '')
     + '</div></div>'
     + (voetH ? `<div class="kvoet" style="height:${mm(voetH)}">${hs.voet.map(l => '<div>' + l.split('|').map(x => esc(x.trim())).join('&nbsp; ') + '</div>').join('')}</div>` : '');
   return el;
