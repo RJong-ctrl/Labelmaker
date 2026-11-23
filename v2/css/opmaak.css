@@ -83,12 +83,12 @@
 .signb.kist .kn{height:100%}
 .signb.kist .kn>span{white-space:nowrap;font-weight:700}
 .signb.kist .kcode{font-size:11pt;flex:0 0 auto;align-self:flex-start}
-.signb.kist .klijst{padding-left:19mm}
+.signb.kist .klijst{padding-left:16mm}
 .signb.kist .kgrid.twee{columns:2;column-gap:7mm}
 .signb.kist .kr{display:grid;grid-template-columns:2.4em 1fr;column-gap:.9em;break-inside:avoid;line-height:1.2;padding:.12em 0}
 .signb.kist .ka{text-align:left}
 .signb.kist .kt{white-space:normal;overflow-wrap:anywhere}
-.signb.kist .kvoet{flex:0 0 auto;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:8pt;font-weight:700;line-height:1.35}
+.signb.kist .kvoet{flex:0 0 auto;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:9pt;font-weight:700;line-height:1.35}
 .signb.kist .kvoet>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 /* materiaalbordje kist (huisstijl): inhoud centraal en luchtig; rechts gewicht, QR en projectsticker */
