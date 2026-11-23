@@ -91,7 +91,7 @@ function bordje(i, hs) {
     const klein = H < 110 && i.sticker !== false;
     // Zonder projectsticker (speakertas): rechts een smalle kolom met nummer, gewicht en QR onder elkaar.
     const smal = i.sticker === false;
-    const kopH = 11 * f / 1.84, st = klein ? { b: 76, h: 56 } : { b: 80, h: 60 }, qs = smal ? 18 * f : klein ? 15 : 20;   // klein: precies de sticker (Robin, 16 nov)
+    const kopH = 11 * f / 1.84, st = klein || i.formaat.r > 0 ? { b: 76, h: 56 } : { b: 80, h: 60 }, qs = smal ? 18 * f : klein ? 15 : 20;   // B&W-deksels (ronde hoeken): precies de sticker (Robin, 16 en 23 nov)
     const gewicht = String(i.waarden?.Gewicht || '').trim();
     const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
     const regels = (i.lijst || []).map(([n, t]) => `<div class="kr"><span class="ka">${n ? esc(n) + '×' : ''}</span><span class="kt">${esc(t)}</span></div>`).join('');

@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-bw1000', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'speakertas', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-bw1000', 'kist-bw6040', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'speakertas', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -456,4 +456,17 @@ test('speakertas_kaartje', () => {
   assert.equal(i.waarden.Gewicht, '7,5');
   assert.deepEqual(i.lijst, [['1', 'd&b E8'], ['1', 'regenhoes']]);
   assert.equal(vul(S['kist-modern'], tas, {}, 'tas-02').sticker, true);
+});
+
+test('kist_bw6040', () => {
+  // B&W outdoor.case type 6040: uitsparing in het deksel max. 255 × 127 mm (Robin, 23 nov).
+  const sj = S['kist-bw6040'];
+  assert.equal(sj.opmaak, 'kist-modern');
+  assert.equal(sj.naam, 'Materiaalbordje B&W type 6040');
+  const { b, h, r } = sj.formaat;
+  assert.ok(b + 2 * 3 <= 253 && h + 2 * 3 <= 125, 'gelamineerd past met speling in 255 × 127');
+  assert.ok(r > 0);
+  assert.ok(b <= 194 || h <= 194, 'past (gedraaid) op A4');
+  assert.equal(groepVan(sj).sleutel, 'kisten');
+  assert.deepEqual(sj.velden.map(v => v.naam), S['kist-modern'].velden.map(v => v.naam));
 });

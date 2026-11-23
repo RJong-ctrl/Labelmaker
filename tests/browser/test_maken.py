@@ -432,6 +432,26 @@ class Maken(MakenHulp, PaginaTest):
             self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)
         self.assertEqual(self.fouten, [])
 
+    def test_kist_bw6040_sticker_precies_en_alles_past(self):
+        """B&W type 6040: ronde hoeken, stickervak precies 76 × 56, inhoud en QR binnen het bordje."""
+        p = self.pagina
+        self.kies('kist-bw6040')
+        p.locator('#makenVelden input[name="Naam"]').fill('Allen & Heath SQ-5 mengtafel')
+        p.locator('#makenVelden input[name="Gewicht"]').fill('21')
+        p.locator('#makenVelden textarea[name="Inhoud"]').fill('1 SQ-5\n1 voedingskabel\n1 lamp\n1 stofhoes')
+        p.locator('#makenVelden input[name="__qr"]').fill('sq5-01')
+        k = p.locator('#makenVoorbeeld .signb.kist-modern')
+        expect(k).to_have_css('border-top-left-radius', re.compile(r'^2[0-9]\.'))
+        p.wait_for_timeout(600)
+        bb = k.bounding_box()
+        st = k.locator('.ksticker').bounding_box()
+        self.assertAlmostEqual(st['width'] / bb['width'], 76 / 245, delta=0.005)
+        self.assertAlmostEqual(st['height'] / bb['height'], 56 / 117, delta=0.005)
+        for el in [st, k.locator('.kgrid').bounding_box(), k.locator('.qq').bounding_box()]:
+            self.assertLessEqual(el['y'] + el['height'], bb['y'] + bb['height'] + 0.5)
+            self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)
+        self.assertEqual(self.fouten, [])
+
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""
         p = self.pagina

@@ -119,6 +119,13 @@ export const kistBw1000 = () => ({
   formaat: { b: 150, h: 87, r: 6 }, voet: false,
 });
 
+/** Idem voor de B&W type 6040 (Robin, 23 nov): uitsparing max. 255 × 127 mm. Papier 245 × 117 (hoek r 6),
+ *  gelamineerd ± 251 × 123: past met speling. Op A4 gaat hij een kwartslag gedraaid, één per vel. */
+export const kistBw6040 = () => ({
+  ...kistbordje('kist-bw6040', 'Materiaalbordje B&W type 6040', 'kist-modern'),
+  formaat: { b: 245, h: 117, r: 6 }, voet: false,
+});
+
 /** Kaartje aan een speakertas (Robin, 16 nov): liggend 105 × 74 zoals Pipe & Drape, in de stijl van het moderne
  *  materiaalbordje: naam, inhoud, exemplaar, gewicht en QR van het exemplaar; gat om op te hangen, geen projectsticker. */
 export const speakertas = () => ({
@@ -182,6 +189,7 @@ export const DSL_SJABLONEN = [
   kistbordje('kist', 'Materiaalbordje kist (A5)'),
   kistbordje('kist-modern', 'Materiaalbordje kist modern (A5)', 'kist-modern'),
   kistBw1000(),
+  kistBw6040(),
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },
     logoBoven: true,
