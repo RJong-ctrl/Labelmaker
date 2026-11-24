@@ -499,6 +499,10 @@ class Maken(MakenHulp, PaginaTest):
         bb = k.bounding_box()
         st = k.locator('.ksticker').bounding_box()
         self.assertAlmostEqual(st['width'] / bb['width'], 76 / 245, delta=0.005)
+        # indeling zoals Robin hem wil (24 nov): nummer, gewicht en QR rechts boven de sticker
+        kb = k.locator('.kbot').bounding_box()
+        self.assertLessEqual(kb['y'] + kb['height'], st['y'] + 0.5)
+        self.assertGreaterEqual(kb['x'] + 0.5, st['x'])
         self.assertAlmostEqual(st['height'] / bb['height'], 56 / 117, delta=0.005)
         expect(k.locator('.ft')).to_have_count(1)   # voettekst ook op de B&W-bordjes (Robin, 24 nov)
         p.wait_for_timeout(300)
