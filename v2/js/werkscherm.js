@@ -485,7 +485,7 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     $('tabLijst').setAttribute('aria-selected', p === 'lijst');
   }
   const maken = startMaken(root, {
-    model, E, sjabloon,
+    model, E, sjabloon, profielId,
     artikelen: () => st.artikelen, perId: () => st.perId, qrIndex: () => st.qrIndex,
     voegToe, indexeer,
     vervang: (printer, index, items) => {

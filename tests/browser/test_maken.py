@@ -535,6 +535,41 @@ class Maken(MakenHulp, PaginaTest):
         self.assertLess(ta.bounding_box()['height'], h1)
         self.assertGreaterEqual(ta.bounding_box()['height'] + 1, extra.bounding_box()['height'])
 
+    def test_concept_blijft_na_f5(self):
+        """Na F5 (bijvoorbeeld na een update) staat wat je aan het maken was er nog (Robin, 24 nov)."""
+        p = self.pagina
+        self.kies('kist-modern')
+        p.locator('#makenVelden input[name="Naam"]').fill('Halve kist')
+        p.locator('#makenVelden textarea[name="Inhoud"]').fill('1 a\n2 b')
+        p.locator('#makenVelden input[name="__aantal"]').fill('3')
+        p.locator('#makenVelden input[name="__geenqr"]').check()
+        p.wait_for_timeout(500)
+        p.reload()
+        p.wait_for_function("document.body.dataset.klaar === '1'")
+        expect(p.locator('#makenSoort')).to_have_attribute('data-sjabloon', 'kist-modern')
+        expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('Halve kist')
+        expect(p.locator('#makenVelden textarea[name="Inhoud"]')).to_have_value('1 a\n2 b')
+        expect(p.locator('#makenVelden input[name="__aantal"]')).to_have_value('3')
+        expect(p.locator('#makenVelden input[name="__geenqr"]')).to_be_checked()
+        # Leegmaken en dan F5: geen oud concept meer
+        p.locator('#makenLeeg').click()
+        p.wait_for_timeout(500)
+        p.reload()
+        p.wait_for_function("document.body.dataset.klaar === '1'")
+        expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('')
+        self.assertEqual(self.fouten, [])
+
+    def test_concept_met_artikel_blijft_na_f5(self):
+        p = self.pagina
+        self.inlezen()
+        self.opzoeken('CO1120')
+        p.locator('#makenVelden input[name="Naam"]').fill('Eigen naam')
+        p.wait_for_timeout(500)
+        p.reload()
+        p.wait_for_function("document.body.dataset.klaar === '1'")
+        expect(p.locator('#makenArtikel')).to_contain_text('Kenwood TK-3201 Portofoon')
+        expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('Eigen naam')
+
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""
         p = self.pagina

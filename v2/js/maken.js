@@ -51,6 +51,37 @@ export function startMaken(root, h) {
   // Beginscherm: tegels met de sjablonen (en bovenaan zoeken/scannen). Een tegel of een artikel opent het formulier.
   const opStart = () => m.kiezen || (!m.artikel && m.sjabloonId === 'auto' && !m.vanRij);
 
+  // ---------- concept: wat je aan het maken bent, blijft na F5 staan (Robin, 24 nov) ----------
+  // Alleen in deze browser (localStorage), per profiel; namen, waarden en QR, geen prijzen (die kent Maken niet).
+  const CONCEPT = `labelmaker-concept-${h.profielId || 'dsl'}`;
+  let conceptTimer = 0;
+  function bewaarConcept() {
+    clearTimeout(conceptTimer);
+    conceptTimer = setTimeout(() => {
+      try {
+        if (opStart()) { localStorage.removeItem(CONCEPT); return; }
+        localStorage.setItem(CONCEPT, JSON.stringify({ sjabloonId: m.sjabloonId, artikel: m.artikel?.id || null, waarden: m.waarden,
+          bewerkt: [...m.bewerkt], qr: m.qr, qrBewerkt: m.qrBewerkt, geenQr: m.geenQr, qrVorig: m.qrVorig, aantal: m.aantal,
+          perExemplaar: m.perExemplaar, vanRij: m.vanRij }));
+      } catch { /* geen opslag: dan niet */ }
+    }, 150);
+  }
+  function herstelConcept() {
+    try {
+      const c = JSON.parse(localStorage.getItem(CONCEPT) || 'null');
+      if (!c || typeof c !== 'object') return;
+      if (c.sjabloonId !== 'auto' && !h.sjabloon(c.sjabloonId)) return;
+      const artikel = c.artikel ? h.perId().get(c.artikel) || null : null;
+      if (c.artikel && !artikel) return;   // artikel bestaat niet meer: niet half herstellen
+      Object.assign(m, {
+        sjabloonId: String(c.sjabloonId), artikel, waarden: c.waarden && typeof c.waarden === 'object' ? c.waarden : {},
+        bewerkt: new Set(Array.isArray(c.bewerkt) ? c.bewerkt.map(String) : []), qr: String(c.qr ?? ''), qrBewerkt: !!c.qrBewerkt,
+        geenQr: !!c.geenQr, qrVorig: String(c.qrVorig ?? ''), aantal: Math.max(1, Math.min(999, Number(c.aantal) || 1)),
+        perExemplaar: !!c.perExemplaar, vanRij: c.vanRij && typeof c.vanRij === 'object' ? c.vanRij : null,
+      });
+    } catch { /* kapot of geen opslag: gewoon leeg beginnen */ }
+  }
+
   function zoekveld() {
     return '<div class="zoeken"><label class="veld"><span>Artikel zoeken of scannen</span>'
       + '<input type="search" id="makenZoek" placeholder="Naam, code of QR" autocomplete="off"></label>'
@@ -59,6 +90,7 @@ export function startMaken(root, h) {
   const artikelChip = (a) => (a ? `<div id="makenArtikel" class="gekoppeld"><b>${esc(a.naam)}</b><span class="hint">${esc(a.code || '')}</span><button type="button" class="klein" id="makenLos" aria-label="Artikel loskoppelen">×</button></div>` : '<div id="makenArtikel" hidden></div>');
 
   function tekenTegels() {
+    bewaarConcept();   // terug bij het begin: geen concept meer
     doel.innerHTML = zoekveld() + artikelChip(m.artikel)
       + '<div class="kiesblok"><button type="button" id="makenKies" class="primary">Sjabloon kiezen</button>'
       + '<p class="hint">Bij een gescand artikel wordt het sjabloon automatisch gekozen.</p></div>';
@@ -226,6 +258,7 @@ export function startMaken(root, h) {
 
   let beurt = 0;
   async function tekenVoorbeeld() {
+    bewaarConcept();
     const mijn = ++beurt;
     const sj = huidigSjabloon();
     const vak = root.getElementById('makenVoorbeeld');
@@ -444,6 +477,7 @@ export function startMaken(root, h) {
     if (e.target.closest('#makenOpVel')) opVel().catch(err => h.melding('Op het printvel zetten mislukt: ' + err.message, true));
   });
 
+  herstelConcept();
   tekenFormulier();
   return { laad, reset, scan, vernieuw: tekenFormulier };
 }

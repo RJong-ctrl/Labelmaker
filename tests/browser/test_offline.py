@@ -248,6 +248,10 @@ class NieuweVersie(OfflineBasis):
         p = self.pagina
         css = os.path.join(self.v2, 'css', 'app.css')
         schrijf(css, lees(css) + '\n/* nieuwe-versie-marker */\n')
+        # De testopzet vervangt js/app.js door een leeg bestand (app_starten = False). Sinds Playwright 1.5x
+        # geldt die vervanging ook voor de verzoeken van de service worker, waardoor app.js de server nooit
+        # bereikt. Voor deze test moet de worker de echte bestanden ophalen: vervanging weghalen.
+        self.context.unroute('**/v2/js/app.js')
         self.eigen_server.verzoeken.clear()
         nieuw = self.werk_bij('test-nieuw-1')
 
