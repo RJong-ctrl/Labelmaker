@@ -452,7 +452,14 @@ class Maken(MakenHulp, PaginaTest):
         st = k.locator('.ksticker').bounding_box()
         self.assertAlmostEqual(st['width'] / bb['width'], 76 / 150, delta=0.005)   # precies de Citizen-sticker
         self.assertAlmostEqual(st['height'] / bb['height'], 56 / 87, delta=0.005)
-        for el in [st, k.locator('.kgrid').bounding_box(), k.locator('.kbot').bounding_box()]:
+        expect(k.locator('.ft')).to_have_count(1)   # voettekst ook op de B&W-bordjes (Robin, 24 nov)
+        p.wait_for_timeout(300)
+        ft = k.locator('.ft').bounding_box()
+        for deel in ['.ksticker', '.kgrid', '.kbot']:   # niets loopt over de voetlijn
+            b = k.locator(deel).bounding_box()
+            self.assertLessEqual(b['y'] + b['height'], ft['y'] + 0.5, deel)
+        expect(k.locator('.ft')).to_contain_text('Schagen')
+        for el in [st, k.locator('.ft').bounding_box(), k.locator('.kgrid').bounding_box(), k.locator('.kbot').bounding_box()]:
             self.assertLessEqual(el['y'] + el['height'], bb['y'] + bb['height'] + 0.5)
             self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)
         self.assertEqual(self.fouten, [])
@@ -493,7 +500,14 @@ class Maken(MakenHulp, PaginaTest):
         st = k.locator('.ksticker').bounding_box()
         self.assertAlmostEqual(st['width'] / bb['width'], 76 / 245, delta=0.005)
         self.assertAlmostEqual(st['height'] / bb['height'], 56 / 117, delta=0.005)
-        for el in [st, k.locator('.kgrid').bounding_box(), k.locator('.qq').bounding_box()]:
+        expect(k.locator('.ft')).to_have_count(1)   # voettekst ook op de B&W-bordjes (Robin, 24 nov)
+        p.wait_for_timeout(300)
+        ft = k.locator('.ft').bounding_box()
+        for deel in ['.ksticker', '.kgrid', '.kbot']:   # niets loopt over de voetlijn
+            b = k.locator(deel).bounding_box()
+            self.assertLessEqual(b['y'] + b['height'], ft['y'] + 0.5, deel)
+        expect(k.locator('.ft')).to_contain_text('Schagen')
+        for el in [st, k.locator('.ft').bounding_box(), k.locator('.kgrid').bounding_box(), k.locator('.qq').bounding_box()]:
             self.assertLessEqual(el['y'] + el['height'], bb['y'] + bb['height'] + 0.5)
             self.assertLessEqual(el['x'] + el['width'], bb['x'] + bb['width'] + 0.5)
         self.assertEqual(self.fouten, [])

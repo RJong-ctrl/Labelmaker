@@ -91,7 +91,8 @@ function bordje(i, hs) {
     // aantal vet). Rechts: gewicht en QR, daaronder het vak voor de projectsticker.
     // Klein bordje (B&W type 1000): het stickervak blijft op ware grootte (Citizen 76 × 56), gewicht en QR
     // schuiven onder de inhoud.
-    const klein = H < 110 && i.sticker !== false;
+    // Laag bordje (B&W 1000 en 6040, met voettekst): sticker rechts alleen, nummer/gewicht/QR onder de inhoud.
+    const klein = H < 130 && i.sticker !== false;
     // Zonder projectsticker (speakertas): rechts een smalle kolom met nummer, gewicht en QR onder elkaar.
     const smal = i.sticker === false;
     const kopH = 11 * f / 1.84, st = klein || i.formaat.r > 0 ? { b: 76, h: 56 } : { b: 80, h: 60 }, qs = smal ? 18 * f : klein ? 15 : 20;   // B&W-deksels (ronde hoeken): precies de sticker (Robin, 16 en 23 nov)
@@ -102,7 +103,7 @@ function bordje(i, hs) {
     // De naam krijgt de hele breedte; het kistnummer staat klein rechts bij het gewicht.
     main = `<div class="kkop" style="height:${mm(kopH)}">${vak('t titel', kopH * PT * 0.9, titel, 'flex:1 1 0')}</div>`
       + `<div class="krij" style="gap:${mm(5)};margin-top:${mm(2.5)}">`
-      + `<div class="klinks">${regels ? vak('klijst', klein || smal ? 12 : 18, `<div class="kgrid">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4) : '<div class="kleeg">Inhoud</div>'}${klein ? kbot : ''}</div>`
+      + `<div class="klinks">${regels ? vak('klijst', (klein && H < 110) || smal ? 12 : 18, `<div class="kgrid">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4) : '<div class="kleeg">Inhoud</div>'}${klein ? kbot : ''}</div>`
       + `<div class="krechts" style="width:${mm(smal ? qs + 2 : st.b)}">${klein ? '' : kbot}`
       + (smal ? '' : `<div class="ksticker" style="height:${mm(st.h)}">Projectsticker</div>`) + '</div></div>'
       + voet;
