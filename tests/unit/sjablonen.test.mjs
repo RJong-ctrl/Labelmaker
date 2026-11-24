@@ -305,9 +305,11 @@ test('kistbordje_modern_ook_te_kiezen', () => {
   assert.equal(S['kist-modern'].opmaak, 'kist-modern');
   assert.deepEqual(S['kist-modern'].formaat, { b: 194, h: 136 });
   assert.deepEqual(S['kist-modern'].velden.map(v => v.naam), S.kist.velden.map(v => v.naam));
-  assert.equal(vul(S['kist-modern'], A.GE9402, {}, 'x').rand, '#005abb');
-  // altijd DSL blauw, ook als er een andere randkleur is ingevuld
-  assert.equal(vul(S['kist-modern'], A.GE9402, { Randkleur: 'Rood' }, 'x').rand, '#005abb');
+  // zwart-wit (Robin, 24 nov), ook als er een andere randkleur is ingevuld; net als de B&W-bordjes
+  for (const id of ['kist-modern', 'kist-bw1000', 'kist-bw6040']) {
+    assert.equal(vul(S[id], A.GE9402, {}, 'x').rand, '#000000', id);
+    assert.equal(vul(S[id], A.GE9402, { Randkleur: 'Rood' }, 'x').rand, '#000000', id);
+  }
 });
 
 test('kist_met_eigen_artikel_qr_neemt_eerste_kist', () => {

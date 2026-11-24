@@ -298,7 +298,7 @@ class Editor(Hulp):
         self.start()
         self.open('sjabloon:kist-modern')
         p.locator('#beheerForm [data-pad="naam"]').fill('Materiaalbordje modern')
-        self.wacht_model("e.sjablonen.find(s => s.id === 'kist-modern').naam === 'Materiaalbordje modern' && e.sjablonen.find(s => s.id === 'kist-modern').kleuren.rand.vast === true && e.sjablonen.find(s => s.id === 'kist-modern').kleuren.rand.anders === '#005abb'")
+        self.wacht_model("e.sjablonen.find(s => s.id === 'kist-modern').naam === 'Materiaalbordje modern' && e.sjablonen.find(s => s.id === 'kist-modern').kleuren.rand.vast === true && e.sjablonen.find(s => s.id === 'kist-modern').kleuren.rand.anders === '#000000'")
 
     def test_sjabloon_bewerken_live(self):
         p = self.pagina

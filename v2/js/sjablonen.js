@@ -114,22 +114,27 @@ export const kistbordje = (id, naam, opmaak = 'kist') => ({
   kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb', vast: true } },
 });
 
+/** Zwart-wit (Robin, 24 nov): het moderne materiaalbordje en de B&W-bordjes hebben een zwarte band, altijd. */
+const zwartWit = (sj) => ({ ...sj, kleuren: { rand: { sleutel: [], waarden: {}, anders: '#000000', vast: true } } });
+
 /** Materiaalbordje modern voor het deksel van de B&W outdoor.case type 1000 (Robin, 16 nov). Uitsparing 160 × 97 mm
  *  met ronde hoeken: papier 150 × 87 (hoek r 6), met een lamineerrand van ± 3 mm wordt het 156 × 93 en past met speling. */
-export const kistBw1000 = () => ({
+export const kistBw1000 = () => zwartWit({
   ...kistbordje('kist-bw1000', 'Materiaalbordje B&W type 1000', 'kist-modern'),
   formaat: { b: 150, h: 87, r: 6 }, voet: false,
 });
 
 /** Idem voor de B&W type 6040 (Robin, 23 nov): uitsparing max. 255 × 127 mm. Papier 245 × 117 (hoek r 6),
  *  gelamineerd ± 251 × 123: past met speling. Op A4 gaat hij een kwartslag gedraaid, één per vel. */
-export const kistBw6040 = () => ({
+export const kistBw6040 = () => zwartWit({
   ...kistbordje('kist-bw6040', 'Materiaalbordje B&W type 6040', 'kist-modern'),
   formaat: { b: 245, h: 117, r: 6 }, voet: false,
 });
 
 /** Kaartje aan een speakertas (Robin, 16 nov): liggend 105 × 74 zoals Pipe & Drape, in de stijl van het moderne
  *  materiaalbordje: naam, inhoud, exemplaar, gewicht en QR van het exemplaar; gat om op te hangen, geen projectsticker. */
+export const kistModern = () => zwartWit(kistbordje('kist-modern', 'Materiaalbordje kist modern (A5)', 'kist-modern'));
+
 export const speakertas = () => ({
   ...kistbordje('speakertas', 'Speakertas-kaartje', 'kist-modern'),
   formaat: { b: 105, h: 74 }, gat: true, voet: false, sticker: false,
@@ -208,7 +213,7 @@ export const DSL_SJABLONEN = [
   wandbord('wandbord-a5-staand', 'Wandbord A5 staand', 136, 194),
   wandbord('wandbord-a5-liggend', 'Wandbord A5 liggend', 194, 136),
   kistbordje('kist', 'Materiaalbordje kist (A5)'),
-  kistbordje('kist-modern', 'Materiaalbordje kist modern (A5)', 'kist-modern'),
+  kistModern(),
   kistBw1000(),
   kistBw6040(),
   {

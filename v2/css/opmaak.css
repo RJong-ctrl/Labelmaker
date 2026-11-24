@@ -97,7 +97,7 @@
 .signb.kist-modern .kkop{display:flex;align-items:flex-end;gap:3mm;flex:0 0 auto}
 .signb.kist-modern .kkop .fb{height:100%;justify-content:flex-end}
 .signb.kist-modern .knr{justify-content:flex-end}
-.signb.kist-modern .knr>span{text-align:right;color:#005abb}
+.signb.kist-modern .knr>span{text-align:right;color:var(--kistkleur,#000)}
 .signb.kist-modern .krij{flex:1 1 auto;min-height:0;display:flex;align-items:stretch}
 .signb.kist-modern .klinks{flex:1 1 0;min-width:0;display:flex;flex-direction:column;border-top:.4mm solid #000}
 .signb.kist-modern .kgrid{display:flex;flex-direction:column}

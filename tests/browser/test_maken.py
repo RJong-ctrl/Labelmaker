@@ -443,6 +443,10 @@ class Maken(MakenHulp, PaginaTest):
         p.locator('#makenVelden textarea[name="Inhoud"]').fill('1 ULXD4\n2 antenne\n1 voeding')
         k = p.locator('#makenVoorbeeld .signb.kist-modern')
         expect(k).to_have_css('border-top-left-radius', re.compile(r'^2[0-9]\.'))   # 6 mm ≈ 22,7 px
+        # zwart-wit: zwarte band, geen blauw meer op het bordje (Robin, 24 nov)
+        kleuren = k.evaluate('''e => [...e.querySelectorAll('*')].flatMap(x => { const c = getComputedStyle(x); return [c.color, c.backgroundColor]; })
+            .filter(c => { const m = c.match(/\\d+/g); return m && m.length >= 3 && !(m[0] === m[1] && m[1] === m[2]); })''')
+        self.assertEqual(kleuren, [])
         p.wait_for_timeout(600)
         bb = k.bounding_box()
         st = k.locator('.ksticker').bounding_box()
