@@ -277,15 +277,32 @@ export function startMaken(root, h) {
     const kolom = root.getElementById('voorbeeld');
     const breedte = Math.max(160, vak.clientWidth - 24);
     const hoogte = Math.max(160, (kolom?.clientHeight || 600) * 0.5 - 40);
-    const s = Math.min(1.3, breedte / (inhoud.formaat.b * PX), hoogte / (inhoud.formaat.h * PX));
+    // Lamineerhoes (A5-materiaalbordjes): donkergrijs eromheen, zodat je ziet hoe het bordje erin past (Robin, 26 nov).
+    const hoes = sj.hoes && sj.hoes.b >= inhoud.formaat.b && sj.hoes.h >= inhoud.formaat.h ? sj.hoes : null;
+    const buiten = hoes || inhoud.formaat;
+    const s = Math.min(1.3, breedte / (buiten.b * PX), hoogte / (buiten.h * PX));
     const d = document.createElement('div');
-    d.className = 'vb';
-    d.style.width = (inhoud.formaat.b * PX * s).toFixed(1) + 'px';
-    d.style.height = (inhoud.formaat.h * PX * s).toFixed(1) + 'px';
+    d.className = 'vb' + (hoes ? ' hoes' : '');
+    d.style.width = (buiten.b * PX * s).toFixed(1) + 'px';
+    d.style.height = (buiten.h * PX * s).toFixed(1) + 'px';
     el.style.transform = `scale(${s})`;
     el.style.transformOrigin = '0 0';
+    if (hoes) {
+      el.style.position = 'absolute';
+      el.style.left = ((hoes.b - inhoud.formaat.b) / 2 * PX * s).toFixed(1) + 'px';
+      el.style.top = ((hoes.h - inhoud.formaat.h) / 2 * PX * s).toFixed(1) + 'px';
+    }
     d.appendChild(el);
-    vak.replaceChildren(d);
+    const randB = (hoes ? (hoes.b - inhoud.formaat.b) / 2 : 0), randH = (hoes ? (hoes.h - inhoud.formaat.h) / 2 : 0);
+    const fmt = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
+    if (hoes) {
+      // Hoes en onderschrift onder elkaar, in één blok (het voorbeeldvak zet zijn kinderen naast elkaar).
+      const blok = document.createElement('div');
+      blok.className = 'hoesblok';
+      blok.append(d, Object.assign(document.createElement('p'), { className: 'hoesmaat hint',
+        textContent: `${hoes.naam} ${hoes.b} × ${hoes.h} mm · bordje ${inhoud.formaat.b} × ${inhoud.formaat.h} mm · rand ${fmt(randB)} / ${fmt(randH)} mm` }));
+      vak.replaceChildren(blok);
+    } else vak.replaceChildren(d);
     await pasAan(el);
     if (mijn !== beurt) return;
   }

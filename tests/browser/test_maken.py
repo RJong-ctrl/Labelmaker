@@ -607,6 +607,15 @@ class Maken(MakenHulp, PaginaTest):
             if soort == 'kist':
                 self.assertLess(maat(kopt), maat(k.locator('.kkop .kn span')), soort)
             # notitie begint onder de naam van het artikel erboven, niet onder het aantal
+            if soort == 'kist':
+                # naam achter 'Inhoud:', kopjes en aantallen beginnen op dezelfde lijn, zoals het origineel (Robin, 26 nov)
+                x = lambda sel: k.locator(sel).first.evaluate('e => { const r = document.createRange(); r.selectNodeContents(e); return r.getBoundingClientRect().left; }')
+                naamx, kopx, aantalx = x('.kkop .kn span'), x('.kr.kop .kt'), x('.kr:not(.kop):not(.noot) .ka')
+                # los van het lettertype: 'Inhoud:' heeft een vaste breedte, gelijk aan de inspringing van de lijst
+                k.locator('.kkop .kl').evaluate("e => { e.textContent = 'Inhoud (lang woord):' }")
+                self.assertAlmostEqual(x('.kkop .kn span'), naamx, delta=1.0)
+                self.assertAlmostEqual(naamx, kopx, delta=1.0)
+                self.assertAlmostEqual(naamx, aantalx, delta=1.0)
             noot = k.locator('.kr.noot .kt').bounding_box()
             naam = k.locator('.kr:not(.kop):not(.noot) .kt').last.bounding_box()
             self.assertGreaterEqual(noot['x'] + 0.5, naam['x'], soort)
@@ -654,6 +663,28 @@ class Maken(MakenHulp, PaginaTest):
                 ft = k.locator('.ft').bounding_box()
                 self.assertLessEqual(st['y'] + st['height'], ft['y'] + 0.5)
         self.assertEqual(self.fouten, [])
+
+    def test_lamineerhoes_in_voorbeeld(self):
+        """Robin, 26 nov: A5-lamineerhoes 216 × 154 donkergrijs achter het A5-materiaalbordje (200 × 140), gecentreerd."""
+        p = self.pagina
+        for soort in ['kist', 'kist-modern']:
+            self.kies(soort)
+            p.locator('#makenVelden input[name="Naam"]').fill('Test')
+            hoes = p.locator('#makenVoorbeeld .hoes')
+            expect(hoes).to_have_count(1)
+            expect(hoes).to_have_css('background-color', 'rgb(77, 77, 77)')
+            p.wait_for_timeout(500)
+            expect(hoes).to_be_visible()
+            h = hoes.bounding_box()
+            self.assertAlmostEqual(h['width'] / h['height'], 216 / 154, delta=0.01)
+            b = hoes.locator('.signb').bounding_box()
+            mm = h['width'] / 216
+            self.assertAlmostEqual((b['x'] - h['x']) / mm, 8, delta=0.3)
+            self.assertAlmostEqual((b['y'] - h['y']) / mm, 7, delta=0.3)
+            expect(p.locator('#makenVoorbeeld .hoesmaat')).to_contain_text('216 × 154')
+        self.kies('kist-bw1000')
+        p.locator('#makenVelden input[name="Naam"]').fill('Test')
+        expect(p.locator('#makenVoorbeeld .hoes')).to_have_count(0)
 
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""

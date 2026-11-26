@@ -105,6 +105,8 @@ export const bakbord = (id, naam) => ({
 export const kistbordje = (id, naam, opmaak = 'kist') => ({
   // 200 × 140: zo groot als past in een A5-sleeve met 2 per A4 (Robin, 26 nov; was 194 × 136).
   ...basis, id, naam, printer: 'a4', opmaak, formaat: { b: 200, h: 140 }, gat: false, voet: true,
+  // A5-lamineerhoes (Robin: 154 × 216): in het voorbeeld donkergrijs achter het bordje.
+  hoes: { b: 216, h: 154, naam: 'A5-lamineerhoes' },
   velden: [kolom('Naam', 'naam', true), uitKist('Kistnummer', 'nr', 'code', { oud: ['Code'] }),
     uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }),
     // Eén veld (Robin, 26 nov): komt uit Rentman, en wat je aanpast wordt per artikel onthouden.
@@ -124,14 +126,14 @@ const zwartWit = (sj) => ({ ...sj, kleuren: { rand: { sleutel: [], waarden: {}, 
  *  met ronde hoeken: papier 150 × 87 (hoek r 6), met een lamineerrand van ± 3 mm wordt het 156 × 93 en past met speling. */
 export const kistBw1000 = () => zwartWit({
   ...kistbordje('kist-bw1000', 'Materiaalbordje B&W type 1000', 'kist-modern'),
-  formaat: { b: 150, h: 87, r: 6 }, voet: true,
+  formaat: { b: 150, h: 87, r: 6 }, voet: true, hoes: null,
 });
 
 /** Idem voor de B&W type 6040 (Robin, 23 nov): uitsparing max. 255 × 127 mm. Papier 245 × 117 (hoek r 6),
  *  gelamineerd ± 251 × 123: past met speling. Op A4 gaat hij een kwartslag gedraaid, één per vel. */
 export const kistBw6040 = () => zwartWit({
   ...kistbordje('kist-bw6040', 'Materiaalbordje B&W type 6040', 'kist-modern'),
-  formaat: { b: 245, h: 117, r: 6 }, voet: true,
+  formaat: { b: 245, h: 117, r: 6 }, voet: true, hoes: null,
 });
 
 /** Kaartje aan een speakertas (Robin, 16 nov): liggend 105 × 74 zoals Pipe & Drape, in de stijl van het moderne
@@ -140,7 +142,7 @@ export const kistModern = () => zwartWit(kistbordje('kist-modern', 'Materiaalbor
 
 export const speakertas = () => ({
   ...kistbordje('speakertas', 'Speakertas-kaartje', 'kist-modern'),
-  formaat: { b: 105, h: 74 }, gat: true, voet: false, sticker: false,
+  formaat: { b: 105, h: 74 }, gat: true, voet: false, sticker: false, hoes: null,
 });
 
 /** Soorten in de sjabloonkeuze, elk een eigen rij. */
