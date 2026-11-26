@@ -1,7 +1,7 @@
 // Maken: een leeg formulier om een bordje, strook of label te maken. Een artikel
 // opzoeken (of scannen) vult de velden in; alles blijft aanpasbaar.
 
-import { vul, ontbrekend, standaardSjabloon, veldwaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan, GEEN_QR } from './sjablonen.js';
+import { vul, ontbrekend, standaardSjabloon, veldwaarde, natuurlijkeWaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan, GEEN_QR } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { veldInvoer, vraagReeks } from './dialogen.js';
 import { leesReeks, zoneKleur } from './reeks.js';
@@ -334,7 +334,11 @@ export function startMaken(root, h) {
     if (!m.artikel || !Object.hasOwn(m.onthouden, naam)) return;
     const waarde = String(m.onthouden[naam] ?? '').trim();
     const huidig = { ...artikelAanv() };
-    if (waarde) huidig[naam] = waarde; else delete huidig[naam];
+    const veld = huidigSjabloon()?.velden?.find(v => v.naam === naam);
+    // Gelijk aan wat Rentman zegt: niets onthouden, dan volgt het bordje een nieuwe export vanzelf.
+    const vanRentman = veld ? natuurlijkeWaarde(veld, m.artikel, qrWaarde()) : '';
+    if (waarde && waarde !== vanRentman) huidig[naam] = waarde; else delete huidig[naam];
+    for (const k of veld?.erbij || []) delete huidig[k];   // oude 'Extra inhoud' zit nu in het veld zelf
     await h.model.vervangAanvulling(m.artikel.id, huidig);
     delete m.onthouden[naam];
     tekenVoorbeeld();

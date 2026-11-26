@@ -120,7 +120,7 @@ export function toonVerschillen(dlg, v) {
   const meer = (n) => (n > MAX ? `<p class="hint">en nog ${n - MAX} …</p>` : '');
   const art = (a) => `<li><b>${esc(a.code)}</b> ${esc(a.naam)}</li>`;
   const regels = v.gewijzigd.slice(0, MAX).flatMap(g => g.wat.map((w, n) =>
-    `<tr>${n ? '<td></td>' : `<td><b>${esc(g.code)}</b> ${esc(g.naam)}</td>`}<td>${esc(w.veld)}</td><td class="was">${esc(w.van) || '—'}</td><td>${esc(w.naar) || '—'}</td></tr>`)).join('');
+    `<tr>${n ? '<td></td>' : `<td><b>${esc(g.code)}</b> ${esc(g.naam)}</td>`}<td>${esc(w.veld)}</td><td class="was">${esc(w.van) || '—'}</td><td>${esc(w.naar) || '—'}${w.eigen ? '<div class="v-eigen">Op het bordje staat jouw aangepaste inhoud; die blijft staan. Controleer of hij nog klopt.</div>' : ''}</td></tr>`)).join('');
   const html = '<form class="verschillen"><h2>Verschillen met de vorige export</h2>'
     + (v.gewijzigd.length + v.nieuw.length + v.weg.length
       ? `<p class="hint">${v.gewijzigd.length} gewijzigd · ${v.nieuw.length} nieuw · ${v.weg.length} niet meer in de export</p>`

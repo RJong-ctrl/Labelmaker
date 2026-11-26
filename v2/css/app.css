@@ -116,6 +116,7 @@ form.verschillen ul.vlijst li{padding:3px 0}
 table.verschil{border-collapse:collapse;width:100%}
 table.verschil th{text-align:left;font-size:12px;color:var(--muted,#888);position:sticky;top:0;background:var(--panel)}
 table.verschil td,table.verschil th{padding:4px 8px 4px 0;vertical-align:top;white-space:pre-line}
+table.verschil .v-eigen{margin-top:3px;font-size:12px;color:var(--warn,#b26b00);white-space:normal}
 table.verschil td.was{color:var(--muted,#888);text-decoration:line-through}
 dialog.sjabloonkeuze{width:min(1080px,94vw);max-height:88vh;overflow:auto;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
 dialog.sjabloonkeuze::backdrop{background:rgba(0,0,0,.55)}

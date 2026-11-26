@@ -33,3 +33,12 @@ test('verschillen_zonder_kistgegevens_of_kolom_geen_ruis', () => {
   assert.deepEqual(verschillen(oud, nieuw, { ontbrekend: ['locatie'] }).gewijzigd, []);
   assert.deepEqual(verschillen([], nieuw), { nieuw: [], weg: [], gewijzigd: [], eerste: true });
 });
+
+test('verschillen_eigen_inhoud_gemeld', () => {
+  // Rentman wijzigt de inhoud, maar er staat een eigen (aangepaste) inhoud op het bordje: dat melden.
+  const oud = [art('K', { kisten: { q1: kist('12', '1 DD6') } })];
+  const nieuw = [art('K', { kisten: { q1: kist('12', '2 DD6') } })];
+  const w = verschillen(oud, nieuw, { eigenInhoud: new Set(['K']) }).gewijzigd[0].wat;
+  assert.deepEqual(w, [{ veld: 'Inhoud DSL01', van: '1 DD6', naar: '2 DD6', eigen: true }]);
+  assert.equal(verschillen(oud, nieuw).gewijzigd[0].wat[0].eigen, undefined);
+});

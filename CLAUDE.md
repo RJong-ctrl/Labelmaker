@@ -60,6 +60,8 @@ Robin schrijft Nederlands: antwoord kort, gestructureerd en in het Nederlands.
   Hernoem je een veld, zet dan de oude naam in `oud: [...]` zodat ingevulde gegevens blijven werken.
 - Inhoudslijst (`lijstUit` in `sjablonen.js`): `2 naam` / `2x naam` = artikel (getal + spatie of x; `230V…` blijft tekst, `'` vooraan = nooit aantal); regel zonder aantal in HOOFDLETTERS of eindigend op `:` = kopje;
   regel die begint met `↳`, `>` of `-` = notitie bij het vorige artikel.
+- Materiaalbordjes hebben één veld Inhoud (uit Rentman; aangepast = onthouden per artikel, `onthouden: true`).
+  Oude aanvulling 'Extra inhoud' komt er via `erbij` nog onder. Bij een nieuwe export met eigen inhoud meldt het verschillenoverzicht dat.
 - Wijzig nooit een eigen sjabloon dat Robin in Beheer heeft aangepast; dat staat alleen in zijn browser.
 
 ## Voorkeuren van Robin

@@ -105,10 +105,11 @@ export const bakbord = (id, naam) => ({
 export const kistbordje = (id, naam, opmaak = 'kist') => ({
   ...basis, id, naam, printer: 'a4', opmaak, formaat: { b: 194, h: 136 }, gat: false, voet: true,
   velden: [kolom('Naam', 'naam', true), uitKist('Kistnummer', 'nr', 'code', { oud: ['Code'] }),
-    uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }), uitKist('Inhoud', 'inhoud', '', { meerregelig: true, plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' }),
-    // Wat niet in de export staat (bulk: kabels, flightcase-inleg): één keer aanvullen, onthouden per type kist.
-    aanvul('Extra inhoud', { meerregelig: true, onthouden: true, plaatshouder: 'Wat er verder in zit, één per regel (2 Speakon kabel 10m)' })],
-  lijstVeld: ['Inhoud', 'Extra inhoud'],
+    uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }),
+    // Eén veld (Robin, 26 nov): komt uit Rentman, en wat je aanpast wordt per artikel onthouden.
+    // Vroeger ingevulde 'Extra inhoud' komt er nog onder (erbij), tot je de inhoud zelf aanpast.
+    uitKist('Inhoud', 'inhoud', '', { meerregelig: true, onthouden: true, erbij: ['Extra inhoud'], plaatshouder: 'Aantal en naam, één per regel (30 DMX 3p 1,25m)' })],
+  lijstVeld: ['Inhoud'],
   plekken: { ...leeg, titel: [v('Naam')], groot: [v('Kistnummer')], onder: [v('Kistnummer')] },
   // Vaste kleur: altijd DSL blauw (een gekozen randkleur telt hier niet).
   kleuren: { rand: { sleutel: [], waarden: {}, anders: '#005abb', vast: true } },
@@ -235,7 +236,8 @@ export function veldwaarde(veld, artikel, aanvullingen = {}, qr = '') {
   // Een aanvulling met de naam van het veld gaat altijd voor, ook leeg (= niet op het bordje).
   if (aanvullingen && Object.hasOwn(aanvullingen, veld.naam)) return String(aanvullingen[veld.naam] ?? '').trim();
   for (const oud of veld.oud || []) if (aanvullingen && Object.hasOwn(aanvullingen, oud)) return String(aanvullingen[oud] ?? '').trim();
-  return natuurlijkeWaarde(veld, artikel, qr);
+  const erbij = (veld.erbij || []).map(k => String(aanvullingen?.[k] ?? '').trim()).filter(Boolean);
+  return [natuurlijkeWaarde(veld, artikel, qr), ...erbij].filter(Boolean).join('\n');
 }
 
 /** Waarde zonder aanvulling: uit de export of uit de naam. */

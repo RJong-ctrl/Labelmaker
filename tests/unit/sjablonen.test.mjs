@@ -253,7 +253,7 @@ test('wandbord_a4_locatie_groot', () => {
 
 test('kistbordje_met_inhoudslijst', () => {
   // Zoals het oude bordje, zonder klant/productie/datum/check (daar komt de projectsticker) en zonder locatie.
-  assert.deepEqual(S.kist.velden.map(v => v.naam), ['Naam', 'Kistnummer', 'Gewicht', 'Inhoud', 'Extra inhoud']);
+  assert.deepEqual(S.kist.velden.map(v => v.naam), ['Naam', 'Kistnummer', 'Gewicht', 'Inhoud']);
   const i = vul(S.kist, A.GE9402, { Gewicht: '66,20', Inhoud: '30 DMX 3p 1,25m grijs\n40× DMX 3p 2,5m\n2 x Afsluiter\nlosse regel\n\n' }, 'dsl01');
   assert.equal(i.opmaak, 'kist');
   assert.deepEqual(S.kist.formaat, { b: 194, h: 136 });
@@ -331,15 +331,24 @@ test('automatisch_materiaalbordje_voor_kist_met_inhoud', () => {
   assert.equal(standaardSjabloon({ ...A.GE9402, kisten: kist.kisten }, 'bordje'), 'gitterbox');
 });
 
-test('extra_inhoud_per_kisttype_komt_erbij', () => {
+test('inhoud_een_veld_onthouden_per_artikel', () => {
+  // Robin, 26 nov: geen apart veld 'Extra inhoud' meer. Inhoud wordt per artikel onthouden als je hem aanpast.
   const kist = { ...A.GE9402, naam: 'Martin Audio 2x DD6 [Case]', code: '*GE2162', qr: '1016954', exemplaren: ['*GE2162-01', '*GE2162-02'],
     kisten: { '*GE2162-01': { nr: 'DSL01', inhoud: '2 Martin Audio DD6', gewicht: '27,34' }, '*GE2162-02': { nr: 'DSL02', inhoud: '2 Martin Audio DD6', gewicht: '' } } };
-  const extra = { 'Extra inhoud': '2 Speakon kabel 10m\n1 Regenhoes' };
-  assert.ok(S.kist.velden.find(v => v.naam === 'Extra inhoud').onthouden);
-  for (const qr of ['*GE2162-01', '*GE2162-02']) {
-    assert.deepEqual(vul(S.kist, kist, extra, qr).lijst, [['2', 'Martin Audio DD6'], ['2', 'Speakon kabel 10m'], ['1', 'Regenhoes']]);
+  for (const id of ['kist', 'kist-modern', 'kist-bw1000', 'kist-bw6040', 'speakertas']) {
+    assert.ok(S[id].velden.find(v => v.naam === 'Inhoud').onthouden, id);
+    assert.ok(!S[id].velden.some(v => v.naam === 'Extra inhoud'), id);
+    assert.deepEqual([].concat(S[id].lijstVeld), ['Inhoud'], id);
   }
-  assert.deepEqual(vul(S['kist-modern'], kist, extra, '*GE2162-01').lijst.length, 3);
+  // eigen inhoud gaat voor, op elk exemplaar
+  const eigen = { Inhoud: '2 Martin Audio DD6\n2 Speakon kabel 10m' };
+  for (const qr of ['*GE2162-01', '*GE2162-02']) {
+    assert.deepEqual(vul(S.kist, kist, eigen, qr).lijst, [['2', 'Martin Audio DD6'], ['2', 'Speakon kabel 10m']]);
+  }
+  // oude 'Extra inhoud' (al ingevuld) komt nog onder de inhoud uit Rentman: niets gaat verloren
+  const oud = { 'Extra inhoud': '2 Speakon kabel 10m\n1 Regenhoes' };
+  assert.deepEqual(vul(S.kist, kist, oud, '*GE2162-01').lijst, [['2', 'Martin Audio DD6'], ['2', 'Speakon kabel 10m'], ['1', 'Regenhoes']]);
+  assert.equal(vul(S.kist, kist, oud, '*GE2162-01').waarden.Inhoud, '2 Martin Audio DD6\n2 Speakon kabel 10m\n1 Regenhoes');
 });
 
 test('stellingbord_als_sjabloon_met_kleur_per_zone', () => {

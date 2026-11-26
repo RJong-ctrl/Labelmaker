@@ -9,9 +9,10 @@ const kg = (x) => (tekst(x) ? tekst(x) + ' kg' : '');
 /**
  * @param {object[]} oud  artikelen van de vorige keer
  * @param {object[]} nieuw  zojuist ingelezen artikelen
- * @param {{ ontbrekend?: string[] }} opties  velden die niet in de nieuwe export staan, worden niet vergeleken
+ * @param {{ ontbrekend?: string[], eigenInhoud?: Set<string> }} opties  ontbrekend: velden die niet in de nieuwe export staan, worden
+ *   niet vergeleken; eigenInhoud: codes van artikelen met een zelf aangepaste inhoud (wordt gemeld)
  */
-export function verschillen(oud, nieuw, { ontbrekend = [] } = {}) {
+export function verschillen(oud, nieuw, { ontbrekend = [], eigenInhoud = new Set() } = {}) {
   if (!oud?.length) return { nieuw: [], weg: [], gewijzigd: [], eerste: true };
   const oudPer = new Map(oud.map(a => [a.code, a]));
   const nieuwPer = new Map(nieuw.map(a => [a.code, a]));
@@ -29,7 +30,8 @@ export function verschillen(oud, nieuw, { ontbrekend = [] } = {}) {
         const vk = o.kisten[qr];
         if (!vk) continue;
         if (tekst(vk.gewicht) !== tekst(k.gewicht)) wat.push({ veld: `Gewicht ${k.nr}`, van: kg(vk.gewicht), naar: kg(k.gewicht) });
-        if (tekst(vk.inhoud) !== tekst(k.inhoud)) wat.push({ veld: `Inhoud ${k.nr}`, van: tekst(vk.inhoud), naar: tekst(k.inhoud) });
+        // Eigen (aangepaste) inhoud op het bordje: melden, want die volgt Rentman niet vanzelf (Robin, 26 nov).
+        if (tekst(vk.inhoud) !== tekst(k.inhoud)) wat.push({ veld: `Inhoud ${k.nr}`, van: tekst(vk.inhoud), naar: tekst(k.inhoud), ...(eigenInhoud.has(a.code) ? { eigen: true } : {}) });
       }
     }
     if (wat.length) gewijzigd.push({ code: a.code, naam: a.naam, wat });

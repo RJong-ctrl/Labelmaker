@@ -406,9 +406,12 @@ class Maken(MakenHulp, PaginaTest):
         p.wait_for_selector('body[data-klaar="1"]')
         p.locator('#makenZoek').fill('DD6')
         p.locator('#makenTreffers li').first.click()
-        extra = p.locator('#makenVelden textarea[name="Extra inhoud"]')
-        extra.fill('2 Speakon kabel 10m\n1 Regenhoes')
-        extra.blur()
+        # één veld Inhoud: aanpassen = onthouden voor dit artikel (Robin, 26 nov)
+        expect(p.locator('#makenVelden textarea[name="Extra inhoud"]')).to_have_count(0)
+        inhoud = p.locator('#makenVelden textarea[name="Inhoud"]')
+        expect(inhoud).to_have_value('2 Martin Audio DD6')
+        inhoud.fill('2 Martin Audio DD6\n2 Speakon kabel 10m\n1 Regenhoes')
+        inhoud.blur()
         expect(p.locator('#makenVoorbeeld .signb.kist .kt')).to_have_text(['Martin Audio DD6', 'Speakon kabel 10m', 'Regenhoes'])
         p.locator('#makenOpVel').click()
         expect(p.locator('#printA4')).to_have_text('Print 1 op A4')
@@ -418,7 +421,7 @@ class Maken(MakenHulp, PaginaTest):
         p.wait_for_selector('body[data-klaar="1"]')
         p.locator('#makenZoek').fill('*GE2162-02')
         p.locator('#makenZoek').press('Enter')
-        expect(p.locator('#makenVelden textarea[name="Extra inhoud"]')).to_have_value('2 Speakon kabel 10m\n1 Regenhoes')
+        expect(p.locator('#makenVelden textarea[name="Inhoud"]')).to_have_value('2 Martin Audio DD6\n2 Speakon kabel 10m\n1 Regenhoes')
         expect(p.locator('#makenVoorbeeld .signb.kist .kt')).to_have_text(['Martin Audio DD6', 'Speakon kabel 10m', 'Regenhoes'])
         self.assertEqual(self.fouten, [])
 
@@ -521,11 +524,11 @@ class Maken(MakenHulp, PaginaTest):
         p = self.pagina
         self.kies('kist-bw6040')
         ta = p.locator('#makenVelden textarea[name="Inhoud"]')
-        extra = p.locator('#makenVelden textarea[name="Extra inhoud"]')
+        extra = p.locator('#makenVelden input[name="Naam"]')
         p.wait_for_timeout(300)
         maken = p.locator('#maken').bounding_box()
         h1 = ta.bounding_box()['height']
-        self.assertGreater(h1, extra.bounding_box()['height'] * 1.8)
+        self.assertGreater(h1, extra.bounding_box()['height'] * 4)
         laatste = p.evaluate("() => Math.max(...[...document.querySelectorAll('#maken > *')].map(e => e.getBoundingClientRect().bottom))")
         self.assertLess(maken['y'] + maken['height'] - laatste, 40)       # weinig lege ruimte over
         self.assertLessEqual(laatste, maken['y'] + maken['height'] + 1)   # en geen scrollbalk erbij

@@ -358,7 +358,10 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
       const nietGevonden = mist.filter(v => kolommen[v]).map(v => kolommen[v]);
       if (nietGevonden.length) delen.push(`Kolommen niet gevonden: ${nietGevonden.join(', ')}.`);
       if (weg) delen.push(`${weg} ${weg === 1 ? 'regel' : 'regels'} van het printvel verwijderd: artikel niet meer in de export.`);
-      const v = verschillen(vorige, artikelen, { ontbrekend: mist });
+      // Artikelen met zelf aangepaste inhoud: een wijziging in Rentman komt niet vanzelf op het bordje, dus melden.
+      const aanv = E().aanvullingen || {};
+      const eigenInhoud = new Set(artikelen.filter(a => aanv[a.id]?.Inhoud).map(a => a.code));
+      const v = verschillen(vorige, artikelen, { ontbrekend: mist, eigenInhoud });
       const aantalV = v.gewijzigd.length + v.nieuw.length + v.weg.length;
       if (!v.eerste && !aantalV) delen.push('Geen verschillen met de vorige export.');
       melding(delen.join(' '));
