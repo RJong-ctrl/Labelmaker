@@ -302,15 +302,19 @@ function eigenRand(aanvullingen) {
 
 /** Inhoudslijst: 'aantal naam' per regel ('30 kabel', '40× kabel', '2 x kabel'); zonder getal: ['', regel].
  *  Inhoud van inhoud (Robin, 26 nov): een regel zonder aantal in HOOFDLETTERS of eindigend op ':' is een kopje
- *  (['', tekst, 'kop']); een regel die begint met ↳, > of - is een notitie bij het vorige artikel (['', tekst, 'noot']). */
+ *  (['', tekst, 'kop']); een regel die begint met ↳, > of - is een notitie bij het vorige artikel (['', tekst, 'noot']).
+ *  Een getal is alleen een aantal met een spatie of x/× erna; ' vooraan maakt er altijd gewone tekst van. */
 function lijstUit(tekst) {
   return String(tekst || '').split(/\r?\n/).map(r => r.trim()).filter(Boolean).map(r => {
     const noot = /^(?:↳|>|-)\s*(.+)$/.exec(r);
     if (noot) return ['', noot[1].trim(), 'noot'];
-    const m = /^(\d+(?:[.,]\d+)?)\s*(?:[x×]\s+|×\s*)?(.+)$/i.exec(r);
+    // ' vooraan: nooit een aantal (zoals in Excel), bv. '19 inch rack
+    if (r.startsWith("'")) return ['', r.slice(1).trim()];
+    // Aantal alleen met een spatie of x/× na het getal: '230V verloop' en '4HE kabelbak' blijven tekst (Robin, 26 nov).
+    const m = /^(\d+(?:[.,]\d+)?)(?:\s*[x×]\s+|×|\s+)(.+)$/i.exec(r);
     if (m) return [m[1], m[2].trim()];
     if (/:$/.test(r)) return ['', r.replace(/:+$/, '').trim(), 'kop'];
-    if (/\p{Lu}/u.test(r) && r === r.toUpperCase()) return ['', r, 'kop'];
+    if (/^\p{L}/u.test(r) && r === r.toUpperCase()) return ['', r, 'kop'];
     return ['', r];
   });
 }

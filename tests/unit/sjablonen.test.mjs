@@ -564,3 +564,18 @@ test('inhoud_met_kopjes_en_notities', () => {
   // gewone lijst blijft precies zoals hij was
   assert.deepEqual(vul(S.kist, A.GE9402, { Inhoud: '30 DMX 3p 1,25m\nDMX' }, '').lijst, [['30', 'DMX 3p 1,25m'], ['', 'DMX', 'kop']]);
 });
+
+test('cijfer_aan_begin_is_niet_altijd_een_aantal', () => {
+  // Robin, 26 nov: een naam die met een cijfer begint sprong altijd naar de aantal-kolom.
+  // Aantal alleen als er na het getal een spatie of x/× komt; met ' vooraan nooit een aantal (zoals in Excel).
+  const l = (t) => vul(S.kist, A.GE9402, { Inhoud: t }, '').lijst;
+  assert.deepEqual(l('230V verloop schuko'), [['', '230V verloop schuko']]);
+  assert.deepEqual(l('4HE kabelbak'), [['', '4HE kabelbak']]);
+  assert.deepEqual(l('1,25m DMX kabel'), [['', '1,25m DMX kabel']]);
+  assert.deepEqual(l('2x4 m truss'), [['', '2x4 m truss']]);
+  assert.deepEqual(l("'19 inch rack"), [['', '19 inch rack']]);
+  // aantallen blijven werken
+  assert.deepEqual(l('2 kabel\n3x kabel\n4 x kabel\n5× kabel\n6×kabel\n1,5 m'), [['2', 'kabel'], ['3', 'kabel'], ['4', 'kabel'], ['5', 'kabel'], ['6', 'kabel'], ['1,5', 'm']]);
+  // een regel met cijfers in hoofdletters is geen kopje
+  assert.deepEqual(l('230V'), [['', '230V']]);
+});
