@@ -175,3 +175,5 @@ dialog.sjabloonkeuze .tegel.gekozen{border-color:var(--accent)}
 .maken-vak .op-vel{margin-top:6px}
 .maken .knoppenrij{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .maken .knoppenrij .vink{margin:0 auto 0 0}
+
+#lettertypeInfo{margin-left:auto;font-size:11.5px;white-space:nowrap}

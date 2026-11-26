@@ -1,3 +1,4 @@
+import re
 import base64
 import unittest
 
@@ -347,6 +348,19 @@ class FuturaKeuze(PaginaTest):
         uit = p.evaluate("async () => (await import('./js/opmaak.js')).kiesFutura()")
         self.assertEqual(uit, {'boek': False, 'vet': False})
         self.assertNotIn('futura-boek', p.evaluate('document.documentElement.className'))
+
+    def test_lettertype_zichtbaar_in_voorbeeld(self):
+        """Robin, 26 nov: op het scherm staat welk lettertype de bordjes op deze pc krijgen."""
+        from playwright.sync_api import expect
+        p = self.pagina
+        p.evaluate("async () => (await import('./js/opmaak.js')).kiesFutura()")
+        info = p.locator('#lettertypeInfo')
+        expect(info).to_contain_text('Jost')
+        expect(info).to_have_attribute('title', re.compile('Futura Bk BT'))
+        # met Futura Book (zoals bij Robin): de naam van Futura, vet door de browser
+        p.evaluate("(await import('./js/opmaak.js')).toonLettertype({ boek: true, vet: false })".join(['async () => ', '']))
+        expect(info).to_contain_text('Futura Book BT')
+        expect(info).to_contain_text('vet nagemaakt')
 
 
 if __name__ == '__main__':

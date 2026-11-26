@@ -359,7 +359,17 @@ export async function kiesFutura(doc = document) {
   const boek = await er('local("Futura Bk BT"), local("Futura Book BT"), local("FuturaBT-Book"), local("Futura Book"), local("Futura-Book")');
   const vet = await er('local("Futura Hv BT"), local("FuturaBT-Heavy"), local("Futura Bold"), local("Futura-Bold"), local("Futura Md BT"), local("FuturaBT-Medium")');
   doc.documentElement.classList.toggle('futura-boek', boek && !vet);
+  toonLettertype({ boek, vet }, doc);
   return { boek, vet };
+}
+
+/** Laat zien welk lettertype de bordjes op deze pc krijgen (Robin, 26 nov: 'gebruik je nog Futura Bk BT?'). */
+export function toonLettertype({ boek, vet }, doc = document) {
+  const el = doc.getElementById('lettertypeInfo');
+  if (!el) return;
+  el.textContent = boek ? `Lettertype: Futura Book BT${vet ? '' : ' (vet nagemaakt)'}` : vet ? 'Lettertype: Futura (vet), rest Jost' : 'Lettertype: Jost (Futura niet gevonden)';
+  el.title = 'Bordjes gebruiken Futura Bk BT als die op deze pc geïnstalleerd is (volledige naam "Futura Book BT"), anders het meegeleverde Jost.'
+    + (boek && !vet ? ' Futura Medium/Heavy staat er niet op: de browser maakt vet zelf.' : '');
 }
 
 let lettertypes = null;
