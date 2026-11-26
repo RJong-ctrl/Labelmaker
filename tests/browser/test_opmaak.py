@@ -362,6 +362,26 @@ class FuturaKeuze(PaginaTest):
         expect(info).to_contain_text('Futura Book BT')
         expect(info).to_contain_text('vet nagemaakt')
 
+    def test_futura_als_bestand_in_beheer(self):
+        """Robin, 26 nov: Futura niet in Windows geïnstalleerd, wel als bestand gegeven. Een eigen lettertype met
+        'Futura' in de naam (Beheer, alleen op deze pc) wordt de Futura van de bordjes."""
+        from playwright.sync_api import expect
+        import base64, pathlib
+        p = self.pagina
+        # nep-Futura: het meegeleverde Jost-bestand onder een Futura-naam (echte Futura mag niet in de repository)
+        data = base64.b64encode((pathlib.Path(__file__).parents[2] / 'v2/fonts/jost-400.woff').read_bytes()).decode()
+        p.evaluate('''async (data) => { const { openOpslag } = await import('./js/opslag.js'); const o = await openOpslag('dsl');
+            await o.schrijf('instellingen', 'pc:eigenLettertype', { naam: 'Futura Bk BT Book.ttf', data }); }''', data)
+        p.reload()
+        p.wait_for_selector('body[data-klaar="1"]')
+        info = p.locator('#lettertypeInfo')
+        expect(info).to_contain_text('Futura')
+        expect(info).to_contain_text('bestand')
+        p.wait_for_function("document.documentElement.classList.contains('futura-boek')")
+        self.assertTrue(p.evaluate('''() => [...document.fonts].some(f => f.family.replace(/"/g, '') === 'DSL Futura Boek' && f.status === 'loaded')'''))
+        # alleen de gewone dikte: dan maakt de browser vet na en blijven koppen vet (Robin, 26 nov)
+        self.assertEqual(p.evaluate('''() => [...document.fonts].filter(f => f.family.replace(/"/g, '') === 'DSL Futura Boek' && f.status === 'loaded').map(f => f.weight)'''), ['400'])
+
 
 if __name__ == '__main__':
     unittest.main()

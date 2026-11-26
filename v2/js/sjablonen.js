@@ -103,7 +103,8 @@ export const bakbord = (id, naam) => ({
  *  naam en gewicht (vroeger klant en productie), QR; inhoud met kistnummer en het vak voor de projectsticker; zwarte voet.
  *  Inhoud: één regel per onderdeel ('aantal naam'). Twee per A4. */
 export const kistbordje = (id, naam, opmaak = 'kist') => ({
-  ...basis, id, naam, printer: 'a4', opmaak, formaat: { b: 194, h: 136 }, gat: false, voet: true,
+  // 200 × 140: zo groot als past in een A5-sleeve met 2 per A4 (Robin, 26 nov; was 194 × 136).
+  ...basis, id, naam, printer: 'a4', opmaak, formaat: { b: 200, h: 140 }, gat: false, voet: true,
   velden: [kolom('Naam', 'naam', true), uitKist('Kistnummer', 'nr', 'code', { oud: ['Code'] }),
     uitKist('Gewicht', 'gewicht', '', { eenheid: 'kg' }),
     // Eén veld (Robin, 26 nov): komt uit Rentman, en wat je aanpast wordt per artikel onthouden.

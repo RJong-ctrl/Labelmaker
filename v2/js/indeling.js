@@ -6,14 +6,18 @@ export const A4 = { b: 210, h: 297 };
 export const MARGE = 8;
 export const TUSSEN = 8;
 
-function rooster(b, h) {
-  const kol = Math.max(0, Math.floor((A4.b - 2 * MARGE + TUSSEN) / (b + TUSSEN)));
-  const rij = Math.max(0, Math.floor((A4.h - 2 * MARGE + TUSSEN) / (h + TUSSEN)));
+// Krap: marge 5 en tussenruimte 6, alleen als er dan meer op een vel passen (A5-materiaalbordje 200 × 140:
+// 2 per A4, Robin 26 nov). Snijtekens (1 + 3 mm) passen er nog in.
+export const KRAP = { marge: 5, tussen: 6 };
+
+function rooster(b, h, marge = MARGE, tussen = TUSSEN) {
+  const kol = Math.max(0, Math.floor((A4.b - 2 * marge + tussen) / (b + tussen)));
+  const rij = Math.max(0, Math.floor((A4.h - 2 * marge + tussen) / (h + tussen)));
   const posities = [];
   for (let r = 0; r < rij; r++) {
     for (let k = 0; k < kol; k++) {
-      const x = kol > 1 ? MARGE + k * (A4.b - 2 * MARGE - b) / (kol - 1) : (A4.b - b) / 2;
-      const y = rij > 1 ? MARGE + r * (A4.h - 2 * MARGE - h) / (rij - 1) : (A4.h - h) / 2;
+      const x = kol > 1 ? marge + k * (A4.b - 2 * marge - b) / (kol - 1) : (A4.b - b) / 2;
+      const y = rij > 1 ? marge + r * (A4.h - 2 * marge - h) / (rij - 1) : (A4.h - h) / 2;
       posities.push([x, y]);
     }
   }
@@ -22,8 +26,10 @@ function rooster(b, h) {
 
 /** Plaatsen op een A4; b/h zijn de maten op het vel (na eventueel draaien). */
 export function a4Indeling(b, h) {
-  const recht = rooster(b, h), gedraaid = rooster(h, b);
-  return gedraaid.posities.length > recht.posities.length ? { ...gedraaid, gedraaid: true } : { ...recht, gedraaid: false };
+  const kies = (recht, gedraaid) => (gedraaid.posities.length > recht.posities.length ? { ...gedraaid, gedraaid: true } : { ...recht, gedraaid: false });
+  const gewoon = kies(rooster(b, h), rooster(h, b));
+  const krap = kies(rooster(b, h, KRAP.marge, KRAP.tussen), rooster(h, b, KRAP.marge, KRAP.tussen));
+  return krap.posities.length > gewoon.posities.length ? krap : gewoon;
 }
 
 /** Lijst opdelen in vellen van perVel stuks. */

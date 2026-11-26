@@ -93,3 +93,17 @@ test('pak_a4_willekeurig_altijd_netjes_en_zuinig', () => {
 test('pak_a4_te_groot_valt_weg', () => {
   assert.deepEqual(pakA4([{ b: 300, h: 300 }, { b: 74, h: 105 }]).flat().map(p => p.i), [1]);
 });
+
+test('a5_materiaalbordje_200x140_twee_per_a4', () => {
+  // Robin, 26 nov: zo groot als met 2 per A4 kan (A5-sleeve 210 × 148). Krappere marge (5) en tussenruimte (6).
+  const ind = a4Indeling(200, 140);
+  assert.equal(ind.posities.length, 2);
+  assert.equal(ind.gedraaid, false);
+  const [[x1, y1], [, y2]] = ind.posities;
+  assert.ok(x1 >= 5 - 1e-9 && x1 + 200 <= 205 + 1e-9);
+  assert.ok(y1 >= 5 - 1e-9 && y2 + 140 <= 292 + 1e-9);
+  assert.ok(y2 - (y1 + 140) >= 6 - 1e-9, 'ruimte voor snijtekens');
+  // gewone formaten houden marge en tussenruimte 8
+  assert.deepEqual(a4Indeling(194, 136).posities, [[8, 8], [8, 153]]);
+  assert.deepEqual(pakA4([{ b: 200, h: 140 }, { b: 200, h: 140 }]).map(v => v.length), [2]);
+});

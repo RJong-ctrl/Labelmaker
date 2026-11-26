@@ -86,6 +86,10 @@ import('./opmaak.js').then(m => m.kiesFutura()).then(({ boek, vet }) => { if (bo
 (async () => {
   try {
     const lt = await model.pcInstelling('eigenLettertype');
-    if (lt) (await import('./beheer.js')).registreerEigenLettertype(lt);
+    if (lt && await (await import('./beheer.js')).registreerEigenLettertype(lt)) {
+      // Futura als bestand: opnieuw kiezen en de bordjes opnieuw tekenen.
+      await (await import('./opmaak.js')).kiesFutura();
+      scherm.vernieuw();
+    }
   } catch { /* geen eigen lettertype */ }
 })();

@@ -256,7 +256,7 @@ test('kistbordje_met_inhoudslijst', () => {
   assert.deepEqual(S.kist.velden.map(v => v.naam), ['Naam', 'Kistnummer', 'Gewicht', 'Inhoud']);
   const i = vul(S.kist, A.GE9402, { Gewicht: '66,20', Inhoud: '30 DMX 3p 1,25m grijs\n40× DMX 3p 2,5m\n2 x Afsluiter\nlosse regel\n\n' }, 'dsl01');
   assert.equal(i.opmaak, 'kist');
-  assert.deepEqual(S.kist.formaat, { b: 194, h: 136 });
+  assert.deepEqual(S.kist.formaat, { b: 200, h: 140 });   // past in een A5-sleeve, 2 per A4 (Robin, 26 nov)
   assert.equal(i.titel, 'Speakon 4p Verlengkabel 2,5m');
   assert.equal(i.qr, 'dsl01');
   assert.equal(i.rand, '#005abb');
@@ -303,7 +303,7 @@ test('kistbordje_vult_zich_uit_exemplaar', () => {
 
 test('kistbordje_modern_ook_te_kiezen', () => {
   assert.equal(S['kist-modern'].opmaak, 'kist-modern');
-  assert.deepEqual(S['kist-modern'].formaat, { b: 194, h: 136 });
+  assert.deepEqual(S['kist-modern'].formaat, { b: 200, h: 140 });
   assert.deepEqual(S['kist-modern'].velden.map(v => v.naam), S.kist.velden.map(v => v.naam));
   // zwart-wit (Robin, 24 nov), ook als er een andere randkleur is ingevuld; net als de B&W-bordjes
   for (const id of ['kist-modern', 'kist-bw1000', 'kist-bw6040']) {

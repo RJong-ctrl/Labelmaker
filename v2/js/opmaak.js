@@ -209,13 +209,14 @@ function kist(i, hs) {
   //   Inhoud: <naam vet> … kistnummer rechtsboven, daaronder aantal + omschrijving
   //   zwarte voet met adres.
   // Klant, productie, datum en check blijven leeg om met de hand in te vullen.
-  const W = i.formaat.b, H = i.formaat.h, L = 1.1, w = i.waarden || {};
-  const kopH = H * 0.23, datumH = H * 0.085, voetH = hs.voet.length ? H * 0.10 : 0;
+  // Lijnen, kop en datumrij gemeten aan het origineel en meegeschaald met de breedte (Robin, 26 nov).
+  const W = i.formaat.b, H = i.formaat.h, L = 1.4 * W / 200, w = i.waarden || {};
+  const kopH = W * 30.3 / 194, datumH = W * 9.9 / 194, voetH = hs.voet.length ? H * 0.10 : 0;
   const veld = (naam, waarde, pt) => `<div class="kv" style="font-size:${pt}pt"><b>${esc(naam)}:</b>${waarde ? vak('kw', pt, esc(waarde), 'flex:1 1 auto', 5) : ''}</div>`;
   const gewicht = String(w.Gewicht || '').trim();
   const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
   // QR vult zijn vak bijna helemaal: de QR heeft zelf al een witte rand van 2 modules (Robin, 26 nov: groter).
-  const qs = kopH - 2 * L - 1;
+  const qs = kopH - 2 * L - 0.6;
   const lijst = i.lijst || [];
   // Veel regels: twee kolommen. De letter wordt zo groot als past (hooguit 16 pt); lange namen lopen door.
   const regels = lijst.map(r => inhoudRegel(r, false)).join('');
@@ -357,19 +358,22 @@ function schrijflijn(span) {
 /** Staat alleen Futura Book op deze pc (geen Medium/Heavy)? Dan alles in Futura Book (class futura-boek). */
 export async function kiesFutura(doc = document) {
   const er = async (bronnen) => { try { await new FontFace('lm-test', bronnen).load(); return true; } catch { return false; } };
-  const boek = await er('local("Futura Bk BT"), local("Futura Book BT"), local("FuturaBT-Book"), local("Futura Book"), local("Futura-Book")');
+  // Futura als bestand in Beheer gezet (eigen lettertype met 'Futura' in de naam) telt ook (Robin, 26 nov).
+  const bestand = doc.documentElement.dataset.futuraBestand || '';
+  const boek = !!bestand || await er('local("Futura Bk BT"), local("Futura Book BT"), local("FuturaBT-Book"), local("Futura Book"), local("Futura-Book")');
   const vet = await er('local("Futura Hv BT"), local("FuturaBT-Heavy"), local("Futura Bold"), local("Futura-Bold"), local("Futura Md BT"), local("FuturaBT-Medium")');
   doc.documentElement.classList.toggle('futura-boek', boek && !vet);
-  toonLettertype({ boek, vet }, doc);
+  toonLettertype({ boek, vet, bestand }, doc);
   return { boek, vet };
 }
 
 /** Laat zien welk lettertype de bordjes op deze pc krijgen (Robin, 26 nov: 'gebruik je nog Futura Bk BT?'). */
-export function toonLettertype({ boek, vet }, doc = document) {
+export function toonLettertype({ boek, vet, bestand = '' }, doc = document) {
   const el = doc.getElementById('lettertypeInfo');
   if (!el) return;
-  el.textContent = boek ? `Lettertype: Futura Book BT${vet ? '' : ' (vet nagemaakt)'}` : vet ? 'Lettertype: Futura (vet), rest Jost' : 'Lettertype: Jost (Futura niet gevonden)';
-  el.title = 'Bordjes gebruiken Futura Bk BT als die op deze pc geïnstalleerd is (volledige naam "Futura Book BT"), anders het meegeleverde Jost.'
+  el.textContent = bestand ? `Lettertype: Futura Book BT (bestand op deze pc${vet ? '' : ', vet nagemaakt'})`
+    : boek ? `Lettertype: Futura Book BT${vet ? '' : ' (vet nagemaakt)'}` : vet ? 'Lettertype: Futura (vet), rest Jost' : 'Lettertype: Jost (Futura niet gevonden)';
+  el.title = 'Bordjes gebruiken Futura Bk BT als die op deze pc geïnstalleerd is (volledige naam "Futura Book BT"), of als het bestand in Beheer > Huisstijl > Eigen lettertype staat; anders het meegeleverde Jost.'
     + (boek && !vet ? ' Futura Medium/Heavy staat er niet op: de browser maakt vet zelf.' : '');
 }
 

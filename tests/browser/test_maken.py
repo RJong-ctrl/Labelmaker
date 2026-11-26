@@ -343,11 +343,14 @@ class Maken(MakenHulp, PaginaTest):
         self.assertGreaterEqual(pt('.kkop .kl'), 12.9)
         self.assertGreaterEqual(pt('.kkop .kcode'), 12.9)
         self.assertGreaterEqual(pt('.kvoet'), 10.9)
-        # verhoudingen van het origineel: kop ± 23 %, datumrij ± 8,5 %, voet ± 10 % van de hoogte
+        # gemeten aan het origineel op gelijke breedte (Robin, 26 nov): kop 30,5 mm, datumrij 10 mm, lijnen 1,4 mm
         p.wait_for_timeout(300)
-        H = k.bounding_box()['height']
-        for deel, aandeel in [('.krij.kkopr', 0.23), ('.krij.kdatum', 0.085), ('.kvoet', 0.10)]:
-            self.assertAlmostEqual(k.locator(deel).bounding_box()['height'] / H, aandeel, delta=0.02, msg=deel)
+        B = k.bounding_box()['width']
+        mm = B / 200                                           # 200 × 140 (A5-sleeve), maten schalen mee met de breedte
+        for deel, maat in [('.krij.kkopr', 31.2), ('.krij.kdatum', 10.2)]:
+            self.assertAlmostEqual(k.locator(deel).bounding_box()['height'] / mm, maat, delta=0.6, msg=deel)
+        lijn = k.evaluate('e => parseFloat(getComputedStyle(e).getPropertyValue("--l"))')
+        self.assertAlmostEqual(lijn, 1.4, delta=0.1)
         p.locator('#makenVelden input[name="__aantal"]').fill('2')
         p.locator('#makenOpVel').click()
         expect(p.locator('#vellen .a4')).to_have_count(1)

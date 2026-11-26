@@ -70,6 +70,7 @@ function naarBase64(buffer) {
  * Eigen lettertype (pc-instelling { naam, data: base64 }) als "DSL Eigen" in deze pagina zetten.
  * Geeft false als het bestand geen bruikbaar lettertype is.
  */
+let futuraUitBestand = null;
 export async function registreerEigenLettertype(lettertype) {
   if (!lettertype?.data || typeof FontFace !== 'function') return false;
   try {
@@ -78,6 +79,16 @@ export async function registreerEigenLettertype(lettertype) {
     await ff.load();
     for (const f of [...document.fonts]) if (f.family.replace(/"/g, '') === 'DSL Eigen') document.fonts.delete(f);
     document.fonts.add(ff);
+    // Futura als bestand (niet in Windows geïnstalleerd): dan is dit de Futura van de bordjes (Robin, 26 nov).
+    // Alleen in deze browser; het bestand wordt nooit gepubliceerd.
+    if (/futura/i.test(lettertype.naam || '')) {
+      const fb = new FontFace('DSL Futura Boek', bytes.buffer, { weight: '400' })   // alleen gewoon: vet maakt de browser na;
+      await fb.load();
+      if (futuraUitBestand) document.fonts.delete(futuraUitBestand);
+      document.fonts.add(fb);
+      futuraUitBestand = fb;
+      document.documentElement.dataset.futuraBestand = lettertype.naam;
+    }
     return true;
   } catch {
     return false;
@@ -388,7 +399,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
       + Object.entries(LETTERTYPES).map(([k, t]) => `<label class="vink"><input type="radio" name="lettertype" value="${k}"${(hs.lettertype || 'futura') === k ? ' checked' : ''}> ${t}</label>`).join('')
       + '</fieldset>'
       + '<div class="upload"><h3>Eigen lettertype</h3>'
-      + '<p class="hint">Alleen op deze pc. Wordt niet gepubliceerd (licentie van het lettertype).</p>'
+      + '<p class="hint">Alleen op deze pc. Wordt niet gepubliceerd (licentie van het lettertype). Heet het bestand Futura (bv. Futura Bk BT Book.ttf), dan wordt het de Futura van de bordjes.</p>'
       + `<p>${lt ? `Op deze pc: <b>${esc(lt.naam)}</b>` : 'Op deze pc staat geen eigen lettertype.'}</p>`
       + '<div class="upload-rij"><button type="button" data-beheer="kies" data-voor="font">Lettertype kiezen…</button>'
       + (lt ? '<button type="button" data-beheer="weg" data-voor="font">Lettertype weghalen</button>' : '')
@@ -426,6 +437,7 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     if (!(await registreerEigenLettertype(lt))) { zetMelding('font', `Kan "${file.name}" niet lezen als lettertype. Kies een ander bestand.`); return; }
     if (!(await bewaar(() => model.zetPcInstelling('eigenLettertype', lt)))) return;
     meld('pc', 'eigenLettertype');
+    await (await import('./opmaak.js')).kiesFutura();   // Futura als bestand: meteen de Futura van de bordjes
     await tekenHuisstijl('[data-beheer="kies"][data-voor="font"]');
     voorbeeldLater(0);
   }
@@ -436,6 +448,9 @@ export async function startBeheer(root, model, { profielId = model.profielId, te
     if (k === 'font') {
       if (!(await bewaar(() => model.zetPcInstelling('eigenLettertype', null)))) return;
       for (const f of [...document.fonts]) if (f.family.replace(/"/g, '') === 'DSL Eigen') document.fonts.delete(f);
+      if (futuraUitBestand) { document.fonts.delete(futuraUitBestand); futuraUitBestand = null; }
+      delete document.documentElement.dataset.futuraBestand;
+      await (await import('./opmaak.js')).kiesFutura();
       meld('pc', 'eigenLettertype');
       await tekenHuisstijl('[data-beheer="kies"][data-voor="font"]');
       return;
