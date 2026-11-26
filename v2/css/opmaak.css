@@ -92,6 +92,8 @@
 .signb.kist .kt{white-space:normal;overflow-wrap:anywhere}
 /* inhoud van inhoud: kopje en notitie (Robin, 26 nov) */
 .signb.kist .kr.kop,.signb.kist-modern .kr.kop{grid-template-columns:1fr;font-weight:700;margin-top:.45em}
+/* kopje in HOOFDLETTERS oogt groot: kleiner dan een lijstregel en dan de naam (Robin, 26 nov) */
+.signb.kist .kr.kop .kt,.signb.kist-modern .kr.kop .kt{font-size:.8em;letter-spacing:.04em}
 .signb.kist .kr.kop:first-child,.signb.kist-modern .kr.kop:first-child{margin-top:0}
 .signb.kist .kr.noot .kt,.signb.kist-modern .kr.noot .kt{font-size:.82em}
 .signb.kist-modern .kr.noot{border-bottom:0;padding-top:0}

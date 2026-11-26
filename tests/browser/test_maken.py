@@ -585,11 +585,34 @@ class Maken(MakenHulp, PaginaTest):
             p.wait_for_timeout(300)
             kop = k.locator('.kr.kop').first
             self.assertEqual(kop.evaluate('e => getComputedStyle(e).fontWeight'), '700', soort)
+            # kopje: zelfde lettertype als de lijst, kleiner dan de naam bovenaan en niet groter dan een lijstregel
+            maat = lambda loc: loc.evaluate('e => parseFloat(getComputedStyle(e).fontSize)')
+            familie = lambda loc: loc.evaluate('e => getComputedStyle(e).fontFamily')
+            regel = k.locator('.kr:not(.kop):not(.noot) .kt').first
+            kopt = kop.locator('.kt')
+            self.assertEqual(familie(kopt), familie(regel), soort)
+            self.assertLess(maat(kopt), maat(regel), soort)
+            if soort == 'kist':
+                self.assertLess(maat(kopt), maat(k.locator('.kkop .kn span')), soort)
             # notitie begint onder de naam van het artikel erboven, niet onder het aantal
             noot = k.locator('.kr.noot .kt').bounding_box()
             naam = k.locator('.kr:not(.kop):not(.noot) .kt').last.bounding_box()
             self.assertGreaterEqual(noot['x'] + 0.5, naam['x'], soort)
         self.assertEqual(self.fouten, [])
+
+    def test_uitleg_onder_inhoud(self):
+        """Korte uitleg van de schrijfwijze staat altijd onder het Inhoud-veld (Robin, 26 nov)."""
+        p = self.pagina
+        self.kies('kist')
+        tip = p.locator('#makenVelden .inhoudtip')
+        expect(tip).to_have_count(1)
+        expect(tip).to_be_visible()
+        for woord in ['kopje', 'notitie', '↳', "'"]:
+            expect(tip).to_contain_text(woord)
+        ta = p.locator('#makenVelden textarea[name="Inhoud"]').bounding_box()
+        self.assertGreaterEqual(tip.bounding_box()['y'], ta['y'] + ta['height'] - 1)   # eronder
+        self.kies('bordje-staand')
+        expect(p.locator('#makenVelden .inhoudtip')).to_have_count(0)                   # alleen bij een inhoudslijst
 
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""

@@ -9,6 +9,8 @@ import { esc } from './html.js';
 
 const PX = 96 / 25.4;
 const LEEG = { id: '__nieuw', naam: '', code: '', qr: '', exemplaren: [], pad: '', map: '', locatie: '', soort: 'bulk', type: '', combinatie: false, aantal: 0 };
+const INHOUDTIP = '<p class="inhoudtip"><b>2 naam</b> = aantal · <b>HOOFDLETTERS</b> of eindigend op <b>:</b> = kopje · '
+  + '<b>↳</b>, <b>&gt;</b> of <b>-</b> vooraan = notitie onder het artikel erboven · <b>\'</b> vooraan = nooit een aantal (\'19 inch rack)</p>';
 const BRON = { kolom: 'uit het artikel', naam: 'uit de naam', exemplaar: 'uit de kist' };
 const norm = (s) => String(s ?? '').toLowerCase().replace(/×/g, 'x').replace(/,/g, '.').replace(/\s+/g, ' ').trim();
 
@@ -215,7 +217,9 @@ export function startMaken(root, h) {
         ...(v.herkomst.patroon === 'kabel' ? { keuzes: [{ waarde: 'ja', tekst: 'Ja' }, { waarde: '', tekst: 'Nee' }] } : {}),
       };
       const html = veldInvoer(vorm, waarde, { verplicht: false });
-      return v.meerregelig ? html.replace('class="veld"', 'class="veld breed"') : html;
+      // Korte uitleg onder het (eerste) inhoudsveld, altijd zichtbaar (Robin, 26 nov).
+      const tip = v.naam === [].concat(sj.lijstVeld || [])[0] ? INHOUDTIP : '';
+      return (v.meerregelig ? html.replace('class="veld"', 'class="veld breed"') : html) + tip;
     });
     void o;
     // Randkleur zelf kiezen kan op elk A4-bordje en elke strook (leeg = wat het sjabloon zegt).

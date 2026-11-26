@@ -146,6 +146,8 @@ dialog.sjabloonkeuze .tegel.gekozen{border-color:var(--accent)}
 .maken .rij2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .maken label.veld{display:grid;gap:3px;font-weight:600;font-size:13px;min-width:0}
 .maken input[type=text],.maken input[type=search],.maken input[type=number],.maken select{padding-top:6px;padding-bottom:6px}
+.maken .inhoudtip{grid-column:1/-1;margin:-4px 0 2px;font-size:11.5px;line-height:1.45;color:var(--muted,#8a8a8a)}
+.maken .inhoudtip b{color:var(--ink);font-weight:600}
 .maken .qrveld{display:grid;gap:4px;min-width:0;align-content:start}
 .maken label.veld{align-content:start}
 .maken input:disabled{opacity:.55;cursor:not-allowed}
