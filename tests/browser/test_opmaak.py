@@ -379,8 +379,43 @@ class FuturaKeuze(PaginaTest):
         expect(info).to_contain_text('bestand')
         p.wait_for_function("document.documentElement.classList.contains('futura-boek')")
         self.assertTrue(p.evaluate('''() => [...document.fonts].some(f => f.family.replace(/"/g, '') === 'DSL Futura Boek' && f.status === 'loaded')'''))
+        expect(p.locator('#futuraMelding')).to_be_hidden()
         # alleen de gewone dikte: dan maakt de browser vet na en blijven koppen vet (Robin, 26 nov)
         self.assertEqual(p.evaluate('''() => [...document.fonts].filter(f => f.family.replace(/"/g, '') === 'DSL Futura Boek' && f.status === 'loaded').map(f => f.weight)'''), ['400'])
+
+
+class FuturaMelding(PaginaTest):
+    def test_melding_zonder_futura_en_bestand_kiezen(self):
+        """Robin, 26 nov: op een pc zonder Futura een balk met één knop om het Futura-bestand te kiezen."""
+        from playwright.sync_api import expect
+        import pathlib
+        p = self.pagina
+        balk = p.locator('#futuraMelding')
+        expect(balk).to_be_visible()
+        expect(balk).to_contain_text('Futura')
+        expect(balk.locator('a')).to_have_count(0)                     # geen downloadlink
+        # nep-Futura: Jost onder een Futura-naam (echte Futura mag niet in de repository)
+        jost = (pathlib.Path(__file__).parents[2] / 'v2/fonts/jost-400.woff').read_bytes()
+        with p.expect_file_chooser() as fc:
+            balk.get_by_role('button', name=re.compile('Futura-bestand kiezen')).click()
+        fc.value.set_files({'name': 'Futura Bk BT Book.ttf', 'mimeType': 'font/ttf', 'buffer': jost})
+        expect(balk).to_be_hidden()
+        expect(p.locator('#lettertypeInfo')).to_contain_text('bestand op deze pc')
+        # blijft na herladen: geen balk meer
+        p.reload()
+        p.wait_for_selector('body[data-klaar="1"]')
+        expect(p.locator('#lettertypeInfo')).to_contain_text('bestand op deze pc')
+        expect(balk).to_be_hidden()
+
+    def test_ander_bestand_wordt_geweigerd(self):
+        from playwright.sync_api import expect
+        p = self.pagina
+        balk = p.locator('#futuraMelding')
+        with p.expect_file_chooser() as fc:
+            balk.get_by_role('button', name=re.compile('Futura-bestand kiezen')).click()
+        fc.value.set_files({'name': 'Arial.ttf', 'mimeType': 'font/ttf', 'buffer': b'xx'})
+        expect(balk).to_contain_text('geen Futura')
+        expect(balk).to_be_visible()
 
 
 if __name__ == '__main__':

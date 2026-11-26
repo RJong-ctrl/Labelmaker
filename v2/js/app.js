@@ -79,17 +79,36 @@ document.getElementById('beheer').addEventListener('click', () => { location.has
 window.addEventListener('hashchange', toonScherm);
 if (location.hash === '#beheer') toonScherm();
 
-// Futura van de pc gebruiken als die er (deels) is.
-import('./opmaak.js').then(m => m.kiesFutura()).then(({ boek, vet }) => { if (boek && !vet) scherm.vernieuw(); }).catch(() => {});
-
-// Eigen lettertype van deze pc (uit beheer) ook in het werkscherm.
+// Futura van de pc gebruiken als die er (deels) is, of als bestand van deze pc (Beheer of de balk hieronder).
+// Zonder Futura: een balk met één knop om het bestand te kiezen (Robin, 26 nov). Het bestand blijft in deze browser,
+// het wordt nooit gepubliceerd (licentie). Bewust geen downloadlink.
 (async () => {
+  const opmaak = await import('./opmaak.js');
+  let r = await opmaak.kiesFutura().catch(() => ({ boek: false, vet: false }));
   try {
     const lt = await model.pcInstelling('eigenLettertype');
-    if (lt && await (await import('./beheer.js')).registreerEigenLettertype(lt)) {
-      // Futura als bestand: opnieuw kiezen en de bordjes opnieuw tekenen.
-      await (await import('./opmaak.js')).kiesFutura();
-      scherm.vernieuw();
-    }
+    if (lt && await (await import('./beheer.js')).registreerEigenLettertype(lt)) r = await opmaak.kiesFutura();
   } catch { /* geen eigen lettertype */ }
+  if (r.boek) scherm.vernieuw();
+  const futura = (model.effectief().huisstijl?.lettertype || 'futura') === 'futura';
+  document.getElementById('futuraMelding').hidden = !futura || r.boek || r.vet;
 })();
+
+document.getElementById('futuraKies').addEventListener('click', () => document.getElementById('futuraBestand').click());
+document.getElementById('futuraBestand').addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  const fout = document.getElementById('futuraFout');
+  fout.textContent = '';
+  if (!file) return;
+  if (!/futura/i.test(file.name) || !/\.(ttf|otf|woff2?)$/i.test(file.name)) { fout.textContent = ` "${file.name}" is geen Futura-lettertype.`; return; }
+  try {
+    const beheer = await import('./beheer.js');
+    const lt = { naam: file.name, data: beheer.naarBase64(await file.arrayBuffer()) };
+    if (!(await beheer.registreerEigenLettertype(lt))) { fout.textContent = ` Kan "${file.name}" niet lezen als lettertype.`; return; }
+    await model.zetPcInstelling('eigenLettertype', lt);
+    await (await import('./opmaak.js')).kiesFutura();
+    document.getElementById('futuraMelding').hidden = true;
+    scherm.vernieuw();
+  } catch (err) { fout.textContent = ' Bewaren mislukt: ' + (err?.message || err); }
+});

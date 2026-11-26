@@ -59,7 +59,7 @@ const leesBestand = (file, als) => new Promise((ok, fout) => {
   r.onerror = () => fout(r.error || new Error('Bestand niet te lezen'));
   if (als === 'url') r.readAsDataURL(file); else r.readAsArrayBuffer(file);
 });
-function naarBase64(buffer) {
+export function naarBase64(buffer) {
   const bytes = new Uint8Array(buffer);
   let s = '';
   for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
