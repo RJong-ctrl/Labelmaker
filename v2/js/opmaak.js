@@ -231,7 +231,7 @@ function kist(i, hs) {
     + `<div class="kstapel"><div class="kc">${veld('Klant', '', 17)}</div><div class="kc">${veld('Productie', '', 17)}</div></div>`
     + `<div class="kc kqr">${i.qr ? qrOfMelding(i.qr, qs) : ''}</div></div>`
     + `<div class="krij kdatum" style="height:${mm(datumH)};grid-template-columns:37fr 37fr 26fr">`
-    + `<div class="kc">${veld('Datum', '', 12)}</div><div class="kc">${veld('Check', '', 12)}</div><div class="kc">${veld('Gewicht', gw, 12)}</div></div>`
+    + `<div class="kc">${veld('Datum', '', 14)}</div><div class="kc">${veld('Check', '', 14)}</div><div class="kc">${veld('Gewicht', gw, 14)}</div></div>`
     + `<div class="krij kmidden"><div class="kc kinhoud">`
     + `<div class="kkop"><span class="kl">Inhoud:</span>${vak('kn', 16, esc(i.titel || ''), 'flex:1 1 auto', 8)}<span class="kcode">${esc(i.onder)}</span></div>`
     + (regels ? vak('klijst', 16, `<div class="kgrid${lijst.length > 13 ? ' twee' : ''}">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4.5) : '')

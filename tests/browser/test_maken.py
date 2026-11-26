@@ -337,6 +337,12 @@ class Maken(MakenHulp, PaginaTest):
             e.appendChild(m); const y = m.getBoundingClientRect().top; m.remove(); return y; })''')
         self.assertEqual(len(lijnen), 3)
         self.assertLess(max(lijnen) - min(lijnen), 1.0, lijnen)
+        # lettergroottes als het origineel naast elkaar gelegd (Robin, 26 nov)
+        pt = lambda sel: k.locator(sel).first.evaluate('e => parseFloat(getComputedStyle(e).fontSize) * 0.75')
+        self.assertGreaterEqual(pt('.kdatum .kv'), 13.9)
+        self.assertGreaterEqual(pt('.kkop .kl'), 12.9)
+        self.assertGreaterEqual(pt('.kkop .kcode'), 12.9)
+        self.assertGreaterEqual(pt('.kvoet'), 10.9)
         # verhoudingen van het origineel: kop ± 23 %, datumrij ± 8,5 %, voet ± 10 % van de hoogte
         p.wait_for_timeout(300)
         H = k.bounding_box()['height']
