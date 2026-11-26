@@ -617,6 +617,35 @@ class Maken(MakenHulp, PaginaTest):
         self.kies('bordje-staand')
         expect(p.locator('#makenVelden .inhoudtip')).to_have_count(0)                   # alleen bij een inhoudslijst
 
+    def test_qr_groter_op_a5_materiaalbordjes(self):
+        """Robin, 26 nov: QR-code op de A5-materiaalbordjes groter (was 25 en 20 mm), alles blijft binnen het bordje."""
+        p = self.pagina
+        for soort, minimaal in [('kist', 27.5), ('kist-modern', 27.5)]:
+            self.kies(soort)
+            p.locator('#makenVelden input[name="Naam"]').fill('Test')
+            p.locator('#makenVelden textarea[name="Inhoud"]').fill('\n'.join(f'{n} kabel {n}m' for n in range(1, 13)))
+            p.locator('#makenVelden input[name="__qr"]').fill('RQ-STAGE-01')
+            p.wait_for_timeout(600)
+            k = p.locator('#makenVoorbeeld .signb')
+            mm = k.evaluate('s => s.getBoundingClientRect().width / parseFloat(s.style.width)')
+            q = k.locator('.qq').bounding_box()
+            self.assertGreaterEqual(q['width'] / mm, minimaal, soort)
+            # binnen zijn vak en binnen het bordje, niets overlapt de sticker of de voet
+            vak = k.locator('.qq').evaluate('e => e.parentElement.getBoundingClientRect().toJSON()')
+            self.assertLessEqual(q['x'] + q['width'], vak['right'] + 0.5, soort)
+            self.assertLessEqual(q['y'] + q['height'], vak['bottom'] + 0.5, soort)
+            bb = k.bounding_box()
+            for deel in ['.ksticker', '.kgrid', '.qq']:
+                if k.locator(deel).count():
+                    b = k.locator(deel).bounding_box()
+                    self.assertLessEqual(b['y'] + b['height'], bb['y'] + bb['height'] + 0.5, f'{soort} {deel}')
+            if soort == 'kist-modern':
+                st = k.locator('.ksticker').bounding_box()
+                self.assertLessEqual(q['y'] + q['height'], st['y'] + 0.5)
+                ft = k.locator('.ft').bounding_box()
+                self.assertLessEqual(st['y'] + st['height'], ft['y'] + 0.5)
+        self.assertEqual(self.fouten, [])
+
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""
         p = self.pagina

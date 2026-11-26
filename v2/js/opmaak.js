@@ -96,7 +96,7 @@ function bordje(i, hs) {
     const klein = H < 110 && i.sticker !== false;
     // Zonder projectsticker (speakertas): rechts een smalle kolom met nummer, gewicht en QR onder elkaar.
     const smal = i.sticker === false;
-    const kopH = 11 * f / 1.84, st = klein || i.formaat.r > 0 ? { b: 76, h: 56 } : { b: 80, h: 60 }, qs = smal ? 18 * f : klein ? 15 : i.formaat.r > 0 && i.voet ? 15 : 20;   // B&W-deksels (ronde hoeken): precies de sticker (Robin, 16 en 23 nov)
+    const kopH = 11 * f / 1.84, st = klein || i.formaat.r > 0 ? { b: 76, h: 56 } : { b: 80, h: 60 }, qs = smal ? 18 * f : klein ? 15 : i.formaat.r > 0 && i.voet ? 15 : 28;   // A5: 28 mm (Robin, 26 nov)   // B&W-deksels (ronde hoeken): precies de sticker (Robin, 16 en 23 nov)
     const gewicht = String(i.waarden?.Gewicht || '').trim();
     const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
     const regels = (i.lijst || []).map(r => inhoudRegel(r, true)).join('');
@@ -214,7 +214,8 @@ function kist(i, hs) {
   const veld = (naam, waarde, pt) => `<div class="kv" style="font-size:${pt}pt"><b>${esc(naam)}:</b>${waarde ? vak('kw', pt, esc(waarde), 'flex:1 1 auto', 5) : ''}</div>`;
   const gewicht = String(w.Gewicht || '').trim();
   const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
-  const qs = kopH - 2 * L - 4;
+  // QR vult zijn vak bijna helemaal: de QR heeft zelf al een witte rand van 2 modules (Robin, 26 nov: groter).
+  const qs = kopH - 2 * L - 1;
   const lijst = i.lijst || [];
   // Veel regels: twee kolommen. De letter wordt zo groot als past (hooguit 16 pt); lange namen lopen door.
   const regels = lijst.map(r => inhoudRegel(r, false)).join('');
