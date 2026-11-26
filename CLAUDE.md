@@ -58,6 +58,8 @@ Robin schrijft Nederlands: antwoord kort, gestructureerd en in het Nederlands.
 - Namen en commentaar in het Nederlands. Bij een keuze van Robin: commentaar met de reden en datum, bv. `(Robin, 23 nov)`.
 - Veldnamen zijn overal gelijk: Naam, Artikelnummer (= Rentman 'Code'), Kistnummer, Locatie, Inhoud, Gewicht, QR-code.
   Hernoem je een veld, zet dan de oude naam in `oud: [...]` zodat ingevulde gegevens blijven werken.
+- Inhoudslijst (`lijstUit` in `sjablonen.js`): `2 naam` = artikel; regel zonder aantal in HOOFDLETTERS of eindigend op `:` = kopje;
+  regel die begint met `↳`, `>` of `-` = notitie bij het vorige artikel.
 - Wijzig nooit een eigen sjabloon dat Robin in Beheer heeft aangepast; dat staat alleen in zijn browser.
 
 ## Voorkeuren van Robin

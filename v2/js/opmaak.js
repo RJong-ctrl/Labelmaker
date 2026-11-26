@@ -99,7 +99,7 @@ function bordje(i, hs) {
     const kopH = 11 * f / 1.84, st = klein || i.formaat.r > 0 ? { b: 76, h: 56 } : { b: 80, h: 60 }, qs = smal ? 18 * f : klein ? 15 : i.formaat.r > 0 && i.voet ? 15 : 20;   // B&W-deksels (ronde hoeken): precies de sticker (Robin, 16 en 23 nov)
     const gewicht = String(i.waarden?.Gewicht || '').trim();
     const gw = gewicht && /^[\d.,\s]+$/.test(gewicht) ? gewicht + ' kg' : gewicht;
-    const regels = (i.lijst || []).map(([n, t]) => `<div class="kr"><span class="ka">${n ? esc(n) + '×' : ''}</span><span class="kt">${esc(t)}</span></div>`).join('');
+    const regels = (i.lijst || []).map(r => inhoudRegel(r, true)).join('');
     const kbot = `<div class="kbot${klein ? ' klein' : ''}${smal ? ' smal' : ''}"><div class="kgew">${groot ? `<span>${smal ? 'Exemplaar' : 'Kist'}</span><b>${groot}</b>` : ''}${gw ? `<span>Gewicht</span><b>${esc(gw)}</b>` : ''}</div>${i.qr ? qrBlok(qs) : ''}</div>`;
     // De naam krijgt de hele breedte; het kistnummer staat klein rechts bij het gewicht.
     main = `<div class="kkop" style="height:${mm(kopH)}">${vak('t titel', kopH * PT * 0.9, titel, 'flex:1 1 0')}</div>`
@@ -195,6 +195,13 @@ function bordje(i, hs) {
 
 // ---------- materiaalbordje voor op de kist (opbouw van het oude bordje) ----------
 
+/** Eén regel van een inhoudslijst. Kopje over de volle breedte, notitie (↳) onder de naam (Robin, 26 nov). */
+function inhoudRegel([n, t, soort], keer) {
+  if (soort === 'kop') return `<div class="kr kop"><span class="kt">${esc(t)}</span></div>`;
+  if (soort === 'noot') return `<div class="kr noot"><span class="ka"></span><span class="kt">↳ ${esc(t)}</span></div>`;
+  return `<div class="kr"><span class="ka">${n ? esc(n) + (keer ? '×' : '') : ''}</span><span class="kt">${esc(t)}</span></div>`;
+}
+
 function kist(i, hs) {
   // Precies het oude Publisher-bordje (Robin, 23 nov):
   //   logo | Klant: / Productie: | QR
@@ -210,7 +217,7 @@ function kist(i, hs) {
   const qs = kopH - 2 * L - 4;
   const lijst = i.lijst || [];
   // Veel regels: twee kolommen. De letter wordt zo groot als past (hooguit 16 pt); lange namen lopen door.
-  const regels = lijst.map(([n, t]) => `<div class="kr"><span class="ka">${esc(n)}</span><span class="kt">${esc(t)}</span></div>`).join('');
+  const regels = lijst.map(r => inhoudRegel(r, false)).join('');
   const el = document.createElement('div');
   el.className = 'signb kist';
   el.dataset.sjabloon = i.sjabloon;

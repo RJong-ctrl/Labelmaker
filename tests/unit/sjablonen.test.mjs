@@ -543,3 +543,24 @@ test('bewust_zonder_qr', async () => {
   assert.equal(vul(S['bordje-staand'], A.GE9402, {}, '').geenQr, false);
   assert.equal(vul(S.stellingbord, { id: 'l', naam: '', code: '' }, { Locatie: 'A1' }, '').geenQr, true);   // standaard zonder
 });
+
+test('inhoud_met_kopjes_en_notities', () => {
+  // Inhoud van inhoud (Robin, 26 nov): kopje = regel zonder aantal in HOOFDLETTERS of eindigend op ':';
+  // notitie onder het vorige artikel = regel die begint met ↳, > of -.
+  const tekst = 'RQ RACK STAGE\n1x Optocore Festival Box Grand\n2 Sonible ML:mio\n\nKABELBAK (AW RQ 4HE)\n2 Fiberfox dualcore kabel 30m\n2 Verloop 230V schuko > Powercon\n↳ hoort bij rack\nKabels:\n> los erbij\nregenhoes';
+  const i = vul(S.kist, A.GE9402, { Inhoud: tekst }, '');
+  assert.deepEqual(i.lijst, [
+    ['', 'RQ RACK STAGE', 'kop'],
+    ['1', 'Optocore Festival Box Grand'],
+    ['2', 'Sonible ML:mio'],
+    ['', 'KABELBAK (AW RQ 4HE)', 'kop'],
+    ['2', 'Fiberfox dualcore kabel 30m'],
+    ['2', 'Verloop 230V schuko > Powercon'],
+    ['', 'hoort bij rack', 'noot'],
+    ['', 'Kabels', 'kop'],
+    ['', 'los erbij', 'noot'],
+    ['', 'regenhoes'],
+  ]);
+  // gewone lijst blijft precies zoals hij was
+  assert.deepEqual(vul(S.kist, A.GE9402, { Inhoud: '30 DMX 3p 1,25m\nDMX' }, '').lijst, [['30', 'DMX 3p 1,25m'], ['', 'DMX', 'kop']]);
+});

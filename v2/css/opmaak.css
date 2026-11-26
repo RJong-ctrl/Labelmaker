@@ -90,6 +90,11 @@
 .signb.kist .kr{display:grid;grid-template-columns:2.4em 1fr;column-gap:.9em;break-inside:avoid;line-height:1.08;padding:.06em 0}
 .signb.kist .ka{text-align:left}
 .signb.kist .kt{white-space:normal;overflow-wrap:anywhere}
+/* inhoud van inhoud: kopje en notitie (Robin, 26 nov) */
+.signb.kist .kr.kop,.signb.kist-modern .kr.kop{grid-template-columns:1fr;font-weight:700;margin-top:.45em}
+.signb.kist .kr.kop:first-child,.signb.kist-modern .kr.kop:first-child{margin-top:0}
+.signb.kist .kr.noot .kt,.signb.kist-modern .kr.noot .kt{font-size:.82em}
+.signb.kist-modern .kr.noot{border-bottom:0;padding-top:0}
 .signb.kist .kvoet{flex:0 0 auto;background:#000;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:10pt;font-weight:700;line-height:1.35}
 .signb.kist .kvoet>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 

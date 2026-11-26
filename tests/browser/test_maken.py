@@ -570,6 +570,27 @@ class Maken(MakenHulp, PaginaTest):
         expect(p.locator('#makenArtikel')).to_contain_text('Kenwood TK-3201 Portofoon')
         expect(p.locator('#makenVelden input[name="Naam"]')).to_have_value('Eigen naam')
 
+    def test_inhoud_met_kopjes_en_notities(self):
+        """Inhoud van inhoud: kopjes over de volle breedte, notitie ingesprongen onder het artikel (Robin, 26 nov)."""
+        p = self.pagina
+        for soort in ['kist', 'kist-modern']:
+            self.kies(soort)
+            p.locator('#makenVelden input[name="Naam"]').fill('RQ set stage')
+            p.locator('#makenVelden textarea[name="Inhoud"]').fill(
+                'RQ RACK STAGE\n1 Optocore Festival Box Grand\n2 Sonible ML:mio\nKABELBAK (AW RQ 4HE)\n2 Fiberfox dualcore kabel 30m\n2 Verloop 230V schuko > Powercon\n↳ hoort bij rack')
+            k = p.locator('#makenVoorbeeld .signb')
+            expect(k.locator('.kr.kop')).to_have_text(['RQ RACK STAGE', 'KABELBAK (AW RQ 4HE)'])
+            expect(k.locator('.kr.noot')).to_have_text(['↳ hoort bij rack'])
+            expect(k.locator('.kr:not(.kop):not(.noot) .kt')).to_have_count(4)
+            p.wait_for_timeout(300)
+            kop = k.locator('.kr.kop').first
+            self.assertEqual(kop.evaluate('e => getComputedStyle(e).fontWeight'), '700', soort)
+            # notitie begint onder de naam van het artikel erboven, niet onder het aantal
+            noot = k.locator('.kr.noot .kt').bounding_box()
+            naam = k.locator('.kr:not(.kop):not(.noot) .kt').last.bounding_box()
+            self.assertGreaterEqual(noot['x'] + 0.5, naam['x'], soort)
+        self.assertEqual(self.fouten, [])
+
     def test_wandborden_uit_lijst(self):
         """Magazijnindeling uit Excel plakken: één wandbord per code, met wat erin hoort en kleur per zone."""
         p = self.pagina
