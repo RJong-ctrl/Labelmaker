@@ -145,6 +145,41 @@ export const speakertas = () => ({
   formaat: { b: 105, h: 74 }, gat: true, voet: false, sticker: false, hoes: null,
 });
 
+/** Scanlijst (Robin, 27 nov): A4 in de moderne stijl, zwart-wit, met ± 10 artikelen die zelf geen QR-code hebben
+ *  (HDMI-kabels): per artikel de QR uit Rentman, de naam en het artikelnummer, zodat je ze toch kunt scannen.
+ *  In 'Artikelen' één per regel: artikelnummer, QR-waarde of een deel van de naam (alle artikelen die erop lijken). */
+export const scanlijst = () => zwartWit({
+  ...basis, id: 'scanlijst', naam: 'Scanlijst A4', printer: 'a4', opmaak: 'scanlijst', formaat: { b: 194, h: 281 }, voet: true,
+  velden: [{ naam: 'Titel', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false, plaatshouder: 'Bijv. HDMI kabels' },
+    { naam: 'Artikelen', soort: 'tekst', meerregelig: true, herkomst: { type: 'aanvulling' }, verplicht: false,
+      plaatshouder: 'Eén per regel: artikelnummer, QR-code of een deel van de naam (HDMI)' }],
+  zonderQrRegel: true,
+  plekken: { ...leeg, titel: [v('Titel')] },
+});
+
+/** Waar de scanlijst de artikelen zoekt: de ingelezen Rentman-lijst (het werkscherm zet die bij het starten). */
+let artikelBron = () => [];
+export function zetArtikelBron(bron) { artikelBron = typeof bron === 'function' ? bron : () => []; }
+const SCAN_MAX = 10;
+const scanSort = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' });
+/** Regels van de scanlijst → artikelen. Per regel: artikelnummer of QR precies, anders alle artikelen met alle
+ *  woorden in de naam (op naam gesorteerd). Geen dubbele; volgorde van de regels. */
+export function zoekScanArtikelen(tekst, lijst = artikelBron()) {
+  const klein = (x) => String(x ?? '').trim().toLowerCase();
+  const items = [], gezien = new Set(), nietGevonden = [];
+  const voegToe = (a) => { const k = a.id || a.code; if (!gezien.has(k)) { gezien.add(k); items.push(a); } };
+  for (const regel of String(tekst || '').split(/\r?\n/).map(r => r.trim()).filter(Boolean)) {
+    const z = klein(regel);
+    const precies = (lijst || []).filter(a => klein(a.code) === z || (a.qr && klein(a.qr) === z));
+    if (precies.length) { precies.forEach(voegToe); continue; }
+    const woorden = z.split(/\s+/);
+    const lijkt = (lijst || []).filter(a => woorden.every(w => klein(a.naam).includes(w)))
+      .sort((x, y) => scanSort.compare(x.naam || '', y.naam || ''));
+    if (lijkt.length) lijkt.forEach(voegToe); else nietGevonden.push(regel);
+  }
+  return { items, nietGevonden, zonderQr: items.filter(a => !String(a.qr || '').trim()), max: SCAN_MAX };
+}
+
 /** Soorten in de sjabloonkeuze, elk een eigen rij. */
 export const GROEPEN = [
   { sleutel: 'bordjes', titel: 'Bordjes' },
@@ -155,7 +190,7 @@ export const GROEPEN = [
 // Stroken (gitterbox) horen bij het magazijn, net als het bakbord (Robin, 11 nov).
 export function groepVan(sj) {
   const sleutel = sj.printer === 'label' ? 'labels'
-    : sj.opmaak === 'wand' || sj.opmaak === 'strook' ? 'magazijn'
+    : sj.opmaak === 'wand' || sj.opmaak === 'strook' || sj.opmaak === 'scanlijst' ? 'magazijn'
       : String(sj.opmaak || '').startsWith('kist') ? 'kisten' : 'bordjes';
   return GROEPEN.find(g => g.sleutel === sleutel);
 }
@@ -166,6 +201,7 @@ export const SUBGROEPEN = [
   { sleutel: 'stellingen', groep: 'magazijn', titel: 'Stellingen' },
   { sleutel: 'bakken', groep: 'magazijn', titel: 'Bakken & gitterboxen' },
   { sleutel: 'wanden', groep: 'magazijn', titel: 'Wanden' },
+  { sleutel: 'scan', groep: 'magazijn', titel: 'Scanlijsten' },
   { sleutel: 'materiaal', groep: 'kisten', titel: 'Materiaalbordjes' },
   { sleutel: 'bw', groep: 'kisten', titel: 'B&W cases' },
   { sleutel: 'qr', groep: 'labels', titel: 'QR-labels' },
@@ -177,7 +213,7 @@ export function subgroepVan(sj) {
   const sleutel = {
     labels: () => (sj.opmaak === 'locatie' ? 'locatie' : 'qr'),
     bordjes: () => (/backdrop|pipe|drape|doek/i.test(naam + ' ' + id) ? 'doeken' : 'algemeen'),
-    magazijn: () => (sj.opmaak === 'strook' || (sj.opmaak === 'wand' && sj.formaat?.b / sj.formaat?.h > 2.5) ? 'bakken'
+    magazijn: () => (sj.opmaak === 'scanlijst' ? 'scan' : sj.opmaak === 'strook' || (sj.opmaak === 'wand' && sj.formaat?.b / sj.formaat?.h > 2.5) ? 'bakken'
       : /^stellingbord|stelling/i.test(id + ' ' + naam) ? 'stellingen' : 'wanden'),
     // Ronde hoeken = bordje voor in een case-deksel (B&W).
     kisten: () => (sj.formaat?.r > 0 || /b&w|bw\d/i.test(naam + ' ' + id) ? 'bw' : 'materiaal'),
@@ -221,6 +257,7 @@ export const DSL_SJABLONEN = [
   kistModern(),
   kistBw1000(),
   kistBw6040(),
+  scanlijst(),
   {
     ...basis, id: 'gitterbox', naam: 'Gitterbox-strook', printer: 'a4', opmaak: 'strook', formaat: { b: 180, h: 48 },
     logoBoven: true,
@@ -353,7 +390,13 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     logoBoven: !!sjabloon.logoBoven,
     waarden: w,
     lijst: [].concat(sjabloon.lijstVeld || []).flatMap(naam => lijstUit(w[naam])),
+    ...(sjabloon.opmaak === 'scanlijst' ? scanInhoud(w.Artikelen) : {}),
   };
+}
+
+function scanInhoud(tekst) {
+  const r = zoekScanArtikelen(tekst);
+  return { scanlijst: r.items.map(a => ({ naam: String(a.naam || ''), code: String(a.code || ''), qr: String(a.qr || '') })), scanNietGevonden: r.nietGevonden };
 }
 
 /** Verplichte aanvulvelden die nog geen waarde hebben. */

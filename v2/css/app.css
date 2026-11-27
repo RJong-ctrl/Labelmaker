@@ -152,6 +152,7 @@ dialog.sjabloonkeuze .tegel.gekozen{border-color:var(--accent)}
 .maken input[type=text],.maken input[type=search],.maken input[type=number],.maken select{padding-top:6px;padding-bottom:6px}
 .maken .inhoudtip{grid-column:1/-1;margin:-4px 0 2px;font-size:11.5px;line-height:1.45;color:var(--muted,#8a8a8a)}
 .maken .inhoudtip b{color:var(--ink);font-weight:600}
+.maken .inhoudtip.let-op{color:#b45309}
 .maken .qrveld{display:grid;gap:4px;min-width:0;align-content:start}
 .maken label.veld{align-content:start}
 .maken input:disabled{opacity:.55;cursor:not-allowed}

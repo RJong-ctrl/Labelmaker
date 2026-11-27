@@ -179,3 +179,12 @@
   .a4,.pagina{break-after:page;page-break-after:always}
   .a4:last-child,.pagina:last-child{break-after:auto;page-break-after:auto}
 }
+
+/* Scanlijst A4 (Robin, 27 nov): artikelen zonder eigen QR, twee kolommen */
+.signb.scanlijst .sgrid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr 1fr}
+.signb.scanlijst .scel{display:flex;align-items:center;min-height:0;min-width:0;overflow:hidden;border-top:.2mm solid #000}
+.signb.scanlijst .stekst{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.signb.scanlijst .snaam>span{white-space:normal;font-weight:700;line-height:1.1;overflow-wrap:anywhere}
+.signb.scanlijst .snaam{justify-content:flex-end}
+.signb.scanlijst .scode{margin-top:1.2mm;letter-spacing:.02em;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.signb.scanlijst .sleeg{flex:1 1 auto;color:#c8c8c8;font-size:10pt;text-transform:uppercase;letter-spacing:.08em;padding-top:4mm}

@@ -54,7 +54,7 @@ class Maken(MakenHulp, PaginaTest):
         self.assertEqual(bw.evaluate_all('l => l.map(e => e.dataset.tegel)'), ['kist-bw1000', 'kist-bw6040'])
         a, b = kisten.locator('.subgroep').nth(0).bounding_box(), kisten.locator('.subgroep').nth(1).bounding_box()
         self.assertAlmostEqual(a['y'], b['y'], delta=2)             # naast elkaar, niet onder elkaar
-        expect(venster.locator('.tegelgroep').nth(1).locator('.subkop')).to_have_text(['Stellingen', 'Bakken & gitterboxen', 'Wanden'])
+        expect(venster.locator('.tegelgroep').nth(1).locator('.subkop')).to_have_text(['Stellingen', 'Bakken & gitterboxen', 'Wanden', 'Scanlijsten'])
 
         # voorbeeldjes tonen ook iets bij sjablonen met eigen velden (Locatie/Inhoud)
         expect(venster.locator('[data-tegel="stellingbord"] .titel')).to_have_text('A1')
@@ -917,3 +917,29 @@ class MakenPast(MakenHulp, PaginaTest):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Scanlijst(MakenHulp, PaginaTest):
+    """Scanlijst A4 (Robin, 27 nov): artikelen zonder eigen QR op één vel; de QR-codes komen uit Rentman."""
+
+    def test_scanlijst_maken(self):
+        p = self.pagina
+        p.locator('#bestand').set_input_files(VOORBEELD)
+        expect(p.locator('#melding')).to_contain_text('ingelezen', timeout=30000)
+        p.locator('#tabMaken').click()
+        self.kies('scanlijst')
+        expect(p.locator('#makenVelden [name="__qr"]')).to_have_count(0)       # geen eigen QR-regel
+        p.locator('#makenVelden [name="Titel"]').fill('Speakon')
+        p.locator('#makenVelden [name="Artikelen"]').fill('speakon 4p\nGE9391\nbestaat niet')
+        lijst = p.locator('#makenVoorbeeld .signb.scanlijst')
+        expect(lijst.locator('.scel')).to_have_count(4)
+        expect(lijst.locator('.scode')).to_have_text(['GE9402', 'GE9407', 'GE9412', 'GE9391'])
+        info = p.locator('#scanInfo')
+        expect(info).to_contain_text('4 artikelen')
+        expect(info).to_contain_text('Niet gevonden: bestaat niet')
+        expect(info).to_contain_text('Zonder QR in Rentman: Speakon 4p Verlengkabel 7,5m')
+        # op het printvel en na herladen nog steeds dezelfde lijst
+        p.locator('#makenOpVel').click()
+        expect(p.locator('#vellen .signb.scanlijst .scel')).to_have_count(4)
+        p.reload()
+        expect(p.locator('#vellen .signb.scanlijst .scel')).to_have_count(4, timeout=15000)

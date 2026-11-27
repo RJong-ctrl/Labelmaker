@@ -11,7 +11,7 @@ const A = Object.fromEntries(importeer(await leesXlsx(b.buffer.slice(b.byteOffse
 const S = Object.fromEntries(DSL_SJABLONEN.map(s => [s.id, s]));
 
 test('dsl_sjablonen_aanwezig', () => {
-  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-bw1000', 'kist-bw6040', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'speakertas', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
+  assert.deepEqual(Object.keys(S).sort(), ['backdrop', 'bakbord', 'bordje-liggend', 'bordje-staand', 'gitterbox', 'kist', 'kist-bw1000', 'kist-bw6040', 'kist-modern', 'leeg-liggend', 'leeg-staand', 'locatie', 'locatie-half', 'pipe-drape', 'qrlabel', 'qrlabel-half', 'scanlijst', 'speakertas', 'stellingbord', 'stellingbord-a5', 'wandbord-a5-liggend', 'wandbord-a5-staand', 'wandbord-liggend', 'wandbord-staand']);
   assert.equal(S['bordje-staand'].printer, 'a4');
   assert.deepEqual(S.gitterbox.formaat, { b: 180, h: 48 });
   assert.deepEqual(S.backdrop.formaat, { b: 74, h: 105 });
@@ -450,13 +450,14 @@ test('sjablonen_in_subgroepen', () => {
     'magazijn / Stellingen': ['stellingbord', 'stellingbord-a5'],
     'magazijn / Bakken & gitterboxen': ['bakbord', 'gitterbox'],
     'magazijn / Wanden': ['wandbord-staand', 'wandbord-liggend', 'wandbord-a5-staand', 'wandbord-a5-liggend'],
+    'magazijn / Scanlijsten': ['scanlijst'],
     'kisten / B&W cases': ['kist-bw1000', 'kist-bw6040'],
   });
   // elke subgroep hoort bij zijn eigen groep, en een eigen sjabloon valt ook ergens in
   for (const sj of DSL_SJABLONEN) assert.equal(subgroepVan(sj).groep, groepVan(sj).sleutel);
   assert.equal(subgroepVan({ id: 'x', naam: 'Eigen case', opmaak: 'kist-modern', formaat: { b: 120, h: 80, r: 5 } }).titel, 'B&W cases');
   // volgorde in het venster: de groepen in GROEPEN-volgorde, binnen een groep de subgroepen in SUBGROEPEN-volgorde
-  assert.deepEqual(SUBGROEPEN.map(s => s.groep), ['bordjes', 'bordjes', 'magazijn', 'magazijn', 'magazijn', 'kisten', 'kisten', 'labels', 'labels']);
+  assert.deepEqual(SUBGROEPEN.map(s => s.groep), ['bordjes', 'bordjes', 'magazijn', 'magazijn', 'magazijn', 'magazijn', 'kisten', 'kisten', 'labels', 'labels']);
 });
 
 test('kist_bw1000', () => {
@@ -587,4 +588,40 @@ test('cijfer_aan_begin_is_niet_altijd_een_aantal', () => {
   assert.deepEqual(l('2 kabel\n3x kabel\n4 x kabel\n5× kabel\n6×kabel\n1,5 m'), [['2', 'kabel'], ['3', 'kabel'], ['4', 'kabel'], ['5', 'kabel'], ['6', 'kabel'], ['1,5', 'm']]);
   // een regel met cijfers in hoofdletters is geen kopje
   assert.deepEqual(l('230V'), [['', '230V']]);
+});
+
+test('scanlijst_artikelen_zoeken', async () => {
+  // Robin, 27 nov: A4 met ± 10 artikelen zonder eigen QR (HDMI-kabels): per artikel de QR uit Rentman.
+  const { zoekScanArtikelen } = await import('../../v2/js/sjablonen.js');
+  const lijst = [
+    { id: 'A', code: 'HD010', naam: 'HDMI kabel 1m', qr: '1001' },
+    { id: 'B', code: 'HD030', naam: 'HDMI kabel 3m', qr: '1003' },
+    { id: 'C', code: 'HD100', naam: 'HDMI kabel 10m', qr: '' },
+    { id: 'D', code: 'SDI05', naam: 'SDI kabel 5m', qr: '2005' },
+  ];
+  // artikelnummer of QR precies → dat artikel; anders alle artikelen met alle woorden in de naam, op naam
+  let r = zoekScanArtikelen('hd030\n2005\nhdmi kabel\nonbekend ding', lijst);
+  assert.deepEqual(r.items.map(a => a.code), ['HD030', 'SDI05', 'HD010', 'HD100']);   // geen dubbele, volgorde van de regels
+  assert.deepEqual(r.nietGevonden, ['onbekend ding']);
+  assert.deepEqual(r.zonderQr.map(a => a.code), ['HD100']);
+  r = zoekScanArtikelen(Array.from({ length: 12 }, (_, n) => `X${n}`).join('\n'),
+    Array.from({ length: 12 }, (_, n) => ({ id: `x${n}`, code: `X${n}`, naam: `Ding ${n}`, qr: `q${n}` })));
+  assert.equal(r.items.length, 12);
+  assert.equal(r.max, 10);
+});
+
+test('scanlijst_sjabloon', async () => {
+  const { zetArtikelBron } = await import('../../v2/js/sjablonen.js');
+  const sj = S.scanlijst;
+  assert.equal(sj.opmaak, 'scanlijst');
+  assert.deepEqual(sj.formaat, { b: 194, h: 281 });
+  assert.equal(groepVan(sj).sleutel, 'magazijn');
+  assert.equal(subgroepVan(sj).titel, 'Scanlijsten');
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Titel', 'Artikelen']);
+  zetArtikelBron(() => [{ id: 'A', code: 'HD010', naam: 'HDMI kabel 1m', qr: '1001' }, { id: 'B', code: 'HD030', naam: 'HDMI kabel 3m', qr: '1003' }]);
+  const i = vul(sj, { id: 'los', naam: '', code: '' }, { Titel: 'HDMI kabels', Artikelen: 'HDMI' }, '');
+  assert.equal(i.titel, 'HDMI kabels');
+  assert.deepEqual(i.scanlijst, [{ naam: 'HDMI kabel 1m', code: 'HD010', qr: '1001' }, { naam: 'HDMI kabel 3m', code: 'HD030', qr: '1003' }]);
+  assert.equal(i.rand, '#000000');                         // zwart-wit, net als het moderne bordje
+  zetArtikelBron(() => []);
 });

@@ -3,7 +3,7 @@
 
 import { leesBestand } from './bestanden.js';
 import { importeer } from './import.js';
-import { vul, ontbrekend, qrsVoor, standaardSjabloon, veldwaarde, natuurlijkeWaarde } from './sjablonen.js';
+import { vul, ontbrekend, qrsVoor, standaardSjabloon, veldwaarde, natuurlijkeWaarde, zetArtikelBron } from './sjablonen.js';
 import { tekenVellen, pasVellenAan, print } from './printen.js';
 import { A4 } from './indeling.js';
 import { esc } from './html.js';
@@ -55,6 +55,8 @@ export async function start(root, model, { waarschuwing = '', profielId = 'dsl',
     st.artikelen.sort((x, y) => nlSort.compare(x.naam, y.naam));
   }
   indexeer();
+  // De scanlijst zoekt in de ingelezen artikelen (altijd de actuele lijst).
+  zetArtikelBron(() => E().artikelen || []);
 
   const opslagFout = (e) => melding('Opslaan mislukt: ' + (e?.message || e) + '. Wat je nu doet, is na herladen misschien weg.', true);
   const bewaarInst = () => model.zetPcInstelling('werkscherm', { tab: st.tab, combinaties: st.combinaties, paneel }).catch(opslagFout);

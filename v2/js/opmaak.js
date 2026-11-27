@@ -60,17 +60,18 @@ const vak = (klasse, max, html, stijl = '', min = 3, regels = 0) =>
 
 function bordje(i, hs) {
   const W = i.formaat.b, H = i.formaat.h;
-  const wand = i.opmaak === 'wand', kist = i.opmaak === 'kist-modern';
+  const wand = i.opmaak === 'wand', kist = i.opmaak === 'kist-modern', scan = i.opmaak === 'scanlijst';
   const staand = i.opmaak === 'staand' || (wand && H > W), strook = i.opmaak === 'strook';
-  const f = wand || kist ? Math.min(W, H) / 74 : staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48);
+  // Scanlijst (A4): maten als op het A5-materiaalbordje, zodat er ruimte is voor tien artikelen.
+  const f = scan ? 1.6 : wand || kist ? Math.min(W, H) / 74 : staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48);
   // Kleurband met logo: breed en laag (bakbord) net als de strook, anders naar de kortste zijde.
   const breed = wand && W / H > 2.5;
-  const bw = breed ? Math.min(W * 0.15, H * 0.3) : wand || kist ? Math.min(W, H) * 0.17 : staand ? W * 0.19 : Math.min(W * 0.15, H * 0.3);
+  const bw = scan ? 26 : breed ? Math.min(W * 0.15, H * 0.3) : wand || kist ? Math.min(W, H) * 0.17 : staand ? W * 0.19 : Math.min(W * 0.15, H * 0.3);
   const gap = staand ? 4 * f : 3.5 * f, pad = staand ? 4 * f : 3 * f;
   const titel = esc(i.titel), groot = esc(i.groot);
   const rijen = i.eigenschappen.map(([k, v]) => [k, v]);
   // Onderregel (bijv. 'Artikelnummer GE9402') klein linksonder, zoals op de strook.
-  const onder = !strook && !wand && !kist && i.onder ? `<div class="onderregel" style="font-size:${(6 * (staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48))).toFixed(1)}pt">${esc(i.onder)}</div>` : '';
+  const onder = !strook && !wand && !kist && !scan && i.onder ? `<div class="onderregel" style="font-size:${(6 * (staand ? Math.min(W / 73, H / 105) : Math.min(W / 85, H / 48))).toFixed(1)}pt">${esc(i.onder)}</div>` : '';
   const tabel = rijen.length
     ? '<div class="tg">' + rijen.map((r, n) => (n ? '<div class="sep"></div>' : '') + `<div class="tk">${esc(r[0])}</div><div class="tv">${esc(r[1])}</div>`).join('') + '</div>'
     : '';
@@ -107,6 +108,23 @@ function bordje(i, hs) {
       + `<div class="klinks">${regels ? vak('klijst', klein || smal ? 12 : 18, `<div class="kgrid">${regels}</div>`, 'flex:1 1 0;justify-content:flex-start', 4) : '<div class="kleeg">Inhoud</div>'}${klein ? kbot : ''}</div>`
       + `<div class="krechts" style="width:${mm(smal ? qs + 2 : st.b)}">${klein ? '' : kbot}`
       + (smal ? '' : `<div class="ksticker" style="height:${mm(st.h)}">Projectsticker</div>`) + '</div></div>'
+      + voet;
+  } else if (scan) {
+    // Scanlijst (Robin, 27 nov): titel, daaronder twee kolommen met per artikel de QR (± 30 mm), de naam vet en
+    // het artikelnummer. Tien passen op ware grootte; bij meer worden de rijen (en QR's) kleiner.
+    const items = i.scanlijst || [];
+    const rijen = Math.max(5, Math.ceil(items.length / 2));
+    const tH = 20, voetH = heeftVoet ? 13 : 0;
+    const rijH = (H - pad - 3.2 * f - tH - 3 - voetH) / rijen;
+    const qs = Math.min(30, rijH - 8);
+    const cel = (a) => `<div class="scel" style="gap:${mm(3.5)}">`
+      + `<div class="qbox">${qrOfMelding(a.qr, qs)}${a.qr ? `<div class="qc" style="font-size:7pt;max-width:${mm(qs + 2)}">${esc(a.qr)}</div>` : ''}</div>`
+      + `<div class="stekst">${vak('snaam', Math.min(16, rijH * 0.32 * PT / 3), esc(a.naam), `height:${mm(Math.min(rijH * 0.55, 20))}`, 6, 3)}`
+      + `<div class="scode" style="font-size:9pt">${esc(a.code)}</div></div></div>`;
+    main = vak('t titel', tH * PT * 0.8, titel || '&nbsp;', `height:${mm(tH)};flex:0 0 auto`)
+      + (items.length
+        ? `<div class="sgrid" style="margin-top:${mm(3)};grid-template-rows:repeat(${rijen},1fr);column-gap:${mm(6)}">${items.map(cel).join('')}</div>`
+        : '<div class="sleeg">Zet de artikelen in het veld Artikelen</div>')
       + voet;
   } else if (breed) {
     // Smal en breed (bakbord): links de naam groot met het artikelnummer eronder, rechts de QR over de hele

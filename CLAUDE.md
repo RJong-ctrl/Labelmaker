@@ -47,7 +47,7 @@ Robin schrijft Nederlands: antwoord kort, gestructureerd en in het Nederlands.
 | `maken.js` | Tab Maken: sjabloonkeuze (pop-up), formulier, QR-regel, concept bewaren na F5 |
 | `sjablonen.js` | Alle sjablonen, groepen/subgroepen, `vul()` (waarden → bordje), oude veldnamen (`oud`) |
 | `standaard.js` | Standaardprofielen (basis, dsl) |
-| `opmaak.js` + `css/opmaak.css` | Tekenen van labels en bordjes (staand, liggend, strook, wand, kist, kist-modern, qrlabel, locatie) |
+| `opmaak.js` + `css/opmaak.css` | Tekenen van labels en bordjes (staand, liggend, strook, wand, kist, kist-modern, scanlijst, qrlabel, locatie) |
 | `import.js`, `bestanden.js` | Rentman-export lezen (materiaal en exemplaren), nooit prijskolommen |
 | `verschillen.js` | Overzicht van verschillen na een nieuwe export |
 | `indeling.js`, `printen.js` | Indeling op A4 (formaten gemengd), printen met snijtekens |
@@ -64,6 +64,8 @@ Robin schrijft Nederlands: antwoord kort, gestructureerd en in het Nederlands.
   regel die begint met `↳`, `>` of `-` = notitie bij het vorige artikel.
 - Materiaalbordjes hebben één veld Inhoud (uit Rentman; aangepast = onthouden per artikel, `onthouden: true`).
   Oude aanvulling 'Extra inhoud' komt er via `erbij` nog onder. Bij een nieuwe export met eigen inhoud meldt het verschillenoverzicht dat.
+- Scanlijst A4 (`scanlijst`): artikelen zonder eigen QR (HDMI-kabels), 2 × 5 per A4 met QR 30 mm. Veld Artikelen: per regel
+  artikelnummer, QR of deel van de naam (`zoekScanArtikelen`, zoekt in de ingelezen lijst via `zetArtikelBron`).
 - Wijzig nooit een eigen sjabloon dat Robin in Beheer heeft aangepast; dat staat alleen in zijn browser.
 
 ## Voorkeuren van Robin

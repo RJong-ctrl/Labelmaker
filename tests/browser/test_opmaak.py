@@ -420,3 +420,55 @@ class FuturaMelding(PaginaTest):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Scanlijst(PaginaTest):
+    """A4 met ± 10 artikelen zonder eigen QR (Robin, 27 nov): per artikel QR, naam en artikelnummer, zwart-wit."""
+    app_starten = False
+
+    def setUp(self):
+        super().setUp()
+        self.laad_voorbeeld()
+
+    def teken(self, n):
+        return self.pagina.evaluate("""async (n) => {
+            const { opmaak, sj, S } = window.T;
+            const lijst = Array.from({ length: n }, (_, k) => ({ id: 'h' + k, code: 'HD' + String(k).padStart(3, '0'),
+                naam: 'HDMI kabel ' + (k + 1) + 'm' + (k === 3 ? ' met een hele lange naam voor de zekerheid' : ''), qr: '10' + k }));
+            sj.zetArtikelBron(() => lijst);
+            document.body.innerHTML = '';
+            const el = opmaak.teken(sj.vul(S.scanlijst, { id: 'los', naam: '', code: '' }, { Titel: 'HDMI kabels', Artikelen: 'HDMI' }, ''));
+            document.body.appendChild(el);
+            await opmaak.pasAan(el);
+            const mm = el.getBoundingClientRect().width / 194, box = el.getBoundingClientRect();
+            const cellen = [...el.querySelectorAll('.scel')];
+            const fouten = [];
+            for (const b of el.querySelectorAll('.fb')) {
+                const s = b.firstElementChild;
+                if (s && s.textContent && (s.scrollWidth > b.clientWidth + 1 || s.offsetHeight > b.clientHeight + 1)) fouten.push(b.className + ' ' + s.textContent);
+            }
+            for (const c of cellen) { const r = c.getBoundingClientRect(); if (r.right > box.right + 1 || r.bottom > box.bottom + 1) fouten.push('cel buiten bordje'); }
+            const ft = el.querySelector('.ft')?.getBoundingClientRect();
+            if (ft && cellen.some(c => c.getBoundingClientRect().bottom > ft.top + 1)) fouten.push('cel over de voet');
+            return { n: cellen.length, kolommen: new Set(cellen.map(c => Math.round(c.getBoundingClientRect().left))).size,
+                qr: Math.min(...cellen.map(c => c.querySelector('.qq').getBoundingClientRect().width / mm)),
+                namen: cellen.map(c => c.querySelector('.snaam').textContent), codes: cellen.map(c => c.querySelector('.scode').textContent),
+                titel: el.querySelector('.titel').textContent, band: getComputedStyle(el.querySelector('.band.streep')).backgroundColor, fouten };
+        }""", n)
+
+    def test_tien_op_een_a4(self):
+        r = self.teken(10)
+        self.assertEqual(r['n'], 10)
+        self.assertEqual(r['kolommen'], 2)
+        self.assertGreaterEqual(r['qr'], 28)
+        self.assertEqual(r['titel'], 'HDMI kabels')
+        self.assertEqual(r['codes'][0], 'HD000')
+        self.assertEqual(r['band'], 'rgb(0, 0, 0)')
+        self.assertEqual(r['fouten'], [])
+        self.assertEqual(self.fouten, [])
+
+    def test_meer_dan_tien_past_nog(self):
+        r = self.teken(14)
+        self.assertEqual(r['n'], 14)
+        self.assertGreaterEqual(r['qr'], 18)
+        self.assertEqual(r['fouten'], [])

@@ -1,7 +1,7 @@
 // Maken: een leeg formulier om een bordje, strook of label te maken. Een artikel
 // opzoeken (of scannen) vult de velden in; alles blijft aanpasbaar.
 
-import { vul, ontbrekend, standaardSjabloon, veldwaarde, natuurlijkeWaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan, GEEN_QR } from './sjablonen.js';
+import { vul, ontbrekend, standaardSjabloon, veldwaarde, natuurlijkeWaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan, GEEN_QR, zoekScanArtikelen } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { veldInvoer, vraagReeks } from './dialogen.js';
 import { leesReeks, zoneKleur } from './reeks.js';
@@ -191,7 +191,8 @@ export function startMaken(root, h) {
     return sj.plekken.qr.map(x => (typeof x === 'string' ? x : (w[x.veld] ?? ''))).join('');
   }
   function qrRegel(sj) {
-    if (!sj) return '';
+    // Scanlijst: de QR-codes komen per artikel uit Rentman, geen eigen QR-regel.
+    if (!sj || sj.zonderQrRegel) return '';
     const af = qrAfgeleid(sj), zonder = zonderQr(sj);
     const uitleg = af ? `volgt ${esc(sj.plekken.qr.find(x => x.veld)?.veld || '')}` : '(leeg = geen)';
     return `<div class="veld qrveld"><label class="veld"><span>QR-code <small>${uitleg}</small></span>`
@@ -218,7 +219,8 @@ export function startMaken(root, h) {
       };
       const html = veldInvoer(vorm, waarde, { verplicht: false });
       // Korte uitleg onder het (eerste) inhoudsveld, altijd zichtbaar (Robin, 26 nov).
-      const tip = v.naam === [].concat(sj.lijstVeld || [])[0] ? INHOUDTIP : '';
+      const tip = v.naam === [].concat(sj.lijstVeld || [])[0] ? INHOUDTIP
+        : sj.opmaak === 'scanlijst' && v.naam === 'Artikelen' ? '<p class="inhoudtip" id="scanInfo"></p>' : '';
       return (v.meerregelig ? html.replace('class="veld"', 'class="veld breed"') : html) + tip;
     });
     void o;
@@ -260,6 +262,20 @@ export function startMaken(root, h) {
     new ResizeObserver(() => { cancelAnimationFrame(wacht); wacht = requestAnimationFrame(vulInhoud); }).observe(root.getElementById('maken'));
   }
 
+  /** Onder 'Artikelen' op de scanlijst: hoeveel gevonden, wat niet, en welke geen QR in Rentman hebben. */
+  function toonScanInfo(sj, inhoud) {
+    const info = root.getElementById('scanInfo');
+    if (!info || sj.opmaak !== 'scanlijst') return;
+    const r = zoekScanArtikelen(inhoud.waarden?.Artikelen || '');
+    const n = r.items.length;
+    const delen = [n ? `${n} ${n === 1 ? 'artikel' : 'artikelen'}${n > r.max ? ` (meer dan ${r.max}: de QR-codes worden kleiner)` : ''}`
+      : 'Eén per regel: artikelnummer, QR-code of een deel van de naam (bv. HDMI).'];
+    if (r.nietGevonden.length) delen.push(`Niet gevonden: ${r.nietGevonden.join(', ')}`);
+    if (r.zonderQr.length) delen.push(`Zonder QR in Rentman: ${r.zonderQr.map(a => a.naam).join(', ')}`);
+    info.innerHTML = delen.map(d => `<span>${esc(d)}</span>`).join('<br>');
+    info.classList.toggle('let-op', r.nietGevonden.length > 0 || r.zonderQr.length > 0 || n > r.max);
+  }
+
   let beurt = 0;
   async function tekenVoorbeeld() {
     bewaarConcept();
@@ -272,6 +288,7 @@ export function startMaken(root, h) {
     const kader = root.getElementById('makenVak');
     if (kader) kader.dataset.leeg = leeg ? '1' : '';
     const inhoud = vul(sj, basisArtikel(), overrides(), qrWaarde());
+    toonScanInfo(sj, inhoud);
     const el = teken(inhoud, h.E().huisstijl);
     // Het voorbeeld staat bovenin de kolom Voorbeeld en neemt hooguit de halve kolomhoogte.
     const kolom = root.getElementById('voorbeeld');
