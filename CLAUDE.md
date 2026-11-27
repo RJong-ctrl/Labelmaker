@@ -64,8 +64,9 @@ Robin schrijft Nederlands: antwoord kort, gestructureerd en in het Nederlands.
   regel die begint met `↳`, `>` of `-` = notitie bij het vorige artikel.
 - Materiaalbordjes hebben één veld Inhoud (uit Rentman; aangepast = onthouden per artikel, `onthouden: true`).
   Oude aanvulling 'Extra inhoud' komt er via `erbij` nog onder. Bij een nieuwe export met eigen inhoud meldt het verschillenoverzicht dat.
-- Scanlijst A4 (`scanlijst`): artikelen zonder eigen QR (HDMI-kabels), 2 × 5 per A4 met QR 30 mm. Veld Artikelen: per regel
-  artikelnummer, QR of deel van de naam (`zoekScanArtikelen`, zoekt in de ingelezen lijst via `zetArtikelBron`).
+- Scanlijst A4 (`scanlijst`): artikelen zonder eigen QR (HDMI-kabels), 2 × 5 per A4 met QR 30 mm. Tien velden 'Artikel 1..10'
+  met keuzelijst; alleen precieze treffer op artikelnummer, QR of volledige naam (`zoekScanArtikelen`, bron via `zetArtikelBron`).
+  Geen zoeken op een deel van de naam (Robin, 27 nov: bij 2 letters kwamen er honderden artikelen bij).
 - Wijzig nooit een eigen sjabloon dat Robin in Beheer heeft aangepast; dat staat alleen in zijn browser.
 
 ## Voorkeuren van Robin

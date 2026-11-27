@@ -1,7 +1,7 @@
 // Maken: een leeg formulier om een bordje, strook of label te maken. Een artikel
 // opzoeken (of scannen) vult de velden in; alles blijft aanpasbaar.
 
-import { vul, ontbrekend, standaardSjabloon, veldwaarde, natuurlijkeWaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan, GEEN_QR, zoekScanArtikelen } from './sjablonen.js';
+import { vul, ontbrekend, standaardSjabloon, veldwaarde, natuurlijkeWaarde, RANDKLEUREN, GROEPEN, groepVan, SUBGROEPEN, subgroepVan, GEEN_QR, zoekScanArtikelen, scanRegels } from './sjablonen.js';
 import { teken, pasAan } from './opmaak.js';
 import { veldInvoer, vraagReeks } from './dialogen.js';
 import { leesReeks, zoneKleur } from './reeks.js';
@@ -217,11 +217,15 @@ export function startMaken(root, h) {
         ...v, verplicht: false, bron: m.artikel ? (v.onthouden && !m.artikel.los ? 'onthouden voor dit artikel' : (BRON[v.herkomst.type] || '')) : '',
         ...(v.herkomst.patroon === 'kabel' ? { keuzes: [{ waarde: 'ja', tekst: 'Ja' }, { waarde: '', tekst: 'Nee' }] } : {}),
       };
-      const html = veldInvoer(vorm, waarde, { verplicht: false });
+      let html = veldInvoer(vorm, waarde, { verplicht: false });
+      // Scanlijst: elke regel kiest uit de ingelezen artikelen (naam of artikelnummer).
+      if (v.kiesArtikel) html = html.replace('<input type="text"', '<input type="text" list="scanArtikelen" autocomplete="off"');
       // Korte uitleg onder het (eerste) inhoudsveld, altijd zichtbaar (Robin, 26 nov).
       const tip = v.naam === [].concat(sj.lijstVeld || [])[0] ? INHOUDTIP
-        : sj.opmaak === 'scanlijst' && v.naam === 'Artikelen' ? '<p class="inhoudtip" id="scanInfo"></p>' : '';
-      return (v.meerregelig ? html.replace('class="veld"', 'class="veld breed"') : html) + tip;
+        : v.naam === 'Artikel 10' && sj.opmaak === 'scanlijst' ? '<p class="inhoudtip" id="scanInfo"></p>' + scanKeuzelijst() : '';
+      // Scanlijst: titel over de hele breedte, dan de 10 regels in 2 kolommen (zoals op het vel).
+      const breed = v.meerregelig || (sj.opmaak === 'scanlijst' && v.naam === 'Titel');
+      return (breed ? html.replace('class="veld"', 'class="veld breed"') : html) + tip;
     });
     void o;
     // Randkleur zelf kiezen kan op elk A4-bordje en elke strook (leeg = wat het sjabloon zegt).
@@ -262,18 +266,25 @@ export function startMaken(root, h) {
     new ResizeObserver(() => { cancelAnimationFrame(wacht); wacht = requestAnimationFrame(vulInhoud); }).observe(root.getElementById('maken'));
   }
 
-  /** Onder 'Artikelen' op de scanlijst: hoeveel gevonden, wat niet, en welke geen QR in Rentman hebben. */
+  /** Keuzelijst voor de regels van de scanlijst: alle ingelezen artikelen (naam, met het artikelnummer erbij). */
+  function scanKeuzelijst() {
+    const opties = (h.E().artikelen || []).filter(a => a.naam)
+      .map(a => `<option value="${esc(a.naam)}" label="${esc(a.code || '')}"></option>`).join('');
+    return `<datalist id="scanArtikelen">${opties}</datalist>`;
+  }
+
+  /** Onder de regels van de scanlijst: hoeveel gevonden, wat niet, en welke geen QR in Rentman hebben. */
   function toonScanInfo(sj, inhoud) {
     const info = root.getElementById('scanInfo');
     if (!info || sj.opmaak !== 'scanlijst') return;
-    const r = zoekScanArtikelen(inhoud.waarden?.Artikelen || '');
+    const r = zoekScanArtikelen(scanRegels(inhoud.waarden || {}));
     const n = r.items.length;
-    const delen = [n ? `${n} ${n === 1 ? 'artikel' : 'artikelen'}${n > r.max ? ` (meer dan ${r.max}: de QR-codes worden kleiner)` : ''}`
-      : 'Eén per regel: artikelnummer, QR-code of een deel van de naam (bv. HDMI).'];
+    const delen = [n ? `${n} ${n === 1 ? 'artikel' : 'artikelen'}`
+      : 'Per regel één artikel: kies uit de lijst of typ het artikelnummer.'];
     if (r.nietGevonden.length) delen.push(`Niet gevonden: ${r.nietGevonden.join(', ')}`);
     if (r.zonderQr.length) delen.push(`Zonder QR in Rentman: ${r.zonderQr.map(a => a.naam).join(', ')}`);
     info.innerHTML = delen.map(d => `<span>${esc(d)}</span>`).join('<br>');
-    info.classList.toggle('let-op', r.nietGevonden.length > 0 || r.zonderQr.length > 0 || n > r.max);
+    info.classList.toggle('let-op', r.nietGevonden.length > 0 || r.zonderQr.length > 0);
   }
 
   let beurt = 0;

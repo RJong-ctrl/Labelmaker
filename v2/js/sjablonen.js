@@ -145,14 +145,17 @@ export const speakertas = () => ({
   formaat: { b: 105, h: 74 }, gat: true, voet: false, sticker: false, hoes: null,
 });
 
-/** Scanlijst (Robin, 27 nov): A4 in de moderne stijl, zwart-wit, met ± 10 artikelen die zelf geen QR-code hebben
+/** Scanlijst (Robin, 27 nov): A4 in de moderne stijl, zwart-wit, met 10 artikelen die zelf geen QR-code hebben
  *  (HDMI-kabels): per artikel de QR uit Rentman, de naam en het artikelnummer, zodat je ze toch kunt scannen.
- *  In 'Artikelen' één per regel: artikelnummer, QR-waarde of een deel van de naam (alle artikelen die erop lijken). */
+ *  Tien losse regels (Robin, 27 nov: één tekstvak zocht al bij 2 letters honderden artikelen); per regel kies je een
+ *  artikel uit de lijst of typ je het artikelnummer of de QR-waarde. */
+export const SCAN_MAX = 10;
+export const SCAN_VELDEN = Array.from({ length: SCAN_MAX }, (_, n) => `Artikel ${n + 1}`);
 export const scanlijst = () => zwartWit({
   ...basis, id: 'scanlijst', naam: 'Scanlijst A4', printer: 'a4', opmaak: 'scanlijst', formaat: { b: 194, h: 281 }, voet: true,
   velden: [{ naam: 'Titel', soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false, plaatshouder: 'Bijv. HDMI kabels' },
-    { naam: 'Artikelen', soort: 'tekst', meerregelig: true, herkomst: { type: 'aanvulling' }, verplicht: false,
-      plaatshouder: 'Eén per regel: artikelnummer, QR-code of een deel van de naam (HDMI)' }],
+    ...SCAN_VELDEN.map(naam => ({ naam, soort: 'tekst', herkomst: { type: 'aanvulling' }, verplicht: false, kiesArtikel: true,
+      plaatshouder: 'Naam of artikelnummer' }))],
   zonderQrRegel: true,
   plekken: { ...leeg, titel: [v('Titel')] },
 });
@@ -160,24 +163,24 @@ export const scanlijst = () => zwartWit({
 /** Waar de scanlijst de artikelen zoekt: de ingelezen Rentman-lijst (het werkscherm zet die bij het starten). */
 let artikelBron = () => [];
 export function zetArtikelBron(bron) { artikelBron = typeof bron === 'function' ? bron : () => []; }
-const SCAN_MAX = 10;
-const scanSort = new Intl.Collator('nl', { numeric: true, sensitivity: 'base' });
-/** Regels van de scanlijst → artikelen. Per regel: artikelnummer of QR precies, anders alle artikelen met alle
- *  woorden in de naam (op naam gesorteerd). Geen dubbele; volgorde van de regels. */
-export function zoekScanArtikelen(tekst, lijst = artikelBron()) {
+/** Regels van de scanlijst → artikelen, in de volgorde van de regels. Alleen een precieze treffer: artikelnummer,
+ *  QR-waarde of de volledige naam (hoofdletters maken niet uit). Lege regels tellen niet mee. */
+export function zoekScanArtikelen(regels, lijst = artikelBron()) {
   const klein = (x) => String(x ?? '').trim().toLowerCase();
-  const items = [], gezien = new Set(), nietGevonden = [];
-  const voegToe = (a) => { const k = a.id || a.code; if (!gezien.has(k)) { gezien.add(k); items.push(a); } };
-  for (const regel of String(tekst || '').split(/\r?\n/).map(r => r.trim()).filter(Boolean)) {
+  const items = [], nietGevonden = [];
+  for (const regel of [].concat(regels || []).map(r => String(r ?? '').trim()).filter(Boolean)) {
     const z = klein(regel);
-    const precies = (lijst || []).filter(a => klein(a.code) === z || (a.qr && klein(a.qr) === z));
-    if (precies.length) { precies.forEach(voegToe); continue; }
-    const woorden = z.split(/\s+/);
-    const lijkt = (lijst || []).filter(a => woorden.every(w => klein(a.naam).includes(w)))
-      .sort((x, y) => scanSort.compare(x.naam || '', y.naam || ''));
-    if (lijkt.length) lijkt.forEach(voegToe); else nietGevonden.push(regel);
+    const a = (lijst || []).find(x => klein(x.code) === z) || (lijst || []).find(x => x.qr && klein(x.qr) === z)
+      || (lijst || []).find(x => klein(x.naam) === z);
+    if (a) items.push(a); else nietGevonden.push(regel);
   }
   return { items, nietGevonden, zonderQr: items.filter(a => !String(a.qr || '').trim()), max: SCAN_MAX };
+}
+
+/** De ingevulde regels van een scanlijst (ook van een oude scanlijst met één tekstvak 'Artikelen'). */
+export function scanRegels(w, aanvullingen = {}) {
+  const regels = SCAN_VELDEN.map(n => w[n] ?? aanvullingen[n] ?? '');
+  return regels.some(r => String(r).trim()) ? regels : String(aanvullingen.Artikelen || w.Artikelen || '').split(/\r?\n/);
 }
 
 /** Soorten in de sjabloonkeuze, elk een eigen rij. */
@@ -390,12 +393,12 @@ export function vul(sjabloon, artikel, aanvullingen = {}, qr = '') {
     logoBoven: !!sjabloon.logoBoven,
     waarden: w,
     lijst: [].concat(sjabloon.lijstVeld || []).flatMap(naam => lijstUit(w[naam])),
-    ...(sjabloon.opmaak === 'scanlijst' ? scanInhoud(w.Artikelen) : {}),
+    ...(sjabloon.opmaak === 'scanlijst' ? scanInhoud(scanRegels(w, aanvullingen)) : {}),
   };
 }
 
-function scanInhoud(tekst) {
-  const r = zoekScanArtikelen(tekst);
+function scanInhoud(regels) {
+  const r = zoekScanArtikelen(regels);
   return { scanlijst: r.items.map(a => ({ naam: String(a.naam || ''), code: String(a.code || ''), qr: String(a.qr || '') })), scanNietGevonden: r.nietGevonden };
 }
 

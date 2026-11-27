@@ -591,7 +591,8 @@ test('cijfer_aan_begin_is_niet_altijd_een_aantal', () => {
 });
 
 test('scanlijst_artikelen_zoeken', async () => {
-  // Robin, 27 nov: A4 met ± 10 artikelen zonder eigen QR (HDMI-kabels): per artikel de QR uit Rentman.
+  // Robin, 27 nov: A4 met 10 artikelen zonder eigen QR (HDMI-kabels). Per invoerregel één artikel, alleen een
+  // precieze treffer (artikelnummer, QR of volledige naam): bij 2 letters niet al 800 artikelen erbij.
   const { zoekScanArtikelen } = await import('../../v2/js/sjablonen.js');
   const lijst = [
     { id: 'A', code: 'HD010', naam: 'HDMI kabel 1m', qr: '1001' },
@@ -599,14 +600,10 @@ test('scanlijst_artikelen_zoeken', async () => {
     { id: 'C', code: 'HD100', naam: 'HDMI kabel 10m', qr: '' },
     { id: 'D', code: 'SDI05', naam: 'SDI kabel 5m', qr: '2005' },
   ];
-  // artikelnummer of QR precies → dat artikel; anders alle artikelen met alle woorden in de naam, op naam
-  let r = zoekScanArtikelen('hd030\n2005\nhdmi kabel\nonbekend ding', lijst);
-  assert.deepEqual(r.items.map(a => a.code), ['HD030', 'SDI05', 'HD010', 'HD100']);   // geen dubbele, volgorde van de regels
-  assert.deepEqual(r.nietGevonden, ['onbekend ding']);
+  const r = zoekScanArtikelen(['hd030', ' 2005 ', 'hdmi kabel 10M', '', 'HD', 'hdmi kabel', 'HD030'], lijst);
+  assert.deepEqual(r.items.map(a => a.code), ['HD030', 'SDI05', 'HD100', 'HD030']);   // dubbel mag: zelf gekozen
+  assert.deepEqual(r.nietGevonden, ['HD', 'hdmi kabel']);
   assert.deepEqual(r.zonderQr.map(a => a.code), ['HD100']);
-  r = zoekScanArtikelen(Array.from({ length: 12 }, (_, n) => `X${n}`).join('\n'),
-    Array.from({ length: 12 }, (_, n) => ({ id: `x${n}`, code: `X${n}`, naam: `Ding ${n}`, qr: `q${n}` })));
-  assert.equal(r.items.length, 12);
   assert.equal(r.max, 10);
 });
 
@@ -617,10 +614,13 @@ test('scanlijst_sjabloon', async () => {
   assert.deepEqual(sj.formaat, { b: 194, h: 281 });
   assert.equal(groepVan(sj).sleutel, 'magazijn');
   assert.equal(subgroepVan(sj).titel, 'Scanlijsten');
-  assert.deepEqual(sj.velden.map(v => v.naam), ['Titel', 'Artikelen']);
+  assert.deepEqual(sj.velden.map(v => v.naam), ['Titel', ...Array.from({ length: 10 }, (_, n) => `Artikel ${n + 1}`)]);
+  assert.ok(sj.velden.slice(1).every(v => v.kiesArtikel && !v.meerregelig));
   zetArtikelBron(() => [{ id: 'A', code: 'HD010', naam: 'HDMI kabel 1m', qr: '1001' }, { id: 'B', code: 'HD030', naam: 'HDMI kabel 3m', qr: '1003' }]);
-  const i = vul(sj, { id: 'los', naam: '', code: '' }, { Titel: 'HDMI kabels', Artikelen: 'HDMI' }, '');
+  const i = vul(sj, { id: 'los', naam: '', code: '' }, { Titel: 'HDMI kabels', 'Artikel 1': 'HDMI kabel 1m', 'Artikel 3': 'hd030' }, '');
   assert.equal(i.titel, 'HDMI kabels');
+  // eerder ingevuld als één tekstvak 'Artikelen' (één per regel): blijft werken
+  assert.equal(vul(sj, { id: 'los' }, { Artikelen: 'HD010\nHD030' }, '').scanlijst.length, 2);
   assert.deepEqual(i.scanlijst, [{ naam: 'HDMI kabel 1m', code: 'HD010', qr: '1001' }, { naam: 'HDMI kabel 3m', code: 'HD030', qr: '1003' }]);
   assert.equal(i.rand, '#000000');                         // zwart-wit, net als het moderne bordje
   zetArtikelBron(() => []);

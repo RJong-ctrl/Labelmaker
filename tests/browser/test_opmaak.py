@@ -437,7 +437,7 @@ class Scanlijst(PaginaTest):
                 naam: 'HDMI kabel ' + (k + 1) + 'm' + (k === 3 ? ' met een hele lange naam voor de zekerheid' : ''), qr: '10' + k }));
             sj.zetArtikelBron(() => lijst);
             document.body.innerHTML = '';
-            const el = opmaak.teken(sj.vul(S.scanlijst, { id: 'los', naam: '', code: '' }, { Titel: 'HDMI kabels', Artikelen: 'HDMI' }, ''));
+            const el = opmaak.teken(sj.vul(S.scanlijst, { id: 'los', naam: '', code: '' }, Object.fromEntries([['Titel', 'HDMI kabels'], ...lijst.map((a, k) => ['Artikel ' + (k + 1), a.code])]), ''));
             document.body.appendChild(el);
             await opmaak.pasAan(el);
             const mm = el.getBoundingClientRect().width / 194, box = el.getBoundingClientRect();
@@ -467,11 +467,6 @@ class Scanlijst(PaginaTest):
         self.assertEqual(r['fouten'], [])
         self.assertEqual(self.fouten, [])
 
-    def test_meer_dan_tien_past_nog(self):
-        r = self.teken(14)
-        self.assertEqual(r['n'], 14)
-        self.assertGreaterEqual(r['qr'], 18)
-        self.assertEqual(r['fouten'], [])
 
 
 class KistLijnen(PaginaTest):
