@@ -472,3 +472,47 @@ class Scanlijst(PaginaTest):
         self.assertEqual(r['n'], 14)
         self.assertGreaterEqual(r['qr'], 18)
         self.assertEqual(r['fouten'], [])
+
+
+class KistLijnen(PaginaTest):
+    """Klassiek materiaalbordje (Robin, 27 nov): de zwarte lijnen waren op het scherm ongelijk dik (vakken met
+    zwarte tussenruimte worden op hele pixels afgerond). Nu één vectortekening: overal precies dezelfde dikte,
+    en de lijnen sluiten precies aan op de vakken."""
+    app_starten = False
+
+    def test_lijnen_als_vector_en_passend(self):
+        self.laad_voorbeeld()
+        r = self.pagina.evaluate("""async () => {
+            const { opmaak, sj, A, S } = window.T;
+            document.body.innerHTML = '';
+            const el = opmaak.teken(sj.vul(S.kist, A['GE9402'], { Gewicht: '80' }, 'nl4-2.50m'));
+            document.body.appendChild(el);
+            await opmaak.pasAan(el);
+            const svg = el.querySelector('svg.klijnen');
+            if (!svg) return { svg: false };
+            const box = el.getBoundingClientRect(), mm = box.width / 200;
+            const cellen = [...el.querySelectorAll('.kc')].map(c => c.getBoundingClientRect());
+            const rects = [...svg.querySelectorAll('rect')].map(r => ({ x: +r.getAttribute('x'), y: +r.getAttribute('y'), w: +r.getAttribute('width'), h: +r.getAttribute('height') }));
+            const fouten = [];
+            // geen lijn over een vak heen
+            for (const c of cellen) {
+                const cx = (c.left - box.left) / mm, cy = (c.top - box.top) / mm, cw = c.width / mm, ch = c.height / mm;
+                for (const r of rects) {
+                    const ox = Math.min(cx + cw, r.x + r.w) - Math.max(cx, r.x), oy = Math.min(cy + ch, r.y + r.h) - Math.max(cy, r.y);
+                    if (ox > 0.05 && oy > 0.05) fouten.push('lijn over vak');
+                }
+            }
+            // zwart (lijnen) + vakken = het hele bordje
+            const zwart = rects.reduce((s, r) => s + r.w * r.h, 0);
+            const vakken = cellen.reduce((s, c) => s + c.width * c.height, 0) / mm / mm;
+            const vakAchtergrond = getComputedStyle(el.querySelector('.kc')).backgroundColor;
+            const bordAchtergrond = getComputedStyle(el).backgroundColor;
+            const diktes = new Set(rects.filter(r => r.w < 3 || r.h < 3).map(r => Math.min(r.w, r.h).toFixed(3)));
+            return { svg: true, fouten, rest: 200 * 140 - zwart - vakken, vakAchtergrond, bordAchtergrond, diktes: [...diktes] };
+        }""")
+        self.assertTrue(r['svg'])
+        self.assertEqual(r['fouten'], [])
+        self.assertAlmostEqual(r['rest'], 0, delta=15)         # mm² (afronding op pixels): lijnen sluiten aan
+        self.assertEqual(len(r['diktes']), 1)                  # één lijndikte
+        self.assertEqual(r['bordAchtergrond'], 'rgb(255, 255, 255)')
+        self.assertEqual(self.fouten, [])

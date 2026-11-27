@@ -244,7 +244,7 @@ function kist(i, hs) {
   el.style.width = W + 'mm';
   el.style.height = H + 'mm';
   el.style.setProperty('--l', mm(L));
-  el.innerHTML =
+  el.innerHTML = kistLijnen(W, H, L, kopH, datumH, voetH) +
     `<div class="krij kkopr" style="height:${mm(kopH)};grid-template-columns:${mm(W * 0.235)} 1fr ${mm(kopH)}">`
     + `<div class="kc klogo">${hs.logo ? `<img alt="" src="${esc(hs.logo)}">` : ''}</div>`
     + `<div class="kstapel"><div class="kc">${veld('Klant', '', 17)}</div><div class="kc">${veld('Productie', '', 17)}</div></div>`
@@ -257,6 +257,28 @@ function kist(i, hs) {
     + '</div></div>'
     + (voetH ? `<div class="kvoet" style="height:${mm(voetH)}">${hs.voet.map(l => '<div>' + l.split('|').map(x => esc(x.trim())).join('&nbsp; ') + '</div>').join('')}</div>` : '');
   return el;
+}
+
+/** Alle zwarte lijnen en de voet van het klassieke bordje als één vectortekening (Robin, 27 nov): zwarte
+ *  tussenruimtes tussen vakken rondt de browser af op hele pixels, waardoor lijnen ongelijk dik lijken.
+ *  Zelfde maten als de vakken (padding, gap, kolommen in de CSS-grid). */
+function kistLijnen(W, H, L, kopH, datumH, voetH) {
+  const r = [];
+  const rect = (x, y, w, h) => r.push(`<rect x="${x.toFixed(3)}" y="${y.toFixed(3)}" width="${w.toFixed(3)}" height="${h.toFixed(3)}"/>`);
+  // rand
+  rect(0, 0, W, L); rect(0, H - L, W, L); rect(0, L, L, H - 2 * L); rect(W - L, L, L, H - 2 * L);
+  // kop: logo | klant/productie | QR
+  const y1 = L, xa = L + W * 0.235, xb = W - L - kopH - L;
+  rect(xa, y1, L, kopH); rect(xb, y1, L, kopH);
+  rect(xa + L, y1 + (kopH - L) / 2, xb - xa - L, L);
+  rect(L, y1 + kopH, W - 2 * L, L);
+  // datumrij: 37 / 37 / 26
+  const y2 = y1 + kopH + L, vrij = W - 4 * L, xc = L + vrij * 0.37, xd = xc + L + vrij * 0.37;
+  rect(xc, y2, L, datumH); rect(xd, y2, L, datumH);
+  rect(L, y2 + datumH, W - 2 * L, L);
+  // voet
+  if (voetH) { const yv = H - L - voetH; rect(L, yv - L, W - 2 * L, L); rect(L, yv, W - 2 * L, voetH); }
+  return `<svg class="klijnen" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${r.join('')}</svg>`;
 }
 
 // ---------- labels voor de Citizen ----------
